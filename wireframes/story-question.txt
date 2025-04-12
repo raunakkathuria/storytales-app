@@ -1,0 +1,24 @@
+------------------------------------------------------
+| Header                                            |
+|  - Time (left)                                   |
+|  - Indicators (dots showing slide position)      |
+|  - Icons (top-right):                            |
+|     ♥️ Favorite icon                             |
+|     ❌ Close icon                                |
+------------------------------------------------------
+| Background: Full-screen illustration (Luna)      |
+|                                                  |
+| Text Overlay (centered, over image)              |
+|   - Background: Semi-transparent dark background |
+|   - Title: "Ideas for Discussion"               |
+|   - Questions (bulleted with icons):             |
+|     • What special gift did Luna discover...     |
+|     • Why is it important to take care of...     |
+|     • How did Luna's discovery change...         |
+|                                                  |
+| Footer Overlay (bottom of text box):             |
+|   - Character: Zoe                               |
+|   - Age Range: 6–8 years                         |
+|   - Created On: 4/2/2025                         |
+|   - "Thank you for reading!" message             |
+------------------------------------------------------
