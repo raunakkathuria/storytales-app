@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "author": "StoryTales AI",
+    "age_range": "7-9",
+    "reading_time": "6 min",
+    "created_at": "2025-04-10T15:45:00Z",
+    "original_prompt": "A story about a boy who fixes a robot",
+    "tags": [
+      "technology",
+      "friendship",
+      "imagination"
+    ],
+    "genre": "Science Fiction",
+    "theme": "Friendship"
+  },
+  "data": {
+    "title": "Max and the Friendly Robot",
+    "summary": "Max finds and repairs an old robot toy that magically comes to life, becoming his best friend and taking him on amazing adventures.",
+    "cover_image_url": "https://ai-service.example.com/images/story_123456_cover.jpg",
+    "pages": [
+      {
+        "content": "Max loved building things. His room was filled with creations made from blocks, cardboard boxes, and anything else he could find.",
+        "image_url": "https://ai-service.example.com/images/story_123456_page_0.jpg"
+      },
+      {
+        "content": "One rainy Saturday, Max found an old toy robot in the attic. It was dusty and missing a few parts, but Max thought it was perfect.",
+        "image_url": "https://ai-service.example.com/images/story_123456_page_1.jpg"
+      },
+      {
+        "content": "Max spent all day cleaning and fixing the robot. He added colorful buttons, a new antenna, and even painted a friendly smile on its face.",
+        "image_url": "https://ai-service.example.com/images/story_123456_page_2.jpg"
+      },
+      {
+        "content": "That night, as Max slept, something magical happened. The robot's eyes began to glow with a soft blue light.",
+        "image_url": "https://ai-service.example.com/images/story_123456_page_3.jpg"
+      },
+      {
+        "content": "Max woke up to a gentle tapping on his shoulder. To his amazement, the robot was standing beside his bed! \"Hello, Max,\" it said in a friendly voice. \"Thank you for fixing me.\"",
+        "image_url": "https://ai-service.example.com/images/story_123456_page_4.jpg"
+      },
+      {
+        "content": "The robot introduced itself as Beep. \"I've been waiting for a friend like you,\" Beep said. \"Someone creative and kind.\"",
+        "image_url": "https://ai-service.example.com/images/story_123456_page_5.jpg"
+      },
+      {
+        "content": "Max and Beep became best friends. During the day, Beep would pretend to be a regular toy when others were around.",
+        "image_url": "https://ai-service.example.com/images/story_123456_page_6.jpg"
+      },
+      {
+        "content": "But at night, they would go on amazing adventures. Beep could project holograms that transformed Max's room into jungles, oceans, or even outer space.",
+        "image_url": "https://ai-service.example.com/images/story_123456_page_7.jpg"
+      },
+      {
+        "content": "Max learned that Beep came from a distant planet where robots and humans lived together in harmony, sharing ideas and helping each other.",
+        "image_url": "https://ai-service.example.com/images/story_123456_page_8.jpg"
+      },
+      {
+        "content": "\"You have a special gift, Max,\" Beep told him. \"You can see the potential in broken things and make them wonderful again.\"",
+        "image_url": "https://ai-service.example.com/images/story_123456_page_9.jpg"
+      },
+      {
+        "content": "Max realized that sometimes the most extraordinary friendships come from the most ordinary places. All it takes is a little imagination and kindness.",
+        "image_url": "https://ai-service.example.com/images/story_123456_page_10.jpg"
+      }
+    ],
+    "questions": [
+      "What made Beep the robot special?",
+      "Why do you think Max was able to bring Beep to life when others couldn't?",
+      "If you had a robot friend like Beep, what adventures would you want to go on?",
+      "What does it mean to see 'potential in broken things'?"
+    ]
+  }
+}
