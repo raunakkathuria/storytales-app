@@ -1,0 +1,17 @@
+------------------------------------------------------
+| Header                                            |
+|  - Time (left)                                   |
+|  - Indicators (dots showing slide position)      |
+|  - Icons (top-right):                            |
+|     ♥️ Favorite icon                             |
+|     ❌ Close icon                                |
+------------------------------------------------------
+| Background: Full-screen illustration of Luna     |
+|   (space setting, colorful background)           |
+|                                                  |
+| Text Overlay (bottom-center, over image)         |
+|   - Background: Semi-transparent dark background |
+|   - Text:                                        |
+|     "That afternoon, Luna rushed to tell her     |
+|      parents about her amazing discovery..."     |
+------------------------------------------------------

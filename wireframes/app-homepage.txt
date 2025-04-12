@@ -1,0 +1,21 @@
+------------------------------------------------------
+| Tab Bar                                           |
+|  - All Stories (active, underlined in red)       |
+|  - Favorites                                     |
+------------------------------------------------------
+| Story Card                                       |
+|  ------------------------------------------------ |
+| | Background: Illustrated image of kids in      | |
+| | a spaceship (illustration)                    | |
+| | Overlay Icons (top-right):                    | |
+| |   ♥️ Favorite icon                             | |
+| |   🗑️ Delete icon                               | |
+| | Overlay Text (bottom-left):                   | |
+| |   Title: "Luna's Garden Whispers"             | |
+| |   Time: "5 minutes"                           | |
+|  ------------------------------------------------ |
+|                                                  |
+| (Repeated for each story...)                     |
+------------------------------------------------------
+| Floating Action Button (bottom-right): ➕         |
+------------------------------------------------------
