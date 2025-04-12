@@ -27,6 +27,10 @@ Future phases will add user accounts, cross-device sync, enhanced library featur
 
 ## Documentation Structure
 
+### Project Tracking
+
+- [CHANGELOG](docs/CHANGELOG.md) - Comprehensive record of all changes and implementation status
+
 ### Specifications
 
 - [Phase 1 Technical Specification](docs/specification/phase-one-technical-specification.md) - Detailed implementation guide for Phase 1

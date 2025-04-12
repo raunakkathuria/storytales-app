@@ -16,16 +16,16 @@
 
 To ensure a **unified** and **easy-to-update** aesthetic, **all brand colors** must be stored in a **single theme file** (e.g. `theme.dart`) in your Flutter project, rather than scattered across multiple files.
 
-### Palette Example: *Under the Sea* (Sample)
+### Palette Example: *Storybook Sky*
 
 | **Color**           | **Hex**   | **Role**                               |
 | ------------------- | --------- | -------------------------------------- |
-| **Seafoam Teal**    | `#80CBC4` | Primary brand color (buttons, headers) |
-| **Soft Coral**      | `#FF9E9E` | Secondary highlights (cards, callouts) |
-| **Sand Beige**      | `#F5E8C7` | Background layers, library screens     |
-| **Deep Ocean Blue** | `#4E8098` | Accent text/icons, subtle emphasis     |
+| **Sky Blue**        | `#7DCDEE` | Primary color (app bar, headings)      |
+| **Lavender Purple** | `#A18CD1` | Secondary color (cards, sections)      |
+| **Cloud White**     | `#F8F9FA` | Background color (main screens)        |
+| **Sunset Orange**   | `#FF9A76` | Accent color (buttons, highlights)     |
 
-> **Note**: This set aligns well with the **Phase 1** color scheme. If you switch to another brand theme (e.g. **Candyland Carnival**, **Galaxy Adventures**), **update the theme file** references accordingly. By maintaining a single file for color definitions, you can **easily swap** or tweak these palettes as needed.
+> **Note**: This is the current **Phase 1** color scheme. If you switch to another brand theme (e.g. **Candyland Carnival**, **Galaxy Adventures**), **update the theme file** references accordingly. By maintaining a single file for color definitions, you can **easily swap** or tweak these palettes as needed.
 
 #### Semantic Color Roles
 
@@ -37,10 +37,10 @@ dart
 
 CopyEdit
 class StoryTalesTheme {
-  static final Color primaryColor = Color(0xFF80CBC4);
-  static final Color secondaryColor = Color(0xFFFF9E9E);
-  static final Color backgroundColor = Color(0xFFF5E8C7);
-  static final Color accentColor = Color(0xFF4E8098);
+  static final Color primaryColor = Color(0xFF7DCDEE);    // Sky Blue
+  static final Color secondaryColor = Color(0xFFA18CD1);  // Lavender Purple
+  static final Color backgroundColor = Color(0xFFF8F9FA); // Cloud White
+  static final Color accentColor = Color(0xFFFF9A76);     // Sunset Orange
 
   // Optionally define text styles, shape themes, etc.
 }
@@ -67,7 +67,7 @@ Then, all widgets reference `StoryTalesTheme.primaryColor` (etc.), rather than r
 ## Illustrations & Iconography
 
 1. **Style**:
-   - Whimsical or cartoonish icons that match the overall theme (e.g., undersea creatures if using the *Under the Sea* palette).
+   - Whimsical or cartoonish icons that match the overall theme (e.g., sky and cloud motifs for the *Storybook Sky* palette).
 2. **Consistency**:
    - Use a single icon set (or a single illustration style) to avoid mismatched visuals.
 3. **Usage**:
@@ -122,11 +122,11 @@ CopyEdit
 import 'package:flutter/material.dart';
 
 class StoryTalesTheme {
-  // Primary brand colors (Under the Sea example)
-  static const Color primaryColor = Color(0xFF80CBC4);  // Seafoam Teal
-  static const Color secondaryColor = Color(0xFFFF9E9E);  // Soft Coral
-  static const Color backgroundColor = Color(0xFFF5E8C7); // Sand Beige
-  static const Color accentColor = Color(0xFF4E8098);     // Deep Ocean Blue
+  // Primary brand colors (Storybook Sky)
+  static const Color primaryColor = Color(0xFF7DCDEE);    // Sky Blue
+  static const Color secondaryColor = Color(0xFFA18CD1);  // Lavender Purple
+  static const Color backgroundColor = Color(0xFFF8F9FA); // Cloud White
+  static const Color accentColor = Color(0xFFFF9A76);     // Sunset Orange
 
   // Generate a corresponding ThemeData
   static ThemeData buildThemeData() {

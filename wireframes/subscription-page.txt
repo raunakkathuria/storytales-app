@@ -1,0 +1,44 @@
+------------------------------------------------------
+| ← Subscription (using ResponsiveText/Icon)         |
+------------------------------------------------------
+|                                                    |
+|                    🔖                              |
+|                                                    |
+|           Unlock Unlimited Stories                 |
+|                                                    |
+| You have X free stories remaining. Subscribe for   |
+| unlimited stories!                                 |
+|                                                    |
+| ┌────────────────────────────────────────────────┐ |
+| │                   Monthly                      │ |
+| │                                                │ |
+| │                   $4.99                        │ |
+| │                  per month                     │ |
+| │                                                │ |
+| │ ✓ Unlimited story generation                   │ |
+| │ ✓ Access to all themes and genres              │ |
+| │ ✓ New features as they launch                  │ |
+| │                                                │ |
+| │             [ Subscribe ]                      │ |
+| └────────────────────────────────────────────────┘ |
+|                                                    |
+| ┌────────────────────────────────────────────────┐ |
+| │            Annual            Best Value        │ |
+| │                                                │ |
+| │                   $39.99                       │ |
+| │                  per year                      │ |
+| │                                                │ |
+| │ ✓ Unlimited story generation                   │ |
+| │ ✓ Access to all themes and genres              │ |
+| │ ✓ New features as they launch                  │ |
+| │ ✓ Save 33% compared to monthly                 │ |
+| │                                                │ |
+| │          [ Subscribe (Best Value) ]            │ |
+| └────────────────────────────────────────────────┘ |
+|                                                    |
+|            [ Restore Subscription ]                |
+|                                                    |
+| By subscribing, you agree to our Terms of Service  |
+| and Privacy Policy. Subscriptions will automatically|
+| renew unless canceled...                           |
+------------------------------------------------------
