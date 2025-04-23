@@ -19,6 +19,14 @@ class SubscriptionPage extends StatefulWidget {
 
 class _SubscriptionPageState extends State<SubscriptionPage> {
   @override
+  void initState() {
+    super.initState();
+    // Refresh the free stories count when the page is initialized
+    // This ensures we have the latest count after library changes
+    context.read<SubscriptionBloc>().add(const RefreshFreeStoriesCount());
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:storytales/core/theme/theme.dart';
+import 'package:storytales/core/widgets/responsive_button.dart';
 import 'package:storytales/core/widgets/responsive_text.dart';
 
 /// A utility class for creating consistent form dialogs across the app.
@@ -111,52 +112,54 @@ class DialogForm extends StatelessWidget {
               ),
         // More bottom padding for actions
         actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-        // Use ButtonBar for standard Flutter button layout
-        actions: !isLoading
-            ? [
-                ElevatedButton(
-                  onPressed: onSecondaryAction ?? () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: StoryTalesTheme.primaryColor,
-                    foregroundColor: StoryTalesTheme.surfaceColor,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: ResponsiveText(
-                    text: secondaryActionText,
-                    style: const TextStyle(
-                      fontFamily: StoryTalesTheme.fontFamilyBody,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18, // Increased font size
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: onPrimaryAction,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: StoryTalesTheme.accentColor,
-                    foregroundColor: StoryTalesTheme.surfaceColor,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: ResponsiveText(
-                    text: primaryActionText,
-                    style: const TextStyle(
-                      fontFamily: StoryTalesTheme.fontFamilyBody,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18, // Increased font size
-                    ),
-                  ),
-                ),
-              ]
-            : null,
+        // Use a custom layout for actions to ensure responsiveness
+        actions: !isLoading ? [_buildResponsiveActions(context)] : null,
       ),
     );
+  }
+
+  /// Builds responsive action buttons that adapt to different screen sizes.
+  Widget _buildResponsiveActions(BuildContext context) {
+    // Get screen width to determine layout
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Determine if we should use vertical layout based on available dialog width
+    // We need to estimate the dialog width since we don't have direct access to it
+    final estimatedDialogWidth = screenWidth - 80; // Accounting for insetPadding
+    final useVerticalLayout = estimatedDialogWidth < 280;
+
+    // Create buttons using the ResponsiveButton component
+    final cancelButton = ResponsiveButton.primary(
+      text: secondaryActionText,
+      onPressed: onSecondaryAction ?? () => Navigator.pop(context),
+      fontSize: 16.0, // Will be automatically scaled down on small screens
+    );
+
+    final confirmButton = ResponsiveButton.accent(
+      text: primaryActionText,
+      onPressed: onPrimaryAction,
+      fontSize: 16.0, // Will be automatically scaled down on small screens
+    );
+
+    // Return appropriate layout based on available width
+    return useVerticalLayout
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              confirmButton,
+              const SizedBox(height: 8),
+              cancelButton,
+            ],
+          )
+        : Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              cancelButton,
+              const SizedBox(width: 8),
+              confirmButton,
+            ],
+          );
   }
 }

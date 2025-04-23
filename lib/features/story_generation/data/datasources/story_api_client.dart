@@ -31,11 +31,15 @@ class StoryApiClient {
     String? theme,
     String? genre,
   }) async {
-    // Check connectivity
+    // Check connectivity only if we're not using mock data
     final isConnected = await _connectivityService.isConnected();
-    if (!isConnected) {
+    if (!isConnected && !_appConfig.useMockData) {
       throw Exception('No internet connection');
     }
+
+    // Log the current configuration for debugging
+    _loggingService.info('Using API endpoint: ${_appConfig.apiBaseUrl}');
+    _loggingService.info('Mock data enabled: ${_appConfig.useMockData}');
 
     try {
       // Convert ageRange to integer for the API

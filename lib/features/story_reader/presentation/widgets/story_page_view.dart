@@ -1,6 +1,8 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:storytales/core/services/image/image_service.dart';
 import 'package:storytales/core/theme/theme.dart';
+import 'package:storytales/core/widgets/responsive_icon.dart';
 import 'package:storytales/core/widgets/responsive_text.dart';
 import 'package:storytales/features/library/domain/entities/story.dart';
 
@@ -24,6 +26,8 @@ class StoryPageView extends StatefulWidget {
 }
 
 class _StoryPageViewState extends State<StoryPageView> with AutomaticKeepAliveClientMixin {
+  bool _isTextVisible = true; // Track whether text is visible
+
   @override
   bool get wantKeepAlive => true; // Keep this page in memory when not visible
 
@@ -46,21 +50,111 @@ class _StoryPageViewState extends State<StoryPageView> with AutomaticKeepAliveCl
 
     final page = widget.story.pages[widget.currentPageIndex];
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // Background image
-        _buildBackgroundImage(page.imagePath),
+    return GestureDetector(
+      // Toggle text visibility on tap in the center area
+      onTap: () {
+        setState(() {
+          _isTextVisible = !_isTextVisible;
+        });
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Background image
+          _buildBackgroundImage(page.imagePath),
 
-        // Semi-transparent overlay for better text readability
-        _buildOverlay(),
+          // Semi-transparent overlay for better text readability (only when text is visible)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).size.height * 0.3, // Bottom 30% of screen
+            child: AnimatedOpacity(
+              opacity: _isTextVisible ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: _buildOverlay(),
+            ),
+          ),
 
-        // Story text
-        _buildStoryText(page.content),
+          // Story text with animation
+          Positioned(
+            bottom: 24,
+            left: 16,
+            right: 16,
+            child: AnimatedOpacity(
+              opacity: _isTextVisible ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: _buildStoryText(page.content),
+            ),
+          ),
 
-        // Navigation areas (left/right sides of the screen)
-        _buildNavigationAreas(),
-      ],
+          // Navigation areas (left/right sides of the screen)
+          _buildNavigationAreas(),
+
+          // Text preview tab (only visible when text is hidden)
+          Positioned(
+            right: 0,
+            // Position proportionally based on screen height
+            bottom: MediaQuery.of(context).size.height * 0.15,
+            child: AnimatedOpacity(
+              opacity: _isTextVisible ? 0.0 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isTextVisible = true;
+                  });
+                },
+                child: Container(
+                  // Responsive width based on screen width (min 120px, max 20% of screen width)
+                  width: math.max(120, MediaQuery.of(context).size.width * 0.2),
+                  // Ensure minimum touch target size of 44px height
+                  constraints: const BoxConstraints(minHeight: 44),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      bottomLeft: Radius.circular(12),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 4,
+                        offset: const Offset(-2, 0),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ResponsiveIcon(
+                        icon: Icons.menu_book,
+                        color: Colors.white,
+                        sizeCategory: IconSizeCategory.small,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: ResponsiveText(
+                          text: _getTextPreview(page.content),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14, // Body Small as per guidelines
+                            fontWeight: FontWeight.bold,
+                            fontFamily: StoryTalesTheme.fontFamilyBody,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -80,7 +174,7 @@ class _StoryPageViewState extends State<StoryPageView> with AutomaticKeepAliveCl
 
   Widget _buildFallbackImage() {
     return Container(
-      color: StoryTalesTheme.primaryColor.withValues(alpha: 0.3),
+      color: StoryTalesTheme.primaryColor.withValues(alpha: .3),
       child: const Center(
         child: Icon(
           Icons.image_not_supported,
@@ -93,7 +187,7 @@ class _StoryPageViewState extends State<StoryPageView> with AutomaticKeepAliveCl
 
   Widget _buildLoadingIndicator() {
     return Container(
-      color: StoryTalesTheme.primaryColor.withValues(alpha: 0.1),
+      color: StoryTalesTheme.primaryColor.withValues(alpha: .1),
       child: const Center(
         child: CircularProgressIndicator(),
       ),
@@ -101,6 +195,7 @@ class _StoryPageViewState extends State<StoryPageView> with AutomaticKeepAliveCl
   }
 
   Widget _buildOverlay() {
+    // Create a gradient container for better text readability
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -110,75 +205,78 @@ class _StoryPageViewState extends State<StoryPageView> with AutomaticKeepAliveCl
             Colors.transparent,
             Colors.black.withValues(alpha: 0.6),
           ],
-          stops: const [0.5, 1.0],
+          stops: const [0.0, 1.0],
         ),
       ),
     );
   }
 
   Widget _buildStoryText(String text) {
-    return Positioned(
-      bottom: 24,
-      left: 16,
-      right: 16,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: StoryTalesTheme.textBackgroundOpacity),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: ResponsiveText(
-          text: text,
-          style: const TextStyle(
-            color: StoryTalesTheme.surfaceColor,
-            fontSize: 20,
-            fontWeight: FontWeight.w600, // Semi-bold text
-            fontFamily: StoryTalesTheme.fontFamilyBody,
-            height: 1.5,
-            shadows: [
-              Shadow(
-                color: StoryTalesTheme.textColor,
-                offset: Offset(1, 1),
-                blurRadius: 4,
-              ),
-              Shadow(
-                color: StoryTalesTheme.textColor,
-                offset: Offset(-1, -1),
-                blurRadius: 4,
-              ),
-            ],
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16), // Extra padding at top for the handle
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: StoryTalesTheme.textBackgroundOpacity),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drawer handle indicator
+          Container(
+            width: 50, // Fixed width for the handle
+            height: 4, // Height of the handle
+            margin: const EdgeInsets.only(bottom: 12), // Space between handle and text
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .5), // Semi-transparent white
+              borderRadius: BorderRadius.circular(2), // Rounded corners
+            ),
           ),
-          textAlign: TextAlign.center,
-        ),
+          // Story text
+          ResponsiveText(
+            text: text,
+            style: const TextStyle(
+              color: StoryTalesTheme.surfaceColor,
+              fontSize: 20,
+              fontWeight: FontWeight.w600, // Semi-bold text
+              fontFamily: StoryTalesTheme.fontFamilyBody,
+              height: 1.5,
+              shadows: [
+                Shadow(
+                  color: StoryTalesTheme.textColor,
+                  offset: Offset(1, 1),
+                  blurRadius: 4,
+                ),
+                Shadow(
+                  color: StoryTalesTheme.textColor,
+                  offset: Offset(-1, -1),
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
 
+  // This method now just returns an empty container since we're using swipe navigation only
   Widget _buildNavigationAreas() {
-    return Row(
-      children: [
-        // Left side - previous page
-        Expanded(
-          child: GestureDetector(
-            onTap: widget.currentPageIndex > 0 ? widget.onPreviousPage : null,
-            behavior: HitTestBehavior.translucent,
-            child: Container(
-              color: Colors.transparent, // Keep transparent for hit testing
-            ),
-          ),
-        ),
-
-        // Right side - next page
-        Expanded(
-          child: GestureDetector(
-            onTap: widget.onNextPage,
-            behavior: HitTestBehavior.translucent,
-            child: Container(
-              color: Colors.transparent, // Keep transparent for hit testing
-            ),
-          ),
-        ),
-      ],
+    // Return an empty, transparent container that doesn't interfere with other gestures
+    return Container(
+      color: Colors.transparent,
     );
+  }
+
+  // Extract the first few words from the text for the preview tab
+  String _getTextPreview(String text) {
+    // Split the text into words
+    final words = text.split(' ');
+
+    // Take the first 3 words (or fewer if the text is shorter)
+    final previewWords = words.take(3).join(' ');
+
+    // Add ellipsis if there are more words
+    return words.length > 3 ? '$previewWords...' : previewWords;
   }
 }

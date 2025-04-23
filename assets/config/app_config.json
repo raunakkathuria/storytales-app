@@ -1,6 +1,6 @@
 {
   "apiBaseUrl": "https://api.storytales.app",
   "apiTimeoutSeconds": 120,
-  "useMockData": false,
+  "useMockData": true,
   "environment": "production"
 }
