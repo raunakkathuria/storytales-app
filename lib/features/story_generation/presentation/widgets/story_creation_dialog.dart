@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storytales/core/theme/theme.dart';
 import 'package:storytales/core/widgets/animated_logo.dart';
 import 'package:storytales/core/widgets/dialog_form.dart';
+import 'package:storytales/core/widgets/responsive_button.dart';
 import 'package:storytales/core/widgets/responsive_text.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_bloc.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_event.dart';
@@ -225,7 +226,14 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
             items: _ageRanges.map<DropdownMenuItem<String>>((String range) {
               return DropdownMenuItem<String>(
                 value: range,
-                child: Text(range),
+                child: ResponsiveText(
+                  text: range,
+                  style: const TextStyle(
+                    fontFamily: StoryTalesTheme.fontFamilyBody,
+                    fontSize: 16,
+                    color: StoryTalesTheme.textColor,
+                  ),
+                ),
               );
             }).toList(),
             onChanged: (value) {
@@ -256,7 +264,14 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
             items: _themes.map<DropdownMenuItem<String>>((String theme) {
               return DropdownMenuItem<String>(
                 value: theme,
-                child: Text(theme),
+                child: ResponsiveText(
+                  text: theme,
+                  style: const TextStyle(
+                    fontFamily: StoryTalesTheme.fontFamilyBody,
+                    fontSize: 16,
+                    color: StoryTalesTheme.textColor,
+                  ),
+                ),
               );
             }).toList(),
             onChanged: (value) {
@@ -287,7 +302,14 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
             items: _genres.map<DropdownMenuItem<String>>((String genre) {
               return DropdownMenuItem<String>(
                 value: genre,
-                child: Text(genre),
+                child: ResponsiveText(
+                  text: genre,
+                  style: const TextStyle(
+                    fontFamily: StoryTalesTheme.fontFamilyBody,
+                    fontSize: 16,
+                    color: StoryTalesTheme.textColor,
+                  ),
+                ),
               );
             }).toList(),
             onChanged: (value) {
@@ -372,26 +394,16 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
         const SizedBox(height: 24),
 
         // Cancel button
-        ElevatedButton.icon(
+        ResponsiveButton.outlined(
+          text: 'Cancel',
           onPressed: () {
             context.read<StoryGenerationBloc>().add(const CancelStoryGeneration());
             Navigator.pop(context);
           },
-          icon: const Icon(Icons.cancel),
-          label: const ResponsiveText(
-            text: 'Cancel',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontFamily: StoryTalesTheme.fontFamilyBody,
-            ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: StoryTalesTheme.surfaceColor,
-            foregroundColor: StoryTalesTheme.primaryColor,
-            elevation: 0,
-            side: BorderSide(color: StoryTalesTheme.primaryColor),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          ),
+          icon: Icons.cancel,
+          borderColor: StoryTalesTheme.primaryColor,
+          textColor: StoryTalesTheme.primaryColor,
+          fontSize: 16,
         ),
       ],
     );

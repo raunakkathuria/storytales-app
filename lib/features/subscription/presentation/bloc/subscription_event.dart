@@ -51,3 +51,10 @@ class SimulatePurchase extends SubscriptionEvent {
 class ResetSubscription extends SubscriptionEvent {
   const ResetSubscription();
 }
+
+/// Event to refresh the free stories count.
+/// This is used to ensure the subscription page shows the correct count
+/// after library changes (like deleting a story).
+class RefreshFreeStoriesCount extends SubscriptionEvent {
+  const RefreshFreeStoriesCount();
+}

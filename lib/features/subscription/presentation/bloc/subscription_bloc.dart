@@ -22,6 +22,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     on<GetFreeStoriesRemaining>(_onGetFreeStoriesRemaining);
     on<SimulatePurchase>(_onSimulatePurchase);
     on<ResetSubscription>(_onResetSubscription);
+    on<RefreshFreeStoriesCount>(_onRefreshFreeStoriesCount);
   }
 
   /// Handle the CheckSubscription event.
@@ -251,6 +252,49 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       // Log analytics event for error
       await _analyticsService.logError(
         errorType: 'reset_subscription_error',
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  /// Handle the RefreshFreeStoriesCount event.
+  /// This is used to ensure the subscription page shows the correct count
+  /// after library changes (like deleting a story).
+  Future<void> _onRefreshFreeStoriesCount(
+    RefreshFreeStoriesCount event,
+    Emitter<SubscriptionState> emit,
+  ) async {
+    try {
+      // Check if the user has an active subscription
+      final hasActiveSubscription = await _repository.hasActiveSubscription();
+
+      if (hasActiveSubscription) {
+        // If the user has an active subscription, no need to refresh the count
+        return;
+      }
+
+      // Get the latest counts
+      final freeStoriesRemaining = await _repository.getFreeStoriesRemaining();
+      final freeStoryLimit = _repository.getFreeStoryLimit();
+      final generatedStoryCount = await _repository.getGeneratedStoryCount();
+
+      if (freeStoriesRemaining <= 0) {
+        // User has no free stories remaining, subscription is required
+        emit(SubscriptionRequired(
+          generatedStoryCount: generatedStoryCount,
+          freeStoryLimit: freeStoryLimit,
+        ));
+      } else {
+        // User still has free stories remaining
+        emit(FreeStoriesAvailable(
+          freeStoriesRemaining: freeStoriesRemaining,
+          totalFreeStories: freeStoryLimit,
+        ));
+      }
+    } catch (e) {
+      // Just log the error, don't emit an error state to avoid disrupting the UI
+      await _analyticsService.logError(
+        errorType: 'refresh_free_stories_count_error',
         errorMessage: e.toString(),
       );
     }

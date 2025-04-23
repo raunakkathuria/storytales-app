@@ -48,6 +48,48 @@ ResponsiveIcon(
 - **IconSizeCategory.large**: For featured or prominent icons (32-48dp)
 - **IconSizeCategory.extraLarge**: For hero or showcase icons (64-80dp)
 
+### ResponsiveButton
+
+The `ResponsiveButton` widget provides consistent button styling and sizing across different devices and screen densities.
+
+```dart
+// Primary button
+ResponsiveButton.primary(
+  text: 'Primary Button',
+  onPressed: () => handlePress(),
+  fontSize: 16.0,
+)
+
+// Accent button
+ResponsiveButton.accent(
+  text: 'Accent Button',
+  onPressed: () => handlePress(),
+  isFullWidth: true,
+)
+
+// Outlined button
+ResponsiveButton.outlined(
+  text: 'Outlined Button',
+  onPressed: () => handlePress(),
+  borderColor: StoryTalesTheme.primaryColor,
+  textColor: StoryTalesTheme.primaryColor,
+)
+```
+
+#### Key Features
+
+- **Adaptive Sizing**: Automatically adjusts padding, font size, and minimum size based on screen dimensions
+- **Factory Constructors**: Provides convenient constructors for common button styles
+- **Icon Support**: Optional icon parameter for buttons with icons
+- **Full Width Option**: Can expand to fill the available width
+
+#### Best Practices
+
+- Use the appropriate factory constructor for the button's purpose
+- Consider using `isFullWidth: true` for primary actions on small screens
+- Use a smaller font size for buttons with longer text
+- Ensure sufficient contrast between text and background colors
+
 ## Text Size Guidelines
 
 For consistent typography, use these base font sizes with `ResponsiveText`:

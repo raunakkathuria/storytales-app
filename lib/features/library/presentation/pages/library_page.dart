@@ -13,6 +13,7 @@ import 'package:storytales/features/story_generation/presentation/widgets/story_
 import 'package:storytales/features/story_reader/presentation/pages/story_reader_page.dart';
 import 'package:storytales/features/subscription/presentation/pages/subscription_page.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_bloc.dart';
+import 'package:storytales/features/subscription/presentation/bloc/subscription_event.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_state.dart';
 
 /// The main library page that displays the user's stories.
@@ -323,6 +324,10 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
       cancelText: 'No',
       onConfirm: () {
         context.read<LibraryBloc>().add(DeleteStory(storyId: story.id));
+
+        // Refresh the free stories count in the subscription bloc
+        // This ensures the subscription page shows the correct count after a story is deleted
+        context.read<SubscriptionBloc>().add(const RefreshFreeStoriesCount());
       },
     );
   }

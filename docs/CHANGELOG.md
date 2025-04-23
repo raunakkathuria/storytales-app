@@ -5,6 +5,26 @@ All notable changes to the StoryTales application will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-04-23
+
+### Added
+- New `ResponsiveButton` component for consistent button styling across devices
+- Enhanced dialog responsiveness for small screens
+- Improved configuration system with better documentation
+- New component documentation in `docs/guidelines/components.md`
+- Updated responsive design guidelines to include button components
+
+### Changed
+- Improved dialog form layout on small screens
+- Enhanced dropdown items to use ResponsiveText for better accessibility
+- Updated wireframe documentation to reflect recent UI changes
+
+### Fixed
+- Fixed "No internet connection" error when using mock data
+- Improved connectivity handling to fall back to mock data when offline
+- Fixed button alignment issues on iPhone devices
+- Fixed dialog button sizing on small screens
+
 ## [1.0.0] - 2025-04-20
 
 ### Added
