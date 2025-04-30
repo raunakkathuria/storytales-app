@@ -88,16 +88,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - N/A (Initial release)
 
-## [Unreleased] - Phase 2 (Planned)
+## [Unreleased] - Phase 2 (In Progress)
 
-### Planned Features
-- User authentication with Google/Apple sign-in
-- Cross-device synchronization
-- Enhanced library features (search, etc.)
-- Improved story generation options
-- Pre-generated stories API
-- Refined UI and animations
-- In-app feedback mechanisms
+### In Development
+- **Authentication & User Management** (docs/specification/phase-two/authentication-user-management.md)
+  - Firebase Authentication with email link (passwordless) sign-in
+  - Persistent authentication across app restarts
+  - User profiles stored in Firestore
+  - Account management and settings screen
+
+### Coming Soon
+- **Cross-Device Synchronization** (docs/specification/phase-two/cross-device-synchronization.md)
+  - Cloud-based story storage
+  - Conflict resolution for offline changes
+  - Background sync capabilities
+  - Offline support with queuing
+
+- **Enhanced Library Features** (docs/specification/phase-two/enhanced-library-features.md)
+  - Advanced search and filtering
+  - Tags system for flexible categorization
+  - Enhanced UI with animations
+  - Organization tools (batch operations, collections, reading lists)
+
+- **Pre-Generated Stories API** (docs/specification/phase-two/pre-generated-stories-api.md)
+  - Cloud Functions API for serving pre-generated stories
+  - Curated story collections
+  - Discovery UI for browsing and discovering stories
+  - Integration with the existing library system
+
+- **In-App Feedback** (docs/specification/phase-two/in-app-feedback.md)
+  - Feedback collection system
+  - Bug reporting system
+  - Feature request system
+  - User satisfaction surveys
 
 ## Future Phases
 
