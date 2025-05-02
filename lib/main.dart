@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'firebase_options.dart';
 import 'package:storytales/core/di/injection_container.dart' as di;
 import 'package:storytales/core/theme/theme.dart';
+import 'package:storytales/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:storytales/features/authentication/presentation/widgets/auth_wrapper.dart';
 import 'package:storytales/features/library/presentation/bloc/library_bloc.dart';
 import 'package:storytales/features/library/presentation/bloc/library_event.dart';
 import 'package:storytales/features/library/presentation/pages/library_page.dart';
@@ -23,6 +28,15 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Connect to Firebase emulators in debug mode
+  if (kDebugMode) {
+    // Connect to Auth emulator
+    await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+
+    // Connect to Firestore emulator
+    FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+  }
 
   // Initialize Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
@@ -47,6 +61,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<AuthBloc>(
+          create: (context) => di.sl<AuthBloc>(),
+        ),
         BlocProvider<LibraryBloc>(
           create: (context) => di.sl<LibraryBloc>()..add(const LoadAllStories()),
         ),
@@ -65,7 +82,9 @@ class MyApp extends StatelessWidget {
           title: 'StoryTales',
           debugShowCheckedModeBanner: false,
           theme: StoryTalesTheme.buildThemeData(context),
-          home: const LibraryPage(),
+          home: AuthWrapper(
+            child: const LibraryPage(),
+          ),
         ),
       ),
     );
