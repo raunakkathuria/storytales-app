@@ -27,7 +27,7 @@ class ErrorMessage extends StatelessWidget {
     final widget = Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: StoryTalesTheme.errorColor.withOpacity(0.1),
+        color: StoryTalesTheme.errorColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: StoryTalesTheme.errorColor),
       ),
