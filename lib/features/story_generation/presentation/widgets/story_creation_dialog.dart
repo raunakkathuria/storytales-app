@@ -74,14 +74,10 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
   final _formKey = GlobalKey<FormState>();
   final _promptController = TextEditingController();
   String? _selectedAgeRange;
-  String? _selectedTheme;
-  String? _selectedGenre;
   bool _isLoading = false;
   double _progress = 0.0;
 
   final List<String> _ageRanges = ['0-2 years', '3-5 years', '6-8 years', '9-12 years', '13+ years'];
-  final List<String> _themes = ['Friendship', 'Adventure', 'Family', 'Nature', 'Learning'];
-  final List<String> _genres = ['Fantasy', 'Science Fiction', 'Fairy Tale', 'Mystery', 'Everyday Life'];
 
   @override
   void dispose() {
@@ -242,82 +238,6 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
               });
             },
           ),
-
-          const SizedBox(height: 16),
-
-          // Theme dropdown
-          DropdownButtonFormField<String>(
-            decoration: const InputDecoration(
-              labelText: 'Theme',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            ),
-            isExpanded: true,
-            value: _selectedTheme,
-            icon: const Icon(Icons.arrow_drop_down),
-            style: const TextStyle(
-              color: StoryTalesTheme.textColor,
-              fontSize: 16,
-              fontFamily: StoryTalesTheme.fontFamilyBody,
-            ),
-            validator: (value) => value == null ? 'Please select a theme' : null,
-            items: _themes.map<DropdownMenuItem<String>>((String theme) {
-              return DropdownMenuItem<String>(
-                value: theme,
-                child: ResponsiveText(
-                  text: theme,
-                  style: const TextStyle(
-                    fontFamily: StoryTalesTheme.fontFamilyBody,
-                    fontSize: 16,
-                    color: StoryTalesTheme.textColor,
-                  ),
-                ),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedTheme = value;
-              });
-            },
-          ),
-
-          const SizedBox(height: 16),
-
-          // Genre dropdown
-          DropdownButtonFormField<String>(
-            decoration: const InputDecoration(
-              labelText: 'Genre',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            ),
-            isExpanded: true,
-            value: _selectedGenre,
-            icon: const Icon(Icons.arrow_drop_down),
-            style: const TextStyle(
-              color: StoryTalesTheme.textColor,
-              fontSize: 16,
-              fontFamily: StoryTalesTheme.fontFamilyBody,
-            ),
-            validator: (value) => value == null ? 'Please select a genre' : null,
-            items: _genres.map<DropdownMenuItem<String>>((String genre) {
-              return DropdownMenuItem<String>(
-                value: genre,
-                child: ResponsiveText(
-                  text: genre,
-                  style: const TextStyle(
-                    fontFamily: StoryTalesTheme.fontFamilyBody,
-                    fontSize: 16,
-                    color: StoryTalesTheme.textColor,
-                  ),
-                ),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedGenre = value;
-              });
-            },
-          ),
         ],
       ),
     );
@@ -457,8 +377,8 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
       GenerateStory(
         prompt: _promptController.text.trim(),
         ageRange: _selectedAgeRange,
-        theme: _selectedTheme,
-        genre: _selectedGenre,
+        theme: null,
+        genre: null,
       ),
     );
   }
