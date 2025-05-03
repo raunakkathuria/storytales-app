@@ -45,14 +45,20 @@ class StoryApiClient {
       // Convert ageRange to integer for the API
       int age = 8; // Default age
       if (ageRange != null) {
-        // Parse age range like "7-9" to get the average
-        final parts = ageRange.split('-');
+        // Remove " years" suffix if present
+        final cleanRange = ageRange.replaceAll(' years', '');
+
+        // Parse age range like "6-8" to get the average
+        final parts = cleanRange.split('-');
         if (parts.length == 2) {
           final minAge = int.tryParse(parts[0]) ?? 8;
-          final maxAge = int.tryParse(parts[1]) ?? 10;
+          // Handle special case for "13+" format
+          final maxAge = parts[1] == "+" ?
+              minAge + 2 : // For "13+", use 15 as max (13+2)
+              int.tryParse(parts[1]) ?? 10;
           age = (minAge + maxAge) ~/ 2;
         } else {
-          age = int.tryParse(ageRange) ?? 8;
+          age = int.tryParse(cleanRange) ?? 8;
         }
       }
 

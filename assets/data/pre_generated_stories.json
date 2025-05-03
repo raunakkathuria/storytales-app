@@ -3,7 +3,7 @@
         {
             "metadata": {
                 "author": "StoryTales AI",
-                "age_range": "3-6",
+                "age_range": "3-5 years",
                 "reading_time": "5 min",
                 "created_at": "2025-03-01T12:00:00Z",
                 "original_prompt": "A story about a friendly dragon",
@@ -59,7 +59,7 @@
         {
             "metadata": {
                 "author": "StoryTales AI",
-                "age_range": "6-9",
+                "age_range": "6-8 years",
                 "reading_time": "8 min",
                 "created_at": "2025-03-02T14:30:00Z",
                 "original_prompt": "A story about space exploration",
@@ -124,7 +124,7 @@
         {
             "metadata": {
                 "author": "StoryTales AI",
-                "age_range": "4-7",
+                "age_range": "3-5 years",
                 "reading_time": "6 min",
                 "created_at": "2025-03-03T09:15:00Z",
                 "original_prompt": "A story about a magical garden",

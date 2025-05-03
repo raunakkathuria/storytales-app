@@ -121,6 +121,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added logging service integration for OTP codes in development mode
   - Fixed profile update functionality to show success message
   - Made display name field optional in profile settings
+  - Standardized age ranges to match API format: "0-2 years", "3-5 years", "6-8 years", "9-12 years", "13+ years"
+  - Updated story generation to properly handle age range format with "years" suffix
 
 ### Coming Soon
 - **Cross-Device Synchronization** (docs/specification/phase-two/cross-device-synchronization.md)

@@ -79,7 +79,7 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
   bool _isLoading = false;
   double _progress = 0.0;
 
-  final List<String> _ageRanges = ['3-6', '7-9', '10-12'];
+  final List<String> _ageRanges = ['0-2 years', '3-5 years', '6-8 years', '9-12 years', '13+ years'];
   final List<String> _themes = ['Friendship', 'Adventure', 'Family', 'Nature', 'Learning'];
   final List<String> _genres = ['Fantasy', 'Science Fiction', 'Fairy Tale', 'Mystery', 'Everyday Life'];
 
