@@ -1,6 +1,19 @@
 # StoryTales Data Model
 
-This document outlines the data model for the StoryTales app based on the requirements in the technical specification and wireframes. It describes the database schema, entity relationships, and data structures needed for Phase 1 implementation.
+This document outlines the data model for the StoryTales app. It describes the database schema, entity relationships, and data structures for the application.
+
+## Current Data Model Status
+
+- **Phase 1**: ✅ Completed (April 2025) - Local SQLite database
+- **Phase 2**: 🚧 In Progress - Adding user profiles and cloud storage
+
+For Phase 2 data model extensions, please refer to the [Phase 2 Data Model Extensions](phase-two/data-model-extensions.md) document.
+
+---
+
+# Phase 1 Data Model
+
+The following sections describe the original data model implemented in Phase 1, which focuses on local storage using SQLite.
 
 ## Database Schema
 
@@ -530,4 +543,6 @@ Subscription data is stored in SharedPreferences with the following keys:
      4. For each story, use `StoryModel.fromPreGeneratedJson()` to create a Story object
      5. Save the Story object to the database using the appropriate repository methods
 
-This data model provides the foundation for implementing the StoryTales app according to the requirements in the technical specification and wireframes.
+## Phase 2 Data Model Extensions
+
+For information about the Phase 2 data model extensions, including user profiles, cloud storage, and cross-device synchronization, please refer to the [Phase 2 Data Model Extensions](phase-two/data-model-extensions.md) document.
