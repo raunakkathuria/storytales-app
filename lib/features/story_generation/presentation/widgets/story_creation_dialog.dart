@@ -76,12 +76,26 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
   String? _selectedAgeRange;
   bool _isLoading = false;
   double _progress = 0.0;
+  int _currentMessageIndex = 0;
+  Timer? _messageTimer;
 
   final List<String> _ageRanges = ['0-2 years', '3-5 years', '6-8 years', '9-12 years', '13+ years'];
+
+  // List of loading messages to cycle through
+  final List<String> _loadingMessages = [
+    "The storybook is weaving a magical tale just for you!",
+    "Our wizards are crafting your adventure...",
+    "Sprinkling fairy dust on your characters...",
+    "Dragons and unicorns are joining your story...",
+    "Painting colorful worlds for your journey...",
+    "The magic quill is writing your special story...",
+    "Gathering stardust for your magical tale...",
+  ];
 
   @override
   void dispose() {
     _promptController.dispose();
+    _messageTimer?.cancel();
     super.dispose();
   }
 
@@ -90,11 +104,19 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
     return BlocConsumer<StoryGenerationBloc, StoryGenerationState>(
       listener: (context, state) {
         if (state is StoryGenerationLoading) {
+          // Only start cycling messages when loading first begins
+          if (!_isLoading) {
+            _startMessageCycling();
+          }
+
           setState(() {
             _isLoading = true;
             _progress = state.progress;
           });
         } else if (state is StoryGenerationSuccess) {
+          // Stop message cycling
+          _messageTimer?.cancel();
+
           // Close the dialog
           Navigator.pop(context);
 
@@ -266,9 +288,9 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
 
         const SizedBox(height: 16),
 
-        // Description
+        // Description with cycling messages
         ResponsiveText(
-          text: 'The storybook is weaving a magical tale just for you!',
+          text: _loadingMessages[_currentMessageIndex],
           style: const TextStyle(
             color: StoryTalesTheme.textColor,
             fontSize: 16,
@@ -381,5 +403,35 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
         genre: null,
       ),
     );
+  }
+
+  // Start cycling through loading messages
+  void _startMessageCycling() {
+    // Cancel any existing timer
+    _messageTimer?.cancel();
+
+    // Reset to first message and immediately trigger first change
+    setState(() {
+      _currentMessageIndex = 0;
+    });
+
+    // Start cycling immediately
+    Timer.run(() {
+      if (mounted) {
+        setState(() {
+          _currentMessageIndex = (_currentMessageIndex + 1) % _loadingMessages.length;
+        });
+      }
+    });
+
+    // Create a new timer that cycles every 3 seconds
+    _messageTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (mounted) {
+        setState(() {
+          // Move to next message, loop back to start if needed
+          _currentMessageIndex = (_currentMessageIndex + 1) % _loadingMessages.length;
+        });
+      }
+    });
   }
 }
