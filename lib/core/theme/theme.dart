@@ -222,7 +222,7 @@ class StoryTalesTheme {
       ),
 
       // Card theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -231,7 +231,7 @@ class StoryTalesTheme {
       ),
 
       // Tab bar theme
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: surfaceColor, // Changed from primaryColor to white for better contrast
         unselectedLabelColor: overlayLightColor, // Changed from textLightColor to overlayLightColor for better visibility
         indicatorColor: accentColor,
