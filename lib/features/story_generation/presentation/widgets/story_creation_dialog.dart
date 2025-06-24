@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storytales/core/theme/theme.dart';
+import 'package:storytales/core/utils/responsive_text_util.dart';
 import 'package:storytales/core/widgets/animated_logo.dart';
 import 'package:storytales/core/widgets/dialog_form.dart';
 import 'package:storytales/core/widgets/responsive_button.dart';
@@ -190,6 +191,9 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
   }
 
   Widget _buildFormContent() {
+    // Get responsive font size for form fields
+    final responsiveFontSize = ResponsiveTextUtil.getScaledFontSize(context, 16.0);
+
     return Form(
       key: _formKey,
       child: Column(
@@ -200,13 +204,13 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
           TextFormField(
             controller: _promptController,
             decoration: const InputDecoration(
-              labelText: 'Story Prompt',
-              hintText: 'Enter a prompt for your story (e.g., "A friendly dragon")',
+              labelText: 'Your story',
+              hintText: 'Tell me what you want your story to be about (like "A friendly dragon")',
               border: OutlineInputBorder(),
               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
-            style: const TextStyle(
-              fontSize: 16,
+            style: TextStyle(
+              fontSize: responsiveFontSize,
               fontFamily: StoryTalesTheme.fontFamilyBody,
               color: StoryTalesTheme.textColor,
             ),
@@ -214,10 +218,10 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
             minLines: 3,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter a prompt';
+                return 'Please tell me about your story';
               }
               if (value.trim().length < 3) {
-                return 'Prompt is too short';
+                return 'Please tell me more about your story';
               }
               return null;
             },
@@ -235,9 +239,9 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
             isExpanded: true,
             value: _selectedAgeRange,
             icon: const Icon(Icons.arrow_drop_down),
-            style: const TextStyle(
+            style: TextStyle(
               color: StoryTalesTheme.textColor,
-              fontSize: 16,
+              fontSize: responsiveFontSize,
               fontFamily: StoryTalesTheme.fontFamilyBody,
             ),
             validator: (value) => value == null ? 'Please select an age range' : null,
@@ -288,15 +292,26 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
 
         const SizedBox(height: 16),
 
-        // Description with cycling messages
-        ResponsiveText(
-          text: _loadingMessages[_currentMessageIndex],
-          style: const TextStyle(
-            color: StoryTalesTheme.textColor,
-            fontSize: 16,
-            fontFamily: StoryTalesTheme.fontFamilyBody,
+        // Description with cycling messages - fixed height container to prevent dialog resizing
+        SizedBox(
+          height: 60, // Fixed height to accommodate 2-3 lines of responsive text
+          width: double.infinity,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: ResponsiveText(
+                text: _loadingMessages[_currentMessageIndex],
+                style: const TextStyle(
+                  color: StoryTalesTheme.textColor,
+                  fontSize: 16,
+                  fontFamily: StoryTalesTheme.fontFamilyBody,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3, // Allow up to 3 lines for responsive text
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ),
-          textAlign: TextAlign.center,
         ),
 
         const SizedBox(height: 24),
