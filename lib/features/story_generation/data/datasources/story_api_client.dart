@@ -85,6 +85,7 @@ class StoryApiClient {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'x-api-key': _appConfig.apiKey,
           },
           sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
           receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),

@@ -18,12 +18,16 @@ class AppConfig {
   /// The environment name (e.g., development, staging, production).
   final String environment;
 
+  /// The API key for authenticating requests.
+  final String apiKey;
+
   /// Creates a new instance of [AppConfig].
   const AppConfig({
     required this.apiBaseUrl,
     required this.apiTimeoutSeconds,
     required this.useMockData,
     required this.environment,
+    required this.apiKey,
   });
 
   /// Creates a new instance of [AppConfig] from a JSON map.
@@ -33,6 +37,7 @@ class AppConfig {
       apiTimeoutSeconds: json['apiTimeoutSeconds'] as int,
       useMockData: json['useMockData'] as bool,
       environment: json['environment'] as String,
+      apiKey: json['apiKey'] as String? ?? '',
     );
   }
 
@@ -70,6 +75,7 @@ class AppConfig {
         apiTimeoutSeconds: 120,
         useMockData: true,
         environment: 'development',
+        apiKey: '',
       );
     }
   }
@@ -80,12 +86,14 @@ class AppConfig {
     int? apiTimeoutSeconds,
     bool? useMockData,
     String? environment,
+    String? apiKey,
   }) {
     return AppConfig(
       apiBaseUrl: apiBaseUrl ?? this.apiBaseUrl,
       apiTimeoutSeconds: apiTimeoutSeconds ?? this.apiTimeoutSeconds,
       useMockData: useMockData ?? this.useMockData,
       environment: environment ?? this.environment,
+      apiKey: apiKey ?? this.apiKey,
     );
   }
 
@@ -93,6 +101,6 @@ class AppConfig {
   @override
   String toString() {
     return 'AppConfig(apiBaseUrl: $apiBaseUrl, apiTimeoutSeconds: $apiTimeoutSeconds, '
-        'useMockData: $useMockData, environment: $environment)';
+        'useMockData: $useMockData, environment: $environment, apiKey: ${apiKey.isNotEmpty ? '***' : 'empty'})';
   }
 }

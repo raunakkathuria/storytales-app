@@ -2,5 +2,6 @@
   "apiBaseUrl": "https://staging-api.storytales.app",
   "apiTimeoutSeconds": 120,
   "useMockData": false,
-  "environment": "staging"
+  "environment": "staging",
+  "apiKey": "staging-api-key"
 }
