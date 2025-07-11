@@ -53,14 +53,38 @@ For a more detailed changelog with implementation status, see [docs/CHANGELOG.md
 - Responsive design for various device sizes
 - "Storybook Sky" color palette implemented throughout the app
 
+## [1.0.2] - 2025-06-24 - Phase 2 Enhancement & Bug Fixes
+
+### Added
+- Enhanced story creation dialog with improved responsiveness
+- Fixed dialog sizing issues to prevent dynamic resizing based on text content
+- Improved text wrapping and overflow handling in loading dialogs
+- Updated form field text to use child-friendly terminology ("Your story" instead of "Story Prompt")
+- Enhanced validation messages with more encouraging, conversational language
+
+### Changed
+- Story creation dialog now uses responsive font sizing for better accessibility
+- Loading dialog maintains consistent dimensions while cycling through messages
+- Improved dialog layout to prevent Flutter rendering errors and overflow issues
+
+### Fixed
+- Fixed story creation dialog text sizing inconsistencies
+- Resolved dropdown text truncation issues in age range selection
+- Fixed Flutter assertion errors in loading dialog layout
+- Eliminated RenderFlex overflow errors in dialog components
+
 ## [Unreleased] - Phase 2 (In Progress)
 
-### Implemented
-- **Authentication & User Management**
+### Completed
+- **Authentication & User Management** ✅
   - Firebase Authentication with OTP (one-time password) authentication
   - Persistent authentication across app restarts
   - User profiles stored in Firestore
   - Account management and settings screen
+  - Email entry and OTP verification flows
+  - Profile settings with optional display name
+  - Secure OTP generation and verification
+  - Integration with Firebase emulator for development
 
 ### In Development
 - **Cross-Device Synchronization**
