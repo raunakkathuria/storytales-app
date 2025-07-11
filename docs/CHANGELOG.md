@@ -88,11 +88,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - N/A (Initial release)
 
+## [1.0.2] - 2025-06-24
+
+### Added
+- Enhanced story creation dialog with improved responsiveness and user experience
+- Fixed dialog sizing issues to prevent dynamic resizing based on text content
+- Improved text wrapping and overflow handling in loading dialogs
+- Updated form field text to use child-friendly terminology ("Your story" instead of "Story Prompt")
+- Enhanced validation messages with more encouraging, conversational language
+- Better error handling for dialog layout issues
+
+### Changed
+- Story creation dialog now uses responsive font sizing for better accessibility
+- Loading dialog maintains consistent dimensions while cycling through messages
+- Improved dialog layout to prevent Flutter rendering errors and overflow issues
+- Enhanced user experience with more intuitive form field labels and hints
+
+### Fixed
+- Fixed story creation dialog text sizing inconsistencies across different devices
+- Resolved dropdown text truncation issues in age range selection
+- Fixed Flutter assertion errors in loading dialog layout (`!semantics.parentDataDirty`)
+- Eliminated RenderFlex overflow errors in dialog components
+- Fixed dialog button alignment issues on small screens
+- Improved text contrast and readability in form fields
+
 ## [Unreleased] - Phase 2 (In Progress)
 
-### In Development
-- **Authentication & User Management** (docs/specification/phase-two/authentication-user-management.md)
-  - Firebase Authentication with email link (passwordless) sign-in [Implemented]
+### Completed
+- **Authentication & User Management** ✅ (docs/specification/phase-two/authentication-user-management.md)
+  - Firebase Authentication with OTP (one-time password) authentication [Implemented]
   - Persistent authentication across app restarts [Implemented]
   - User profiles stored in Firestore [Implemented]
   - Account management and settings screen [Implemented]
@@ -123,6 +147,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Made display name field optional in profile settings
   - Standardized age ranges to match API format: "0-2 years", "3-5 years", "6-8 years", "9-12 years", "13+ years"
   - Updated story generation to properly handle age range format with "years" suffix
+
+### In Development
 
 ### Coming Soon
 - **Cross-Device Synchronization** (docs/specification/phase-two/cross-device-synchronization.md)

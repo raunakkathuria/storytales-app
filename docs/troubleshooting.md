@@ -143,6 +143,78 @@ This document provides solutions for common issues that developers might encount
    )
    ```
 
+### Dialog Dynamic Resizing Issues
+
+**Symptoms:**
+- Dialog changes size when content updates (e.g., cycling loading messages)
+- Dialog appears to "jump" or resize during animations
+- Inconsistent dialog dimensions across different states
+
+**Possible Causes:**
+1. Content with variable height is not constrained
+2. Text content changes affect overall layout
+3. Complex widget nesting creates layout conflicts
+
+**Solutions:**
+
+1. **Fix Content Area Height**
+   - Use `SizedBox` with fixed height for variable content:
+
+   ```dart
+   SizedBox(
+     height: 60, // Fixed height for message area
+     width: double.infinity,
+     child: Center(
+       child: ResponsiveText(
+         text: dynamicMessage,
+         style: const TextStyle(fontSize: 16),
+         textAlign: TextAlign.center,
+         maxLines: 3,
+         overflow: TextOverflow.ellipsis,
+       ),
+     ),
+   )
+   ```
+
+2. **Avoid Complex Layout Constraints**
+   - Use simple layout widgets instead of complex nesting:
+
+   ```dart
+   // Instead of: LayoutBuilder + ConstrainedBox + IntrinsicHeight
+   // Use simple Column with fixed spacing:
+   Column(
+     mainAxisSize: MainAxisSize.min,
+     children: [
+       // Fixed height content areas
+       SizedBox(height: 80, child: logo),
+       SizedBox(height: 24), // Fixed spacing
+       SizedBox(height: 60, child: messageArea),
+       // ... other elements
+     ],
+   )
+   ```
+
+3. **Prevent Flutter Layout Assertion Errors**
+   - Avoid conflicting layout constraints that cause `!semantics.parentDataDirty` errors:
+
+   ```dart
+   // Problematic: Multiple competing constraints
+   LayoutBuilder(
+     builder: (context, constraints) => ConstrainedBox(
+       constraints: BoxConstraints(maxHeight: 320),
+       child: IntrinsicHeight(
+         child: Column(/* ... */),
+       ),
+     ),
+   )
+
+   // Better: Simple, clear constraints
+   Column(
+     mainAxisSize: MainAxisSize.min,
+     children: [/* ... */],
+   )
+   ```
+
 ### Text Overflow or Truncation
 
 **Symptoms:**
