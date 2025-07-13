@@ -40,6 +40,7 @@ class StoryApiClient {
     // Log the current configuration for debugging
     _loggingService.info('Using API endpoint: ${_appConfig.apiBaseUrl}');
     _loggingService.info('Mock data enabled: ${_appConfig.useMockData}');
+    _loggingService.info('API key configured: ${_appConfig.apiKey.isNotEmpty ? 'Yes (${_appConfig.apiKey.length} chars)' : 'No'}');
 
     try {
       // Convert ageRange to integer for the API
@@ -73,6 +74,18 @@ class StoryApiClient {
         }
       }
 
+      // Prepare request data
+      final requestData = {
+        'age': age,
+        'character_name': characterName,
+        'description': prompt,
+      };
+
+      // Log request details for debugging
+      _loggingService.info('Making API request to: ${_appConfig.apiBaseUrl}/story');
+      _loggingService.info('Request data: ${json.encode(requestData)}');
+      _loggingService.info('Headers: Content-Type: application/json, x-api-key: ${_appConfig.apiKey.substring(0, 8)}...');
+
       // Make the API call to the configured endpoint
       final response = await _dio.post(
         '${_appConfig.apiBaseUrl}/story',
@@ -92,16 +105,28 @@ class StoryApiClient {
         ),
       );
 
+      _loggingService.info('API Response Status: ${response.statusCode}');
+
       if (response.statusCode == 200) {
         final apiResponse = response.data;
+        _loggingService.info('API Response received successfully');
 
         // Process the response to handle null image URLs
         return _processApiResponse(apiResponse);
       } else {
+        _loggingService.error('API Error - Status: ${response.statusCode}, Data: ${response.data}');
         throw Exception('Failed to generate story: ${response.statusCode}');
       }
     } catch (e) {
-      // Error handling with fallback for development
+      // Enhanced error logging
+      if (e is DioException) {
+        _loggingService.error('DioException Details:');
+        _loggingService.error('- Type: ${e.type}');
+        _loggingService.error('- Message: ${e.message}');
+        _loggingService.error('- Response Status: ${e.response?.statusCode}');
+        _loggingService.error('- Response Data: ${e.response?.data}');
+        _loggingService.error('- Response Headers: ${e.response?.headers}');
+      }
       _loggingService.error('Error calling API: $e');
 
       // Check if we should use mock data based on configuration

@@ -29,13 +29,21 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Connect to Firebase emulators in debug mode
+  // Connect to Firebase emulators in debug mode only
   if (kDebugMode) {
-    // Connect to Auth emulator
-    await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+    try {
+      // Connect to Auth emulator
+      await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
 
-    // Connect to Firestore emulator
-    FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+      // Connect to Firestore emulator
+      FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+
+      print('🔧 Connected to Firebase emulators for development');
+    } catch (e) {
+      print('⚠️ Could not connect to emulators, using production Firebase: $e');
+    }
+  } else {
+    print('🚀 Using production Firebase services');
   }
 
   // Initialize Crashlytics
