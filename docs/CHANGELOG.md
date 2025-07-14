@@ -92,10 +92,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### In Development
 - **Authentication & User Management** (docs/specification/phase-two/authentication-user-management.md)
-  - Firebase Authentication with email link (passwordless) sign-in
-  - Persistent authentication across app restarts
-  - User profiles stored in Firestore
-  - Account management and settings screen
+  - Firebase Authentication with email link (passwordless) sign-in [Implemented]
+  - Persistent authentication across app restarts [Implemented]
+  - User profiles stored in Firestore [Implemented]
+  - Account management and settings screen [Implemented]
+  - Added Firebase Authentication and Firestore dependencies
+  - Implemented AuthService with Firebase Authentication
+  - Created UserProfile model for storing user data
+  - Added authentication BLoC for state management
+  - Implemented email link authentication flow
+  - Added profile settings screen for account management
+  - Updated to latest Firebase packages (firebase_core, firebase_auth, cloud_firestore)
+  - Replaced discontinued firebase_dynamic_links with app_links package
+  - Updated app_links to the latest version (^6.4.0)
+  - Updated flutter_launcher_icons to the latest version (^0.14.3)
+  - Added Firebase emulator support for local development and testing
+  - Made authentication optional (not mandatory for app usage)
+  - Moved sign-in functionality to profile section
+  - Created unified ProfilePage for both authenticated and unauthenticated states
+  - Improved UI with more visible profile button in app bar
+  - Enhanced app bar with title and better spacing
+  - Updated profile icon to use accent color for brand consistency
+  - Switched from email link authentication to OTP-based authentication for improved testing
+  - Added OTP verification screen for entering verification codes
+  - Implemented secure OTP generation and verification
+  - Enhanced user experience with clearer authentication flow
+  - Improved error handling with branded error messages
+  - Added logging service integration for OTP codes in development mode
+  - Fixed profile update functionality to show success message
+  - Made display name field optional in profile settings
+  - Standardized age ranges to match API format: "0-2 years", "3-5 years", "6-8 years", "9-12 years", "13+ years"
+  - Updated story generation to properly handle age range format with "years" suffix
 
 ### Coming Soon
 - **Cross-Device Synchronization** (docs/specification/phase-two/cross-device-synchronization.md)

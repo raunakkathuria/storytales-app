@@ -1,10 +1,19 @@
 # StoryTales Wireframes Description
 
-This document provides detailed descriptions of the wireframes for the StoryTales app. These wireframes serve as the visual reference for implementing the UI components in Phase 1.
+This document provides detailed descriptions of the wireframes for the StoryTales app. The wireframes are divided into two sections: Phase 1 (completed) and Phase 2 (in progress).
 
-## Overview
+## Current Status
 
-The wireframes cover seven main components:
+- **Phase 1**: ✅ Completed (April 2025) - Core features and UI components
+- **Phase 2**: 🚧 In Progress - Authentication, profile, and cross-device sync UI components
+
+For Phase 2 wireframes and UI components, please refer to the [Phase 2 documentation](phase-two/) directory.
+
+---
+
+# Phase 1 Wireframes
+
+The Phase 1 wireframes cover seven main components:
 1. **App Homepage** - The main library screen with story cards
 2. **Story Page** - Individual pages of a story with illustrations and text
 3. **Story Question** - The final page of a story with discussion questions
@@ -269,6 +278,42 @@ The wireframes cover seven main components:
 - "Yes"/"Subscribe" buttons trigger the corresponding action
 - "No"/"Not Now" buttons dismiss the dialog without taking action
 
+# Phase 2 Wireframes
+
+Phase 2 introduces several new UI components to support authentication, user profiles, and cross-device synchronization. For detailed wireframes and descriptions of these components, please refer to the following documents:
+
+1. **Authentication Screens** - [Authentication UI Components](phase-two/authentication-user-management.md#ui-components)
+   - Email Entry Screen
+   - OTP Verification Screen
+   - Profile Setup Screen
+
+2. **Profile Management** - [Profile Management UI](phase-two/authentication-user-management.md#profile-management-ui)
+   - Profile Settings Screen
+   - Account Information Screen
+   - Preferences Screen
+
+3. **Sync Status UI** - [Sync UI Components](phase-two/cross-device-synchronization.md#ui-components)
+   - Sync Status Indicators
+   - Conflict Resolution UI
+   - Offline Mode Indicators
+
+4. **Enhanced Library UI** - [Enhanced Library UI](phase-two/enhanced-library-features.md#ui-components)
+   - Search and Filtering UI
+   - Tags Management UI
+   - Collections UI
+   - Reading Lists UI
+
+5. **Pre-Generated Stories Discovery** - [Discovery UI](phase-two/pre-generated-stories-api.md#ui-components)
+   - Collections Browser
+   - Story Details Screen
+   - Download Progress UI
+
+6. **Feedback UI** - [Feedback UI Components](phase-two/in-app-feedback.md#ui-components)
+   - Feedback Form
+   - Bug Report Form
+   - Feature Request Form
+   - Survey UI
+
 ## Implementation Guidelines
 
 When implementing these screens, consider the following:
@@ -333,5 +378,12 @@ When implementing these screens, consider the following:
    - Make destructive actions (like delete) use the error color
    - Position the primary action on the right side
    - Ensure dialog content is clear and concise
+
+8. **Phase 2 UI Guidelines**
+   - Maintain consistency between Phase 1 and Phase 2 UI components
+   - Use the ResponsiveButton component for consistent button styling
+   - Implement the enhanced dialog responsiveness for small screens
+   - Follow the updated responsive design guidelines for all new components
+   - Use the same color palette and typography for all new screens
 
 These wireframes serve as a visual guide for the UI implementation. The actual implementation should follow the clean architecture and BLoC pattern as specified in the technical documentation.

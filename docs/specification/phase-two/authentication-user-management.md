@@ -6,7 +6,7 @@ The Authentication & User Management feature introduces user accounts to StoryTa
 
 ## Key Components
 
-1. **Firebase Authentication**: Email link (passwordless) authentication with persistent sessions
+1. **Firebase Authentication**: Email OTP (one-time password) authentication with persistent sessions
 2. **User Profiles**: Cloud-based user data storage with Firestore
 3. **Account Management**: Settings screen for profile management and sign-out
 4. **Session Management**: Persistent authentication across app restarts and device reboots
@@ -21,16 +21,16 @@ The implementation requires Firebase Authentication, Firebase Firestore, and sup
 
 #### 1.2 Firebase Configuration
 
-- Enable Email Link authentication in Firebase Console
-- Configure Dynamic Links for deep linking
+- Enable Email/Password authentication in Firebase Console
 - Set up security rules for Firestore
+- Configure Firebase Auth Emulator for local testing
 
 ### 2. Authentication Service
 
 The `AuthService` class will handle all authentication-related functionality:
 
 - **Current User Management**: Methods to get the current user and check login status
-- **Email Link Authentication**: Methods to send sign-in links and authenticate users
+- **OTP Authentication**: Methods to send OTP codes and verify them for authentication
 - **User Profile Management**: Methods to create, retrieve, and update user profiles
 - **Session Management**: Methods to handle persistent authentication and sign-out
 
@@ -48,8 +48,8 @@ The authentication BLoC will manage the authentication state and handle authenti
 
 #### 4.1 Events
 - Check authentication status
-- Send sign-in link
-- Sign in with email link
+- Send OTP code
+- Verify OTP code
 - Sign out
 - Update user profile
 
@@ -58,7 +58,8 @@ The authentication BLoC will manage the authentication state and handle authenti
 - Loading state
 - Authenticated state (with user profile)
 - Unauthenticated state
-- Sign-in link sent state
+- OTP sent state
+- OTP verification failed state
 - Error state
 - Profile update success state
 
@@ -66,14 +67,24 @@ The authentication BLoC will manage the authentication state and handle authenti
 
 #### 5.1 Email Entry Screen
 
-A screen where users can enter their email address to receive a sign-in link:
+A screen where users can enter their email address to receive an OTP code:
 
 - Email input field with validation
-- Send sign-in link button
+- Send OTP button
 - Error message display
 - Loading indicator
 
-#### 5.2 Profile Settings Screen
+#### 5.2 OTP Verification Screen
+
+A screen where users can enter the OTP code they received:
+
+- OTP input field with validation
+- Verify OTP button
+- Resend OTP option
+- Error message display
+- Loading indicator
+
+#### 5.3 Profile Settings Screen
 
 A screen where authenticated users can manage their profile:
 
@@ -82,26 +93,16 @@ A screen where authenticated users can manage their profile:
 - Sign out option
 - Profile update functionality
 
-### 6. Deep Link Handling
-
-A system to handle authentication deep links:
-
-- Initialize dynamic links on app start
-- Process incoming links
-- Extract authentication information
-- Complete the sign-in process
-
-### 7. Dependency Injection
+### 6. Dependency Injection
 
 Update the dependency injection container to include the new authentication services.
 
-### 8. App Initialization
+### 7. App Initialization
 
 Update the main app to handle authentication state:
 
 - Check authentication state on app start
 - Navigate to appropriate screens based on authentication state
-- Handle deep links for authentication
 
 ## Security Considerations
 
@@ -127,7 +128,7 @@ Update the main app to handle authentication state:
 ## Implementation Timeline
 
 1. **Week 1**: Firebase project setup and configuration
-2. **Week 2**: Email link authentication implementation
+2. **Week 2**: OTP-based authentication implementation
 3. **Week 3**: Persistent authentication and user profiles
 4. **Week 4**: Account management and settings screen
 

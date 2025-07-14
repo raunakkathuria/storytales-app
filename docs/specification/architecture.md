@@ -1,4 +1,17 @@
-# High-Level Architecture (Phase 1)
+# High-Level Architecture
+
+This document provides an overview of the architecture for the StoryTales app. For Phase 1-specific architecture details, see the original architecture description below. For Phase 2 architecture details, refer to the [Phase 2 documentation](phase-two/README.md).
+
+## Current Architecture Status
+
+- **Phase 1**: ✅ Completed (April 2025)
+- **Phase 2**: 🚧 In Progress - See [Phase 2 Overview](phase-two/overview.md) for details
+
+The architecture is currently transitioning from the Phase 1 local-only approach to the Phase 2 architecture that includes user authentication, cloud storage, and cross-device synchronization.
+
+---
+
+# Original Phase 1 Architecture
 
 Below is a high-level architecture diagram and a component diagram for Phase 1 of the StoryTales app, as described in the Phased Implementation Plan and the Technical Specification. These visuals illustrate how the app's pieces fit together—focusing on the client-side (Flutter), local storage for offline reading, and direct interaction with the AI service to generate stories.
 
@@ -123,15 +136,15 @@ Below is a more **detailed look** at the internal components within the Flutter 
 
 ---
 
-### Transition to a Lightweight Backend (Future Phases)
+### Transition to a Lightweight Backend (Phase 2)
 
-As detailed in the [Phased Implementation Plan](), **Phase 2** or **Phase 3** may introduce a lightweight backend to handle:
+As detailed in the [Phase 2 Overview](phase-two/overview.md), Phase 2 introduces a lightweight backend to handle:
 
 - **User Authentication & Cross-Device Sync**
 - **Server-Side Subscription Validation**
 - **More Robust Analytics & Personalization**
 
-At that point, the architecture evolves to route calls through your own **server** instead of the app talking directly to the AI API, offering better control, security, and multi-device features. For Phase 1, the **local-only** approach is typically faster to develop and release.
+The architecture evolves to route calls through our own **server** instead of the app talking directly to the AI API, offering better control, security, and multi-device features. This transition is currently in progress.
 
 ---
 
