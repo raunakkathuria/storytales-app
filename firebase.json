@@ -1,1 +1,53 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"storytales-21ccd","appId":"1:746576505180:android:e6d4d2200c080754f87999","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"storytales-21ccd","appId":"1:746576505180:ios:a334c172dedf5c76f87999","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"macos":{"default":{"projectId":"storytales-21ccd","appId":"1:746576505180:ios:a334c172dedf5c76f87999","uploadDebugSymbols":false,"fileOutput":"macos/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"storytales-21ccd","configurations":{"android":"1:746576505180:android:e6d4d2200c080754f87999","ios":"1:746576505180:ios:a334c172dedf5c76f87999","macos":"1:746576505180:ios:a334c172dedf5c76f87999","web":"1:746576505180:web:6ceda1ea18223f14f87999","windows":"1:746576505180:web:dd2ffa4ad0ec0073f87999"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "storytales-21ccd",
+          "appId": "1:746576505180:android:e6d4d2200c080754f87999",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "storytales-21ccd",
+          "appId": "1:746576505180:ios:a334c172dedf5c76f87999",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "storytales-21ccd",
+          "appId": "1:746576505180:ios:a334c172dedf5c76f87999",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "storytales-21ccd",
+          "configurations": {
+            "android": "1:746576505180:android:e6d4d2200c080754f87999",
+            "ios": "1:746576505180:ios:a334c172dedf5c76f87999",
+            "macos": "1:746576505180:ios:a334c172dedf5c76f87999",
+            "web": "1:746576505180:web:6ceda1ea18223f14f87999",
+            "windows": "1:746576505180:web:dd2ffa4ad0ec0073f87999"
+          }
+        }
+      }
+    }
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
+  }
+}

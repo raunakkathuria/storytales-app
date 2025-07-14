@@ -11,6 +11,7 @@ import 'package:storytales/features/library/presentation/bloc/library_state.dart
 import 'package:storytales/features/library/presentation/widgets/story_card.dart';
 import 'package:storytales/features/story_generation/presentation/widgets/story_creation_dialog.dart';
 import 'package:storytales/features/story_reader/presentation/pages/story_reader_page.dart';
+import 'package:storytales/features/authentication/presentation/widgets/auth_wrapper.dart';
 import 'package:storytales/features/subscription/presentation/pages/subscription_page.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_bloc.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_event.dart';
@@ -61,11 +62,17 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // No title
-        toolbarHeight: 40, // Reduced from default 56
+        title: const Text('StoryTales', style: TextStyle(color: StoryTalesTheme.primaryColor)),
+        toolbarHeight: 56, // Standard height for better visibility
         backgroundColor: StoryTalesTheme.surfaceColor, // White background
-        elevation: 0, // No shadow
+        elevation: 1, // Slight shadow for definition
         actions: [
+          // Profile button for account management
+          const ProfileButton(),
+
+          const SizedBox(width: 8), // Add spacing between buttons
+
+          // Subscription button
           BlocBuilder<SubscriptionBloc, SubscriptionState>(
             builder: (context, state) {
               // Show a different icon if subscribed

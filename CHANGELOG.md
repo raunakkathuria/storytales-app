@@ -2,7 +2,27 @@
 
 All notable changes to the StoryTales project will be documented in this file.
 
-## [1.0.0] - Phase 1 Completion - 2025-04-13
+For a more detailed changelog with implementation status, see [docs/CHANGELOG.md](docs/CHANGELOG.md).
+
+## [1.0.1] - 2025-04-23
+
+### Added
+- New `ResponsiveButton` component for consistent button styling across devices
+- Enhanced dialog responsiveness for small screens
+- Improved configuration system with better documentation
+
+### Changed
+- Improved dialog form layout on small screens
+- Enhanced dropdown items to use ResponsiveText for better accessibility
+- Updated wireframe documentation to reflect recent UI changes
+
+### Fixed
+- Fixed "No internet connection" error when using mock data
+- Improved connectivity handling to fall back to mock data when offline
+- Fixed button alignment issues on iPhone devices
+- Fixed dialog button sizing on small screens
+
+## [1.0.0] - Phase 1 Completion - 2025-04-20
 
 ### Core Features Implemented
 - Story generation with AI integration
@@ -33,15 +53,37 @@ All notable changes to the StoryTales project will be documented in this file.
 - Responsive design for various device sizes
 - "Storybook Sky" color palette implemented throughout the app
 
-### Known Issues
-- None at this time
+## [Unreleased] - Phase 2 (In Progress)
 
-### Bug Fixes
-- Fixed story generation error by moving sample AI response file to the correct assets directory
+### Implemented
+- **Authentication & User Management**
+  - Firebase Authentication with OTP (one-time password) authentication
+  - Persistent authentication across app restarts
+  - User profiles stored in Firestore
+  - Account management and settings screen
 
-## [Upcoming] - Phase 2 Plans
-- User accounts and authentication
-- Cross-device synchronization
-- Enhanced personalization options
-- Improved story generation with more customization options
-- Social sharing features
+### In Development
+- **Cross-Device Synchronization**
+  - Cloud-based story storage
+  - Conflict resolution for offline changes
+  - Background sync capabilities
+  - Offline support with queuing
+
+### Coming Soon
+- **Enhanced Library Features**
+  - Advanced search and filtering
+  - Tags system for flexible categorization
+  - Enhanced UI with animations
+  - Organization tools (batch operations, collections, reading lists)
+
+- **Pre-Generated Stories API**
+  - Cloud Functions API for serving pre-generated stories
+  - Curated story collections
+  - Discovery UI for browsing and discovering stories
+  - Integration with the existing library system
+
+- **In-App Feedback**
+  - Feedback collection system
+  - Bug reporting system
+  - Feature request system
+  - User satisfaction surveys

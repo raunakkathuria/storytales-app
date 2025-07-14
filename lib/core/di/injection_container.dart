@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +25,21 @@ import 'package:storytales/features/story_generation/domain/repositories/story_g
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_bloc.dart';
 import 'package:storytales/features/story_reader/presentation/bloc/story_reader_bloc.dart';
 import 'package:storytales/features/subscription/data/datasources/subscription_local_data_source.dart';
+import 'package:storytales/features/authentication/data/datasources/auth_data_source.dart';
+import 'package:storytales/features/authentication/data/datasources/firebase_auth_data_source.dart';
+import 'package:storytales/features/authentication/data/repositories/auth_repository_impl.dart';
+import 'package:storytales/features/authentication/domain/repositories/auth_repository.dart';
+import 'package:storytales/features/authentication/domain/usecases/get_current_user.dart';
+import 'package:storytales/features/authentication/domain/usecases/get_stored_email.dart';
+import 'package:storytales/features/authentication/domain/usecases/is_authenticated.dart';
+import 'package:storytales/features/authentication/domain/usecases/is_sign_in_link.dart';
+import 'package:storytales/features/authentication/domain/usecases/send_otp_to_email.dart';
+import 'package:storytales/features/authentication/domain/usecases/send_sign_in_link_to_email.dart';
+import 'package:storytales/features/authentication/domain/usecases/sign_in_with_email_link.dart';
+import 'package:storytales/features/authentication/domain/usecases/sign_out.dart';
+import 'package:storytales/features/authentication/domain/usecases/update_user_profile.dart';
+import 'package:storytales/features/authentication/domain/usecases/verify_otp.dart';
+import 'package:storytales/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:storytales/features/subscription/data/repositories/subscription_repository_impl.dart';
 import 'package:storytales/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_bloc.dart';
@@ -110,6 +127,12 @@ Future<void> init() async {
   final firebaseCrashlytics = FirebaseCrashlytics.instance;
   sl.registerSingleton<FirebaseCrashlytics>(firebaseCrashlytics);
 
+  final firebaseAuth = FirebaseAuth.instance;
+  sl.registerSingleton<FirebaseAuth>(firebaseAuth);
+
+  final firestore = FirebaseFirestore.instance;
+  sl.registerSingleton<FirebaseFirestore>(firestore);
+
   // Initialize and register LoggingService
   final loggingService = LoggingService();
   loggingService.init();
@@ -160,6 +183,15 @@ Future<void> init() async {
     () => SubscriptionLocalDataSource(sharedPreferences: sl()),
   );
 
+  // Register Authentication data sources
+  sl.registerLazySingleton<AuthDataSource>(
+    () => FirebaseAuthDataSource(
+      firebaseAuth: sl(),
+      firestore: sl(),
+      sharedPreferences: sl(),
+    ),
+  );
+
   //! Repositories
   sl.registerLazySingleton<StoryRepository>(
     () => StoryRepositoryImpl(
@@ -179,6 +211,13 @@ Future<void> init() async {
   sl.registerLazySingleton<SubscriptionRepository>(
     () => SubscriptionRepositoryImpl(
       localDataSource: sl(),
+    ),
+  );
+
+  // Register Authentication repository
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      dataSource: sl(),
     ),
   );
 
@@ -207,6 +246,63 @@ Future<void> init() async {
     () => SubscriptionBloc(
       repository: sl<SubscriptionRepository>(),
       analyticsService: sl<AnalyticsService>(),
+    ),
+  );
+
+  // Register Authentication use cases
+  sl.registerLazySingleton<GetCurrentUser>(
+    () => GetCurrentUser(sl<AuthRepository>()),
+  );
+
+  sl.registerLazySingleton<IsAuthenticated>(
+    () => IsAuthenticated(sl<AuthRepository>()),
+  );
+
+  sl.registerLazySingleton<SendSignInLinkToEmail>(
+    () => SendSignInLinkToEmail(sl<AuthRepository>()),
+  );
+
+  sl.registerLazySingleton<SignInWithEmailLink>(
+    () => SignInWithEmailLink(sl<AuthRepository>()),
+  );
+
+  sl.registerLazySingleton<SignOut>(
+    () => SignOut(sl<AuthRepository>()),
+  );
+
+  sl.registerLazySingleton<UpdateUserProfile>(
+    () => UpdateUserProfile(sl<AuthRepository>()),
+  );
+
+  sl.registerLazySingleton<IsSignInLink>(
+    () => IsSignInLink(sl<AuthRepository>()),
+  );
+
+  sl.registerLazySingleton<GetStoredEmail>(
+    () => GetStoredEmail(sl<AuthRepository>()),
+  );
+
+  sl.registerLazySingleton<SendOtpToEmail>(
+    () => SendOtpToEmail(sl<AuthRepository>()),
+  );
+
+  sl.registerLazySingleton<VerifyOtp>(
+    () => VerifyOtp(sl<AuthRepository>()),
+  );
+
+  // Register Authentication BLoC
+  sl.registerFactory<AuthBloc>(
+    () => AuthBloc(
+      getCurrentUser: sl<GetCurrentUser>(),
+      isAuthenticated: sl<IsAuthenticated>(),
+      sendSignInLinkToEmail: sl<SendSignInLinkToEmail>(),
+      signInWithEmailLink: sl<SignInWithEmailLink>(),
+      signOut: sl<SignOut>(),
+      updateUserProfile: sl<UpdateUserProfile>(),
+      isSignInLink: sl<IsSignInLink>(),
+      getStoredEmail: sl<GetStoredEmail>(),
+      sendOtpToEmail: sl<SendOtpToEmail>(),
+      verifyOtp: sl<VerifyOtp>(),
     ),
   );
 }
