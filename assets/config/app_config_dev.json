@@ -1,0 +1,6 @@
+{
+  "apiBaseUrl": "http://0.0.0.0:3000",
+  "apiTimeoutSeconds": 120,
+  "useMockData": true,
+  "environment": "development"
+}

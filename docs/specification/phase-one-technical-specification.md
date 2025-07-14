@@ -16,7 +16,7 @@
 **Scope**:
 
 - This document focuses **exclusively on Phase 1**.
-- Future expansions (user accounts, cross-device sync, personalization, etc.) are addressed separately in the “Future Phases” document.
+- Future expansions (user accounts, cross-device sync, personalization, etc.) are addressed separately in the "Future Phases" document.
 
 ## Core MVP Features
 
@@ -47,10 +47,31 @@ From the Phased Implementation Plan (), Phase 1 requires:
    - Story reader with full-screen illustrations and text overlays
    - Discussion questions at the end of stories
    - Show user-friendly errors for connectivity or AI call failures
+   - Responsive design with adaptive text and icon sizing
+   - Accessibility support for different text scaling preferences
 
 ## Architecture & Components
 
 Below is the recommended **clean architecture** approach for Phase 1.
+
+### Responsive Design Components
+
+- **ResponsiveText Widget**
+  - Custom wrapper around Flutter's Text widget
+  - Automatically scales text based on device settings and screen size
+  - Ensures consistent typography across different devices
+  - Improves accessibility for users with visual impairments
+
+- **ResponsiveIcon Widget**
+  - Standardizes icon sizing across the app
+  - Uses size categories (small, medium, large, extraLarge) instead of fixed pixel values
+  - Adapts to different screen densities and accessibility settings
+
+- **Responsive Layout Principles**
+  - Flexible layouts that adapt to different screen sizes
+  - Proper spacing and margins that scale with content
+  - Touch targets sized appropriately for accessibility (minimum 44x44px)
+  - Consistent use of theme colors for better contrast and readability
 
 ### 1. App (Flutter)
 
@@ -144,25 +165,48 @@ Below is the recommended **clean architecture** approach for Phase 1.
 5. **Story Reader**
 
    - **StoryReaderBloc** manages page navigation and story state.
+   - Immersive edge-to-edge experience with:
+     - Transparent status bar for maximum screen utilization
+     - Semi-transparent gradient header that fades out
    - Header with:
-     - Reading time on the left
+     - Reading time with clock icon on the left
      - Page indicators (dots) in the center
      - Favorite and close icons on the right
-   - Full-screen illustration as background for each page.
+   - Full-screen illustration as background for each page with consistent gradient overlay.
    - Semi-transparent text overlay at the bottom with story content.
-   - Swipe or tap navigation to move between pages.
+   - Consistent styling between story pages and question pages.
+   - **Optimized page navigation:**
+     - Native swipe gestures using Flutter's PageView with allowImplicitScrolling
+     - Efficient image preloading that prioritizes the next page
+     - Background thread processing to avoid UI jank
    - Final page shows "Ideas for Discussion" with:
      - Bulleted discussion questions
      - Character info, age range, and creation date
      - Thank you message
+     - Same background image and overlay as story pages
 
 6. **Subscription Handling**
 
    - Use `SharedPreferences` to track:
      - `generated_story_count`: # of user-generated stories
      - `has_active_subscription`: bool
+     - `subscription_type`: String (monthly/annual)
    - In-app purchase flow can be minimal or stubbed:
-     - After user tries 3rd story: show paywall → if they purchase, set `has_active_subscription = true`.
+     - After user tries 3rd story: show subscription prompt dialog → if they purchase, set `has_active_subscription = true` and `subscription_type` to the selected plan.
+   - Subscription UI components:
+     - Subscription page with monthly and annual plan options
+     - Subscription cards with features, pricing, and "Best Value" badge for annual plan
+     - "Current Plan" badge for active subscription
+     - Subscription prompt dialog when free limit is reached
+     - Cancel subscription confirmation dialog
+   - Subscription State Management:
+     - Use `SubscriptionBloc` to manage subscription states:
+       - `SubscriptionRequired`: When user has consumed all free stories
+       - `FreeStoriesAvailable`: When user still has free stories remaining
+       - `SubscriptionActive`: When user has an active subscription
+     - Display appropriate messages based on state:
+       - "You've used all 2 of your free stories. Subscribe to continue creating!" for `SubscriptionRequired`
+       - "You have X free stories remaining. Subscribe for unlimited stories!" for `FreeStoriesAvailable`
 
 7. **Offline Considerations**
 
@@ -176,8 +220,8 @@ Below is the recommended **clean architecture** approach for Phase 1.
 9. **Error Handling**
 
    - Wrap AI calls in try/catch.
-   - Show user-friendly messages like “Connection timed out. Retry?”
-   - If subscription gating fails, display “You’ve reached 2 free stories.”
+   - Show user-friendly messages like "Connection timed out. Retry?"
+   - If subscription gating fails, display "You've reached 2 free stories."
 
 10. **Testing**
 
@@ -196,11 +240,7 @@ Below is the recommended **clean architecture** approach for Phase 1.
 
 **pubspec.yaml** snippet:
 
-```
-yaml
-
-
-CopyEdit
+```yaml
 dependencies:
   flutter:
     sdk: flutter
@@ -215,11 +255,7 @@ dependencies:
 
 - **main.dart** (Android & iOS):
 
-```
-dart
-
-
-CopyEdit
+```dart
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -240,11 +276,7 @@ void main() async {
 
 - Your `StoryTalesApp` can have an optional **`navigatorObservers`** parameter to track screen views automatically:
 
-```
-dart
-
-
-CopyEdit
+```dart
 class StoryTalesApp extends StatelessWidget {
   static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   static FirebaseAnalyticsObserver observer =
@@ -268,11 +300,7 @@ class StoryTalesApp extends StatelessWidget {
 
 Use a small **AnalyticsService** or direct calls to `FirebaseAnalytics.instance`. For instance:
 
-```
-dart
-
-
-CopyEdit
+```dart
 class AnalyticsService {
   final FirebaseAnalytics _analytics;
 
@@ -316,11 +344,7 @@ class AnalyticsService {
 
 Then, inside your BLoCs or UI flows, you can do something like:
 
-```
-dart
-
-
-CopyEdit
+```dart
 class StoryGenerationBloc extends Bloc<StoryGenerationEvent, StoryGenerationState> {
   final StoryRepository _repository;
   final SubscriptionService _subscriptionService;
@@ -407,6 +431,6 @@ Per , moving from Phase 1 to Phase 2 requires:
 - **≥ 4.0 average rating** in app stores
 - **≥95% story generation success rate**
 - **≥98% crash-free sessions**
-- User feedback on the MVP’s core features, guiding next-phase improvements
+- User feedback on the MVP's core features, guiding next-phase improvements
 
 Once these metrics are **reasonably** met (or the team decides to proceed), you can confidently move to **Phase 2** (User Accounts, Enhanced UX).

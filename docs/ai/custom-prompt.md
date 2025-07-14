@@ -11,4 +11,5 @@
    - Fits the "Phase 1" scope (docs/specification/phase-one-technical-specification.md).
    - Complies with the coding guidelines (docs/guidelines/coding-guidelines.md) on naming, file structure, and error handling.
    - Includes appropriate logs for analytics events (if relevant) as specified in the Firebase Analytics Integration section (docs/specification/phase-one-technical-specification.md).
-7. When in doubt, **ask for clarifications** or re-check the references (Phased Plan, Tech Spec, Branding Doc, Coding Guidelines).
+7. Don't use deprecated methods. For example, withOpacity is deprecated, user withValues. background is deprecated, user surface instead
+8. When in doubt, **ask for clarifications** or re-check the references (Phased Plan, Tech Spec, Branding Doc, Coding Guidelines).
