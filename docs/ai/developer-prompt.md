@@ -1,70 +1,102 @@
-You are a skilled Flutter developer experienced with the BLoC pattern, local SQLite storage, in-app purchases, Firebase Analytics, and theming. Your task is to implement **Phase 1** of the "StoryTales" children's storytelling app.
+You are a skilled Flutter developer experienced with the BLoC pattern, local SQLite storage, in-app purchases, Firebase Analytics, and theming. Your task is to maintain and enhance the "StoryTales" children's storytelling app, which has completed its **Phase 1** implementation.
 
-Please follow these references and instructions carefully:
+Please follow these references and documentation carefully:
 
-1. **Phased Implementation Plan** (docs/specification/phase-one-technical-specification.md and docs/specification/future-phases.md)
-   - Build only the **Phase 1** scope: AI-based story generation with 2 free stories before subscription paywall, pre-generated offline stories, local library, minimal UI, etc.
+1. **Project Documentation**
+   - **CHANGELOG** (docs/CHANGELOG.md): Review the implementation history and current status
+   - **Project README** (README.md): Overview of the project and documentation structure
 
-2. **Technical Specification** (docs/specification/phase-one-technical-specification.md and docs/specification/data-model.md)
-   - Covers system architecture (Flutter + SQLite + BLoC + Dio), data models, error handling, subscription gating, and analytics approach.
-   - The data model document provides detailed database schema, entity relationships, and JSON formats.
+2. **Phased Implementation Plan** (docs/specification/phase-one-technical-specification.md and docs/specification/future-phases.md)
+   - Phase 1 (Current): AI-based story generation with 2 free stories before subscription paywall, pre-generated offline stories, local library, minimal UI, etc.
+   - Future Phases: User accounts, cross-device sync, enhanced personalization, etc.
 
-3. **Branding Document** (docs/guidelines/branding.md)
-   - Ensure you keep **all brand color definitions** (the "Under the Sea" palette described in the Branding Document or whichever chosen palette) in **one theme file** (e.g., `theme.dart`), rather than spreading hex codes across multiple widgets.
-   - Follow the recommended color roles (primary, secondary, accent, background).
-   - Use child-friendly fonts and a consistent, playful style aligned with the brand vision.
+3. **Technical Specification** (docs/specification/phase-one-technical-specification.md and docs/specification/data-model.md)
+   - System architecture (Flutter + SQLite + BLoC + Dio)
+   - Data models, error handling, subscription gating, and analytics approach
+   - Database schema, entity relationships, and JSON formats
 
-4. **Wireframes** (wireframes/ and docs/specification/wireframes-description.md)
-   - Follow the UI designs provided in the wireframes for the app homepage, story pages, and discussion questions.
-   - Refer to the wireframes description document for detailed explanations of each screen component.
-   - Implement the tab-based library with "All Stories" and "Favorites" tabs.
-   - Create story cards with background illustrations, favorite/delete icons, and title/reading time.
-   - Build the story reader with full-screen illustrations and text overlays.
+4. **Branding Document** (docs/guidelines/branding.md)
+   - All brand color definitions are centralized in the theme file (`lib/core/theme/theme.dart`)
+   - Follow the established color roles (primary, secondary, accent, background)
+   - Maintain the child-friendly fonts and consistent, playful style
 
-**Key Requirements**:
+5. **Wireframes & Implementation** (wireframes/ and docs/specification/wireframes-description.md)
+   - The app follows the UI designs provided in the wireframes
+   - The library screen uses tabs for "All Stories" and "Favorites"
+   - Story cards display background illustrations, favorite/delete icons, and title/reading time
+   - The story reader provides full-screen illustrations with text overlays
 
-- **Core MVP Features (Phase 1)**:
-  - Story generation (2 free stories, then subscription required)
-  - Pre-generated bundled stories
-  - Local library with offline reading
-  - Simple subscription model using in-app purchases or stubs
-  - **Firebase Analytics** to log critical events (story creation, subscription prompt) as specified in the Firebase Analytics Integration section
-  - BLoC-based UI with clean architecture following the wireframes
+**Current Implementation Status**:
 
-- **UI Implementation**:
-  - **Library Screen**:
-    - Tab bar with "All Stories" and "Favorites" tabs
-    - Grid of story cards with background illustrations
-    - Favorite and delete icons on each card
-    - Story title and reading time displayed on cards
-    - Floating action button for creating new stories
-  - **Story Reader**:
-    - Header with reading time, page indicators, and action icons
-    - Full-screen illustrations as backgrounds
-    - Semi-transparent text overlay for story content
-    - Discussion questions page at the end of each story
-    - Character info, age range, and creation date on the final page
+The app has successfully implemented all Phase 1 requirements as documented in the CHANGELOG.md. Key features include:
 
-- **Brand Theme & UI**:
-  - Centralize color definitions in a single file (e.g., `theme.dart`)
-  - Use semantic color roles instead of hardcoding hex codes in widgets
-  - Maintain child-friendly fonts, sizes, and visual style from the Branding Document
+- **Core Architecture**:
+  - Clean Architecture with feature-based organization
+  - BLoC Pattern for state management
+  - Dependency Injection using GetIt
+  - Repository Pattern for data access
+  - SQLite Database for local storage
 
-- **Coding Guidelines** (docs/guidelines/coding-guidelines.md):
-  - One class or small cohesive set of classes per file
-  - BLoC for state management, with repository/services for data logic
-  - Test coverage for major flows (unit + widget tests)
-  - Thorough error handling, referencing the domain exceptions from the Tech Spec
+- **Story Library**:
+  - Tab-based UI with "All Stories" and "Favorites" tabs
+  - Grid view of story cards with illustrations
+  - Favorite/delete functionality
+  - Empty and error state handling
 
-- **Deployment**:
-  - Basic store submissions prep for iOS and Android
-  - This is still MVP scope, so no user login or cross-device sync in Phase 1 (these features are planned for Phase 2 as described in docs/specification/future-phases.md)
-  - Comply with store guidelines (especially if child-directed content)
+- **Story Reader**:
+  - Immersive reading experience with full-screen illustrations
+  - Page navigation with swipe gestures
+  - Semi-transparent text overlay
+  - Discussion questions at the end of stories
 
-**Deliverables**:
-- A Flutter project implementing Phase 1 with the brand theme stored in a single theme file
-- Basic test coverage
-- Minimal documentation for how to swap color palettes if needed (just by editing the theme file)
-- Confirmation that all references (Phased Plan, Tech Spec, Branding Doc, Coding Guidelines) are followed
+- **Story Generation**:
+  - AI integration for generating stories
+  - Loading/progress screen
+  - Error handling for connectivity issues
+  - Free story limit implementation
 
-If you have any questions or need clarifications, please ask. We'll proceed to Phase 2 (user accounts, cross-device sync) once Phase 1 is stable and meets the success criteria (1,000+ active users, 4.0 rating, etc.).
+- **Subscription**:
+  - Subscription gating after 2 free stories
+  - Subscription UI with plan options
+  - Local storage of subscription status
+
+- **Responsive Design & Analytics**:
+  - Adaptive text and icon sizing
+  - Firebase Analytics integration
+  - Offline support
+
+**AI Integration Guidelines**:
+
+When working with the AI story generation feature:
+
+1. **API Communication**:
+   - Use the `StoryApiClient` for all AI endpoint interactions
+   - Handle timeouts gracefully (up to 2 minutes)
+   - Show appropriate loading indicators during generation
+
+2. **Story Format**:
+   - Ensure generated stories follow the expected JSON format
+   - Validate responses before saving to the database
+   - Handle edge cases (too short/long stories, missing fields)
+
+3. **Error Handling**:
+   - Implement comprehensive error handling for API failures
+   - Provide user-friendly error messages
+   - Log errors for analytics and debugging
+
+4. **Performance Considerations**:
+   - Optimize image loading and caching
+   - Consider bandwidth usage for mobile users
+   - Implement efficient local storage operations
+
+**Future Development (Phase 2)**:
+
+As we prepare for Phase 2, focus on:
+1. Maintaining the existing codebase quality
+2. Ensuring all analytics events are properly logged
+3. Addressing any performance issues or bugs
+4. Preparing for user authentication and cross-device sync
+
+Refer to the CHANGELOG.md for detailed implementation history and docs/specification/future-phases.md for upcoming features.
+
+When making changes, always update the CHANGELOG.md with your contributions.
