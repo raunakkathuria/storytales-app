@@ -1,7 +1,7 @@
 {
-  "apiBaseUrl": "https://storytales-api-gateway-5seg9buf.an.gateway.dev",
+  "apiBaseUrl": "",
   "apiTimeoutSeconds": 120,
   "useMockData": false,
   "environment": "production",
-  "apiKey": "your-production-api-key-here"
+  "apiKey": ""
 }
