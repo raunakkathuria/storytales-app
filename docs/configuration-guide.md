@@ -107,6 +107,37 @@ The `apiTimeoutSeconds` setting controls how long the app will wait for API resp
 }
 ```
 
+## Firebase Configuration
+
+### Development vs Production
+
+The app automatically detects the environment and configures Firebase accordingly:
+
+**Development Mode (kDebugMode = true):**
+- Attempts to connect to Firebase emulators (localhost:9099 for Auth, localhost:8080 for Firestore)
+- Falls back to production Firebase if emulators are not available
+- Logs connection status for debugging
+
+**Production Mode (kDebugMode = false):**
+- Uses production Firebase services directly
+- Enhanced security and performance optimizations
+
+### Firebase Emulator Setup
+
+For local development with Firebase emulators:
+
+1. Install Firebase CLI: `npm install -g firebase-tools`
+2. Start emulators: `firebase emulators:start --only auth,firestore`
+3. The app will automatically connect to emulators in debug mode
+
+### API Key Configuration
+
+**Important:** Never commit actual API keys to version control.
+
+- Production API keys should be configured through secure deployment processes
+- Development configurations can use placeholder values
+- The app logs API key configuration status (masked for security)
+
 ## Troubleshooting
 
 ### "No internet connection" Error
@@ -127,20 +158,45 @@ If the app is having trouble connecting to the API:
 3. Try accessing the API directly with a tool like curl or Postman
 4. Check if your device can reach the API endpoint (e.g., firewall issues)
 
+### Firebase Connection Issues
+
+If you're having trouble with Firebase:
+
+1. **Emulator Connection Failed:** Check if Firebase emulators are running
+2. **Production Connection Issues:** Verify Firebase project configuration
+3. **Authentication Problems:** Check Firebase Auth configuration and API keys
+
+### Background Generation Issues
+
+If stories aren't appearing in the library after background generation:
+
+1. Check BLoC state management logs
+2. Verify that BackgroundGenerationComplete events are being emitted
+3. Ensure library refresh events are being handled properly
+
 ## Logging
 
-The app logs configuration information when it starts up:
+The app provides comprehensive logging for debugging:
 
+### Configuration Logging
 ```
 Loading configuration for environment: development
 Loaded configuration: AppConfig(apiBaseUrl: http://0.0.0.0:3000, apiTimeoutSeconds: 120, useMockData: true, environment: development)
 ```
 
-When making API calls, it also logs:
-
+### API Client Logging
 ```
 Using API endpoint: http://0.0.0.0:3000
 Mock data enabled: true
+API key configured: Yes (32 chars)
+Making API request to: http://0.0.0.0:3000/story
 ```
 
-These logs can help diagnose configuration issues.
+### Firebase Logging
+```
+🔧 Connected to Firebase emulators for development
+🚀 Using production Firebase services
+⚠️ Could not connect to emulators, using production Firebase
+```
+
+These logs help diagnose configuration and connectivity issues.
