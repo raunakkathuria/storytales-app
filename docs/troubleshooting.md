@@ -292,6 +292,80 @@ This document provides solutions for common issues that developers might encount
 
 ## State Management Issues
 
+### Library Not Refreshing After Background Story Generation
+
+**Symptoms:**
+- Stories are generated successfully but don't appear in the library
+- Library only updates after manual refresh or app restart
+- Background generation completes but UI doesn't reflect changes
+
+**Possible Causes:**
+1. BLoC emitter is disposed when dialog closes
+2. BackgroundGenerationComplete event is not being emitted
+3. Library BLoC is not listening for background generation events
+
+**Solutions:**
+
+1. **Fix BLoC Emitter Lifecycle**
+   - Use Timer.run() to schedule events after dialog disposal:
+
+   ```dart
+   // In StoryGenerationBloc
+   Future<void> _onGenerateStoryBackground(
+     GenerateStoryBackground event,
+     Emitter<StoryGenerationState> emit,
+   ) async {
+     try {
+       // Generate story logic...
+       final story = await _generateStory(event);
+
+       // Schedule event after current execution context
+       Timer.run(() {
+         if (!emit.isDone) {
+           emit(BackgroundGenerationComplete(story: story));
+         }
+       });
+     } catch (e) {
+       // Error handling
+     }
+   }
+   ```
+
+2. **Ensure Library BLoC Listens for Background Events**
+   - Add event handler in LibraryBloc:
+
+   ```dart
+   LibraryBloc() : super(LibraryInitial()) {
+     on<LoadLibrary>(_onLoadLibrary);
+     on<RefreshLibrary>(_onRefreshLibrary);
+     on<BackgroundGenerationComplete>(_onBackgroundGenerationComplete);
+   }
+
+   Future<void> _onBackgroundGenerationComplete(
+     BackgroundGenerationComplete event,
+     Emitter<LibraryState> emit,
+   ) async {
+     // Refresh library when background generation completes
+     add(RefreshLibrary());
+   }
+   ```
+
+3. **Use Cross-BLoC Communication**
+   - Implement proper event communication between BLoCs:
+
+   ```dart
+   // In story generation dialog
+   BlocListener<StoryGenerationBloc, StoryGenerationState>(
+     listener: (context, state) {
+       if (state is BackgroundGenerationComplete) {
+         // Notify library to refresh
+         context.read<LibraryBloc>().add(RefreshLibrary());
+       }
+     },
+     child: // Dialog content
+   )
+   ```
+
 ### BLoC Events Not Triggering State Changes
 
 **Symptoms:**
@@ -303,6 +377,7 @@ This document provides solutions for common issues that developers might encount
 1. Event handler is not registered
 2. Event handler has an error
 3. State comparison is preventing state updates
+4. Emitter is disposed or in "done" state
 
 **Solutions:**
 
@@ -319,12 +394,13 @@ This document provides solutions for common issues that developers might encount
      on<GetFreeStoriesRemaining>(_onGetFreeStoriesRemaining);
      on<PurchaseSubscription>(_onPurchaseSubscription);
      on<RestoreSubscription>(_onRestoreSubscription);
-     on<RefreshFreeStoriesCount>(_onRefreshFreeStoriesCount); // Don't forget this!
+     on<RefreshFreeStoriesCount>(_onRefreshFreeStoriesCount);
+     on<BackgroundGenerationComplete>(_onBackgroundGenerationComplete); // Add new events
    }
    ```
 
-2. **Add Logging to Event Handlers**
-   - Add logging to event handlers to track execution:
+2. **Check Emitter State Before Emission**
+   - Always verify emitter is not done before emitting:
 
    ```dart
    Future<void> _onRefreshFreeStoriesCount(
@@ -335,40 +411,24 @@ This document provides solutions for common issues that developers might encount
      try {
        final freeStoriesRemaining = await _repository.getFreeStoriesRemaining();
        _loggingService.info('Free stories remaining: $freeStoriesRemaining');
-       // ...
+
+       // Check emitter state before emission
+       if (!emit.isDone) {
+         emit(FreeStoriesAvailable(
+           freeStoriesRemaining: freeStoriesRemaining,
+           totalFreeStories: 2,
+         ));
+       }
      } catch (e) {
        _loggingService.error('Error refreshing free stories count: $e');
-       // ...
+       if (!emit.isDone) {
+         emit(SubscriptionError(message: e.toString()));
+       }
      }
    }
    ```
 
-3. **Check Equatable Implementation**
-   - Ensure the state class properly implements `Equatable`:
-
-   ```dart
-   class SubscriptionState extends Equatable {
-     const SubscriptionState();
-
-     @override
-     List<Object?> get props => []; // Override in subclasses
-   }
-
-   class FreeStoriesAvailable extends SubscriptionState {
-     final int freeStoriesRemaining;
-     final int totalFreeStories;
-
-     const FreeStoriesAvailable({
-       required this.freeStoriesRemaining,
-       required this.totalFreeStories,
-     });
-
-     @override
-     List<Object?> get props => [freeStoriesRemaining, totalFreeStories];
-   }
-   ```
-
-4. **Use BlocObserver for Debugging**
+3. **Use BlocObserver for Debugging**
    - Implement a custom `BlocObserver` to log all BLoC events and state changes:
 
    ```dart
@@ -397,13 +457,21 @@ This document provides solutions for common issues that developers might encount
    }
    ```
 
-   Then register it in `main.dart`:
+4. **Implement Proper State Equality**
+   - Ensure states implement Equatable correctly:
 
    ```dart
-   void main() {
-     // ...
-     Bloc.observer = AppBlocObserver(sl<LoggingService>());
-     // ...
+   class LibraryLoaded extends LibraryState {
+     final List<Story> stories;
+     final List<Story> favoriteStories;
+
+     const LibraryLoaded({
+       required this.stories,
+       required this.favoriteStories,
+     });
+
+     @override
+     List<Object?> get props => [stories, favoriteStories];
    }
    ```
 
