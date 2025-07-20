@@ -17,7 +17,7 @@ class Environment {
   /// This should be set to the appropriate environment before building the app.
   /// For example, in a CI/CD pipeline, this would be set to 'production' for
   /// production builds.
-  static const String currentEnvironment = production;
+  static const String currentEnvironment = development;
 
   /// Returns true if the current environment is production.
   static bool get isProduction => currentEnvironment == production;

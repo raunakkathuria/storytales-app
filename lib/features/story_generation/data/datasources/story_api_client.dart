@@ -161,7 +161,8 @@ class StoryApiClient {
         metadata['created_at'] = DateTime.now().toIso8601String();
       }
 
-      return sampleResponse;
+      // Process the mock response to transform image URLs
+      return _processApiResponse(sampleResponse);
     }
   }
 
@@ -171,14 +172,14 @@ class StoryApiClient {
     final metadata = apiResponse['metadata'] as Map<String, dynamic>;
     final data = apiResponse['data'] as Map<String, dynamic>;
 
-    // Process cover image URL - use placeholder if null
-    final coverImageUrl = data['cover_image_url'] ?? ImageService.placeholderImagePath;
+    // Process cover image URL - transform mock URLs to use configured API base URL
+    final coverImageUrl = _transformImageUrl(data['cover_image_url']);
 
     // Process pages and handle null image URLs
     final pages = (data['pages'] as List).map((page) {
       return {
         'content': page['content'],
-        'image_url': page['image_url'] ?? ImageService.placeholderImagePath,
+        'image_url': _transformImageUrl(page['image_url']),
       };
     }).toList();
 
@@ -193,5 +194,20 @@ class StoryApiClient {
         'questions': data['questions'],
       },
     };
+  }
+
+  /// Transform image URLs from mock data to use the configured API base URL
+  String _transformImageUrl(String? originalUrl) {
+    if (originalUrl == null) {
+      return ImageService.placeholderImagePath;
+    }
+
+    // If the URL contains the mock domain, replace it with the configured API base URL
+    if (originalUrl.contains('ai-service.example.com')) {
+      return originalUrl.replaceAll('https://ai-service.example.com', _appConfig.apiBaseUrl);
+    }
+
+    // If it's already a valid URL or placeholder, return as is
+    return originalUrl;
   }
 }
