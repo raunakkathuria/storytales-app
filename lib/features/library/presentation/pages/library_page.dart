@@ -16,6 +16,8 @@ import 'package:storytales/features/subscription/presentation/pages/subscription
 import 'package:storytales/features/subscription/presentation/bloc/subscription_bloc.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_event.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_state.dart';
+import 'package:storytales/features/story_generation/presentation/bloc/story_generation_bloc.dart';
+import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
 
 /// The main library page that displays the user's stories.
 class LibraryPage extends StatefulWidget {
@@ -110,84 +112,108 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
         ],
       ),
       body: SafeArea(
-        child: BlocBuilder<LibraryBloc, LibraryState>(
-          builder: (context, state) {
-            if (state is LibraryLoading) {
-              return const Center(
-                child: CircularProgressIndicator(),
+        child: BlocListener<StoryGenerationBloc, StoryGenerationState>(
+          listener: (context, state) {
+            // When a story is generated in the background, refresh the library
+            if (state is BackgroundGenerationComplete) {
+              // Refresh the library to show the new story
+              context.read<LibraryBloc>().add(const LoadAllStories());
+
+              // Also refresh the subscription state to update free stories count
+              context.read<SubscriptionBloc>().add(const RefreshFreeStoriesCount());
+            }
+
+            // Also handle background generation failure
+            if (state is BackgroundGenerationFailure) {
+              // Show error message to user
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Story generation failed: ${state.error}'),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 5),
+                ),
               );
-            } else if (state is LibraryLoaded) {
-              return _buildStoryGrid(state.stories);
-            } else if (state is LibraryEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const ResponsiveIcon(
-                        icon: Icons.auto_stories,
-                        sizeCategory: IconSizeCategory.large,
-                        color: StoryTalesTheme.accentColor,
-                      ),
-                      const SizedBox(height: 16),
-                      ResponsiveText(
-                        text: state.message,
-                        style: StoryTalesTheme.bodyMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      if (state.activeTab == LibraryTab.all)
+            }
+          },
+          child: BlocBuilder<LibraryBloc, LibraryState>(
+            builder: (context, state) {
+              if (state is LibraryLoading) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              } else if (state is LibraryLoaded) {
+                return _buildStoryGrid(state.stories);
+              } else if (state is LibraryEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const ResponsiveIcon(
+                          icon: Icons.auto_stories,
+                          sizeCategory: IconSizeCategory.large,
+                          color: StoryTalesTheme.accentColor,
+                        ),
+                        const SizedBox(height: 16),
+                        ResponsiveText(
+                          text: state.message,
+                          style: StoryTalesTheme.bodyMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        if (state.activeTab == LibraryTab.all)
+                          ElevatedButton(
+                            onPressed: () => _navigateToStoryGeneration(context),
+                            child: const ResponsiveText(
+                              text: 'Create Your First Story',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: StoryTalesTheme.fontFamilyBody,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              } else if (state is LibraryError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const ResponsiveIcon(
+                          icon: Icons.error_outline,
+                          sizeCategory: IconSizeCategory.large,
+                          color: StoryTalesTheme.errorColor,
+                        ),
+                        const SizedBox(height: 16),
+                        ResponsiveText(
+                          text: 'Error: ${state.message}',
+                          style: StoryTalesTheme.bodyMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
                         ElevatedButton(
-                          onPressed: () => _navigateToStoryGeneration(context),
+                          onPressed: () => context.read<LibraryBloc>().add(const LoadAllStories()),
                           child: const ResponsiveText(
-                            text: 'Create Your First Story',
+                            text: 'Try Again',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontFamily: StoryTalesTheme.fontFamilyBody,
                             ),
                           ),
                         ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            } else if (state is LibraryError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const ResponsiveIcon(
-                        icon: Icons.error_outline,
-                        sizeCategory: IconSizeCategory.large,
-                        color: StoryTalesTheme.errorColor,
-                      ),
-                      const SizedBox(height: 16),
-                      ResponsiveText(
-                        text: 'Error: ${state.message}',
-                        style: StoryTalesTheme.bodyMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () => context.read<LibraryBloc>().add(const LoadAllStories()),
-                        child: const ResponsiveText(
-                          text: 'Try Again',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontFamily: StoryTalesTheme.fontFamilyBody,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
