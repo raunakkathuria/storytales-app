@@ -45,3 +45,77 @@ class ResetStoryGeneration extends StoryGenerationEvent {
 class GetFreeStoriesRemaining extends StoryGenerationEvent {
   const GetFreeStoriesRemaining();
 }
+
+/// Event to start the countdown before background generation.
+class StartGenerationCountdown extends StoryGenerationEvent {
+  final String prompt;
+  final String? ageRange;
+  final String? theme;
+  final String? genre;
+
+  const StartGenerationCountdown({
+    required this.prompt,
+    this.ageRange,
+    this.theme,
+    this.genre,
+  });
+
+  @override
+  List<Object?> get props => [prompt, ageRange, theme, genre];
+}
+
+/// Event to start background story generation.
+class StartBackgroundGeneration extends StoryGenerationEvent {
+  final String prompt;
+  final String? ageRange;
+  final String? theme;
+  final String? genre;
+
+  const StartBackgroundGeneration({
+    required this.prompt,
+    this.ageRange,
+    this.theme,
+    this.genre,
+  });
+
+  @override
+  List<Object?> get props => [prompt, ageRange, theme, genre];
+}
+
+/// Event when background generation completes.
+class BackgroundGenerationCompleted extends StoryGenerationEvent {
+  final String tempStoryId;
+
+  const BackgroundGenerationCompleted({required this.tempStoryId});
+
+  @override
+  List<Object?> get props => [tempStoryId];
+}
+
+/// Event when background generation completes successfully with a story.
+class BackgroundGenerationCompletedWithStory extends StoryGenerationEvent {
+  final String tempStoryId;
+  final dynamic story; // Using dynamic to avoid import issues
+
+  const BackgroundGenerationCompletedWithStory({
+    required this.tempStoryId,
+    required this.story,
+  });
+
+  @override
+  List<Object?> get props => [tempStoryId, story];
+}
+
+/// Event when background generation fails.
+class BackgroundGenerationFailed extends StoryGenerationEvent {
+  final String tempStoryId;
+  final String error;
+
+  const BackgroundGenerationFailed({
+    required this.tempStoryId,
+    required this.error,
+  });
+
+  @override
+  List<Object?> get props => [tempStoryId, error];
+}
