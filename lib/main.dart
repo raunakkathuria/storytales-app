@@ -38,12 +38,12 @@ void main() async {
       // Connect to Firestore emulator
       FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
 
-      print('🔧 Connected to Firebase emulators for development');
+      debugPrint('🔧 Connected to Firebase emulators for development');
     } catch (e) {
-      print('⚠️ Could not connect to emulators, using production Firebase: $e');
+      debugPrint('⚠️ Could not connect to emulators, using production Firebase: $e');
     }
   } else {
-    print('🚀 Using production Firebase services');
+    debugPrint('🚀 Using production Firebase services');
   }
 
   // Initialize Crashlytics

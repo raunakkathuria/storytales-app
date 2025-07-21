@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:storytales/core/config/app_config.dart';
 import 'package:storytales/core/di/injection_container.dart';
+import 'package:storytales/core/services/analytics/analytics_service.dart';
 import 'package:storytales/core/services/connectivity/connectivity_service.dart';
 import 'package:storytales/core/services/image/image_service.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
@@ -13,6 +14,7 @@ class StoryApiClient {
   final Dio _dio;
   final ConnectivityService _connectivityService;
   final LoggingService _loggingService;
+  final AnalyticsService _analyticsService;
   final AppConfig _appConfig;
 
   StoryApiClient({
@@ -22,7 +24,8 @@ class StoryApiClient {
   })  : _dio = dio,
         _connectivityService = connectivityService,
         _appConfig = appConfig,
-        _loggingService = sl<LoggingService>();
+        _loggingService = sl<LoggingService>(),
+        _analyticsService = sl<AnalyticsService>();
 
   /// Generate a story using the local API.
   Future<Map<String, dynamic>> generateStory({
@@ -129,41 +132,123 @@ class StoryApiClient {
       }
       _loggingService.error('Error calling API: $e');
 
-      // Check if we should use mock data based on configuration
-      if (!_appConfig.useMockData) {
-        // In production, we don't want to use mock data, so rethrow the error
-        throw Exception('Failed to generate story: $e');
+      // Always throw the error to inform the user - no silent fallbacks
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while crafting your tale. Please try again!';
+      String errorType = 'unknown_error';
+      String technicalDetails = e.toString();
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorType = 'timeout_error';
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to weave your tale! The magical connection seems slow. Please check your internet and let\'s try again!';
+            technicalDetails = 'Timeout: ${e.type.name} - ${e.message}';
+            break;
+          case DioExceptionType.connectionError:
+            errorType = 'connection_error';
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t reach the magical story realm right now. Please check your internet connection and we\'ll try to reconnect!';
+            technicalDetails = 'Connection error: ${e.message}';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 401) {
+              errorType = 'auth_error';
+              errorMessage = '🔮 The Story Wizard\'s magical key isn\'t working properly. We\'re checking with the wizard council to fix this!';
+              technicalDetails = 'Authentication failed: HTTP $statusCode';
+            } else if (statusCode == 429) {
+              errorType = 'rate_limit_error';
+              errorMessage = '✨ Wow! So many story requests! Our Story Wizard is a bit overwhelmed. Please wait a moment and try again!';
+              technicalDetails = 'Rate limited: HTTP $statusCode';
+            } else if (statusCode == 500) {
+              errorType = 'server_error';
+              errorMessage = '🏰 The Story Wizard\'s castle is having some magical difficulties right now. We\'re working to fix it - please try again in a little while!';
+              technicalDetails = 'Server error: HTTP $statusCode - ${e.response?.data}';
+            } else {
+              errorType = 'api_error';
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode). Let\'s try casting the story spell again!';
+              technicalDetails = 'API error: HTTP $statusCode - ${e.response?.data}';
+            }
+            break;
+          case DioExceptionType.cancel:
+            errorType = 'cancelled_error';
+            errorMessage = '📖 The story creation was cancelled. No worries - the Story Wizard is ready whenever you are!';
+            technicalDetails = 'Request cancelled by user';
+            break;
+          default:
+            errorType = 'dio_error';
+            errorMessage = '🌙 Something unexpected happened in the magical story realm. Our Story Wizard is investigating - please try again!';
+            technicalDetails = 'DioException: ${e.type.name} - ${e.message}';
+        }
+      } else {
+        errorType = 'unknown_error';
+        errorMessage = '🔮 The Story Wizard encountered an unknown magical phenomenon. We\'re extremely sorry and checking with the wizard council!';
+        technicalDetails = 'Unknown error: ${e.toString()}';
       }
 
-      // Fall back to sample response during development
-      final jsonString = await rootBundle.loadString('assets/data/sample-ai-response.json');
-      final sampleResponse = json.decode(jsonString);
+      // Log detailed analytics for story generation failures
+      await _analyticsService.logError(
+        errorType: 'story_generation_$errorType',
+        errorMessage: errorMessage, // User-friendly message
+        errorDetails: json.encode({
+          'technical_error': technicalDetails,
+          'prompt_length': prompt.length,
+          'age_range': ageRange,
+          'theme': theme,
+          'genre': genre,
+          'api_endpoint': _appConfig.apiBaseUrl,
+          'environment': _appConfig.environment,
+          'timestamp': DateTime.now().toIso8601String(),
+        }),
+      );
 
-      // Update the sample response with the provided parameters
-      if (sampleResponse is Map<String, dynamic> &&
-          sampleResponse.containsKey('metadata') &&
-          sampleResponse.containsKey('data')) {
-        final metadata = sampleResponse['metadata'] as Map<String, dynamic>;
-
-        if (ageRange != null) {
-          metadata['age_range'] = ageRange;
-        }
-
-        if (theme != null) {
-          metadata['theme'] = theme;
-        }
-
-        if (genre != null) {
-          metadata['genre'] = genre;
-        }
-
-        metadata['original_prompt'] = prompt;
-        metadata['created_at'] = DateTime.now().toIso8601String();
-      }
-
-      // Process the mock response to transform image URLs
-      return _processApiResponse(sampleResponse);
+      throw Exception(errorMessage);
     }
+  }
+
+  /// Generate a sample story for development/testing purposes.
+  /// This method explicitly returns mock data and should only be used
+  /// when the user explicitly chooses to view a sample story.
+  Future<Map<String, dynamic>> generateSampleStory({
+    String? prompt,
+    String? ageRange,
+    String? theme,
+    String? genre,
+  }) async {
+    _loggingService.info('Generating sample story for development/testing');
+
+    // Load the sample response
+    final jsonString = await rootBundle.loadString('assets/data/sample-ai-response.json');
+    final sampleResponse = json.decode(jsonString);
+
+    // Update the sample response with the provided parameters if available
+    if (sampleResponse is Map<String, dynamic> &&
+        sampleResponse.containsKey('metadata') &&
+        sampleResponse.containsKey('data')) {
+      final metadata = sampleResponse['metadata'] as Map<String, dynamic>;
+
+      if (ageRange != null) {
+        metadata['age_range'] = ageRange;
+      }
+
+      if (theme != null) {
+        metadata['theme'] = theme;
+      }
+
+      if (genre != null) {
+        metadata['genre'] = genre;
+      }
+
+      if (prompt != null) {
+        metadata['original_prompt'] = prompt;
+      }
+
+      metadata['created_at'] = DateTime.now().toIso8601String();
+    }
+
+    // Process the mock response to transform image URLs
+    return _processApiResponse(sampleResponse);
   }
 
   /// Process the API response to handle null image URLs and ensure correct format

@@ -167,15 +167,6 @@ class StoryGenerationBloc
     }
   }
 
-  /// Creates a stream that emits countdown values from 5 to 0.
-  Stream<int> _createCountdownStream() async* {
-    for (int i = 5; i >= 0; i--) {
-      yield i;
-      if (i > 0) {
-        await Future.delayed(const Duration(seconds: 1));
-      }
-    }
-  }
 
   /// Handle the StartBackgroundGeneration event.
   Future<void> _onStartBackgroundGeneration(
@@ -229,12 +220,12 @@ class StoryGenerationBloc
   /// Start background story generation.
   void _startBackgroundGeneration(
     String tempStoryId,
-    StartBackgroundGeneration event,
+    StartBackgroundGeneration backgroundEvent,
     Emitter<StoryGenerationState> emit,
   ) {
     // Use a timer to run the background generation independently
     final timer = Timer(const Duration(milliseconds: 100), () {
-      _performBackgroundGeneration(tempStoryId, event);
+      _performBackgroundGeneration(tempStoryId, backgroundEvent);
     });
 
     _backgroundGenerationTimers[tempStoryId] = timer;
@@ -243,14 +234,14 @@ class StoryGenerationBloc
   /// Perform the actual background story generation.
   Future<void> _performBackgroundGeneration(
     String tempStoryId,
-    StartBackgroundGeneration event,
+    StartBackgroundGeneration generationEvent,
   ) async {
     try {
       final story = await _repository.generateStory(
-        prompt: event.prompt,
-        ageRange: event.ageRange,
-        theme: event.theme,
-        genre: event.genre,
+        prompt: generationEvent.prompt,
+        ageRange: generationEvent.ageRange,
+        theme: generationEvent.theme,
+        genre: generationEvent.genre,
       );
 
       // Use add() to trigger events through the normal flow

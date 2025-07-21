@@ -295,7 +295,6 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
           story: story,
           onTap: () => _navigateToStoryReader(context, story),
           onFavoriteToggle: () => _toggleFavorite(context, story),
-          onDelete: () => _deleteStory(context, story),
         );
       },
     );
@@ -348,20 +347,4 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
     context.read<LibraryBloc>().add(ToggleFavorite(storyId: story.id));
   }
 
-  void _deleteStory(BuildContext context, Story story) {
-    ConfirmationDialog.show(
-      context: context,
-      title: 'Delete Story',
-      content: 'Are you sure you want to delete "${story.title}"?',
-      confirmText: 'Yes',
-      cancelText: 'No',
-      onConfirm: () {
-        context.read<LibraryBloc>().add(DeleteStory(storyId: story.id));
-
-        // Refresh the free stories count in the subscription bloc
-        // This ensures the subscription page shows the correct count after a story is deleted
-        context.read<SubscriptionBloc>().add(const RefreshFreeStoriesCount());
-      },
-    );
-  }
 }

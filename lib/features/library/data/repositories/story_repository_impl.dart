@@ -238,10 +238,6 @@ class StoryRepositoryImpl implements StoryRepository {
     await updateStory(updatedStory);
   }
 
-  @override
-  Future<void> deleteStory(String id) async {
-    await _databaseService.delete('stories', id);
-  }
 
   @override
   Future<void> loadPreGeneratedStories() async {
