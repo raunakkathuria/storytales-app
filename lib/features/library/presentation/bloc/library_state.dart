@@ -55,25 +55,6 @@ class LibraryError extends LibraryState {
   List<Object?> get props => [message];
 }
 
-/// State when a story is being deleted.
-class StoryDeleting extends LibraryState {
-  final String storyId;
-
-  const StoryDeleting({required this.storyId});
-
-  @override
-  List<Object?> get props => [storyId];
-}
-
-/// State when a story has been deleted.
-class StoryDeleted extends LibraryState {
-  final String storyId;
-
-  const StoryDeleted({required this.storyId});
-
-  @override
-  List<Object?> get props => [storyId];
-}
 
 /// State when a story's favorite status is being toggled.
 class FavoriteToggling extends LibraryState {

@@ -28,15 +28,6 @@ class ToggleFavorite extends LibraryEvent {
   List<Object?> get props => [storyId];
 }
 
-/// Event to delete a story.
-class DeleteStory extends LibraryEvent {
-  final String storyId;
-
-  const DeleteStory({required this.storyId});
-
-  @override
-  List<Object?> get props => [storyId];
-}
 
 /// Event to filter stories by tab.
 class FilterByTab extends LibraryEvent {

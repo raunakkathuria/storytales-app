@@ -91,6 +91,35 @@ For a more detailed changelog with implementation status, see [docs/CHANGELOG.md
 - Enhanced API client logging for better debugging and monitoring
 - Better error handling in story generation with detailed DioException logging
 
+## [1.0.4] - 2025-07-21 - Error Handling & User Experience Improvements
+
+### Added
+- Comprehensive error handling with user-friendly, creative "Story Wizard" themed error messages
+- Specific error messages for different network failure scenarios (timeout, connection error, authentication, rate limiting, server errors)
+- Enhanced API client logging for better debugging and troubleshooting
+- `generateSampleStory` method for explicit development/testing purposes
+- **Comprehensive analytics tracking** for story generation failures with detailed error categorization
+
+### Changed
+- **BREAKING**: Removed silent fallback to mock data when API calls fail
+- Story generation now always informs users of actual errors instead of silently returning sample stories
+- Error messages are now creative and child-friendly, using magical storytelling themes (🧙‍♂️, 🌟, 🔮, etc.)
+- Enhanced DioException handling with specific error categorization
+- Analytics now capture detailed failure information including error types, technical details, and user context
+
+### Fixed
+- Users will no longer receive unexpected sample stories when API calls fail
+- Transparent error reporting ensures users understand when story generation fails
+- Proper error propagation through the application layers
+
+### Technical Improvements
+- Better separation of concerns between production and development/testing scenarios
+- Enhanced logging for API requests and responses
+- Improved error handling architecture for better user experience
+- **Analytics Integration**: Detailed error tracking with categorized failure types (timeout_error, connection_error, auth_error, rate_limit_error, server_error, etc.)
+- Rich analytics data including prompt context, API endpoints, environment details, and timestamps
+- Both user-friendly and technical error details captured for comprehensive monitoring
+
 ## [Unreleased] - Phase 2 (In Progress)
 
 ### Completed

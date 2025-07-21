@@ -20,8 +20,6 @@ abstract class StoryRepository {
   /// Toggle the favorite status of a story.
   Future<void> toggleFavorite(String id);
 
-  /// Delete a story from the local database.
-  Future<void> deleteStory(String id);
 
   /// Load pre-generated stories from the assets and save them to the local database.
   Future<void> loadPreGeneratedStories();
