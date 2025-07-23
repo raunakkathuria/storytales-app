@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:storytales/core/services/image/image_service.dart';
 import 'package:storytales/core/services/local_storage/database_service.dart';
 import 'package:storytales/features/library/data/models/story_model.dart';
 import 'package:storytales/features/library/domain/entities/story.dart';
@@ -14,8 +13,9 @@ class StoryRepositoryImpl implements StoryRepository {
   final DatabaseService _databaseService;
   final Uuid _uuid = const Uuid();
 
-  StoryRepositoryImpl({required DatabaseService databaseService})
-      : _databaseService = databaseService;
+  StoryRepositoryImpl({
+    required DatabaseService databaseService,
+  }) : _databaseService = databaseService;
 
   @override
   Future<List<Story>> getAllStories() async {
@@ -268,70 +268,13 @@ class StoryRepositoryImpl implements StoryRepository {
 
   @override
   Future<Story> saveAiGeneratedStory(Map<String, dynamic> aiResponse) async {
-    // Create story model from AI response
+    // Create story model from AI response (uses API image URLs directly)
     final storyModel = StoryModel.fromAiResponseJson(aiResponse);
 
-    // Download and save images locally
-    final updatedStoryModel = await _downloadAndSaveImages(storyModel);
-
     // Save story to database
-    await saveStory(updatedStoryModel);
+    await saveStory(storyModel);
 
-    return updatedStoryModel;
+    return storyModel;
   }
 
-  /// Downloads images from URLs and saves them locally.
-  /// Returns an updated story model with local image paths.
-  Future<StoryModel> _downloadAndSaveImages(StoryModel storyModel) async {
-    final imageService = ImageService();
-
-    // Process cover image
-    String updatedCoverImagePath;
-    final coverImageUrl = storyModel.coverImagePath;
-
-    if (coverImageUrl.startsWith('http')) {
-      // Download and cache the cover image
-      final coverImageFileName = 'cover_${storyModel.id}.webp';
-      updatedCoverImagePath = await imageService.downloadAndCacheImage(
-        coverImageUrl,
-        coverImageFileName
-      );
-    } else if (coverImageUrl.isEmpty) {
-      // Empty URL, use fallback
-      updatedCoverImagePath = ImageService.placeholderImagePath;
-    } else {
-      // Use the existing path
-      updatedCoverImagePath = coverImageUrl;
-    }
-
-    // Process page images
-    final updatedPages = <StoryPageModel>[];
-    for (var i = 0; i < storyModel.pages.length; i++) {
-      final page = storyModel.pages[i] as StoryPageModel;
-      final pageImageUrl = page.imagePath;
-      String updatedPageImagePath;
-
-      if (pageImageUrl.startsWith('http')) {
-        // Download and cache the page image
-        final pageImageFileName = 'page_${storyModel.id}_$i.webp';
-        updatedPageImagePath = await imageService.downloadAndCacheImage(
-          pageImageUrl,
-          pageImageFileName
-        );
-      } else if (pageImageUrl.isEmpty) {
-        // Empty URL, use fallback
-        updatedPageImagePath = ImageService.placeholderImagePath;
-      } else {
-        // Use the existing path
-        updatedPageImagePath = pageImageUrl;
-      }
-
-      updatedPages.add(page.copyWith(imagePath: updatedPageImagePath));
-    }
-
-    return storyModel.copyWith(
-      coverImagePath: updatedCoverImagePath,
-      pages: updatedPages,
-    );
-  }
 }
