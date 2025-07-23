@@ -139,3 +139,31 @@ class BackgroundGenerationFailure extends StoryGenerationState {
   @override
   List<Object?> get props => [tempStoryId, error];
 }
+
+/// State when a loading card should be displayed in the library.
+class ShowLoadingCard extends StoryGenerationState {
+  final String tempStoryId;
+  final String prompt;
+  final String? ageRange;
+  final DateTime startTime;
+
+  const ShowLoadingCard({
+    required this.tempStoryId,
+    required this.prompt,
+    this.ageRange,
+    required this.startTime,
+  });
+
+  @override
+  List<Object?> get props => [tempStoryId, prompt, ageRange, startTime];
+}
+
+/// State when a loading card should be removed from the library.
+class RemoveLoadingCard extends StoryGenerationState {
+  final String tempStoryId;
+
+  const RemoveLoadingCard({required this.tempStoryId});
+
+  @override
+  List<Object?> get props => [tempStoryId];
+}
