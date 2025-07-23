@@ -9,6 +9,7 @@ import 'package:storytales/features/library/presentation/bloc/library_bloc.dart'
 import 'package:storytales/features/library/presentation/bloc/library_event.dart';
 import 'package:storytales/features/library/presentation/bloc/library_state.dart';
 import 'package:storytales/features/library/presentation/widgets/story_card.dart';
+import 'package:storytales/features/library/presentation/widgets/loading_story_card.dart';
 import 'package:storytales/features/story_generation/presentation/widgets/story_creation_dialog.dart';
 import 'package:storytales/features/story_reader/presentation/pages/story_reader_page.dart';
 import 'package:storytales/features/authentication/presentation/widgets/auth_wrapper.dart';
@@ -30,6 +31,7 @@ class LibraryPage extends StatefulWidget {
 class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedIndex = 0; // Track the selected bottom nav index separately
+  final Map<String, Map<String, dynamic>> _loadingCards = {}; // Track loading cards
 
   @override
   void initState() {
@@ -114,6 +116,25 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
       body: SafeArea(
         child: BlocListener<StoryGenerationBloc, StoryGenerationState>(
           listener: (context, state) {
+            // Handle loading card display
+            if (state is ShowLoadingCard) {
+              setState(() {
+                _loadingCards[state.tempStoryId] = {
+                  'tempStoryId': state.tempStoryId,
+                  'prompt': state.prompt,
+                  'ageRange': state.ageRange,
+                  'startTime': state.startTime,
+                };
+              });
+            }
+
+            // Handle loading card removal
+            if (state is RemoveLoadingCard) {
+              setState(() {
+                _loadingCards.remove(state.tempStoryId);
+              });
+            }
+
             // When a story is generated in the background, refresh the library
             if (state is BackgroundGenerationComplete) {
               // Refresh the library to show the new story
@@ -144,6 +165,34 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
               } else if (state is LibraryLoaded) {
                 return _buildStoryGrid(state.stories);
               } else if (state is LibraryEmpty) {
+                // Check if we have loading cards to show
+                final showLoadingCards = _selectedIndex == 0;
+                final loadingCardsList = showLoadingCards ? _loadingCards.values.toList() : <Map<String, dynamic>>[];
+
+                if (loadingCardsList.isNotEmpty) {
+                  // Show loading cards instead of empty state
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.75,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: loadingCardsList.length,
+                    itemBuilder: (context, index) {
+                      final loadingCardData = loadingCardsList[index];
+                      return LoadingStoryCard(
+                        tempStoryId: loadingCardData['tempStoryId'],
+                        prompt: loadingCardData['prompt'],
+                        ageRange: loadingCardData['ageRange'],
+                        startTime: loadingCardData['startTime'],
+                      );
+                    },
+                  );
+                }
+
+                // Show regular empty state
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -280,6 +329,34 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
   }
 
   Widget _buildStoryGrid(List<Story> stories) {
+    // Only show loading cards on "All Stories" tab (index 0)
+    final showLoadingCards = _selectedIndex == 0;
+    final loadingCardsList = showLoadingCards ? _loadingCards.values.toList() : <Map<String, dynamic>>[];
+    final totalItems = loadingCardsList.length + stories.length;
+
+    // Show empty state with loading cards if no regular stories but has loading cards
+    if (stories.isEmpty && loadingCardsList.isNotEmpty) {
+      return GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.75,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+        ),
+        itemCount: loadingCardsList.length,
+        itemBuilder: (context, index) {
+          final loadingCardData = loadingCardsList[index];
+          return LoadingStoryCard(
+            tempStoryId: loadingCardData['tempStoryId'],
+            prompt: loadingCardData['prompt'],
+            ageRange: loadingCardData['ageRange'],
+            startTime: loadingCardData['startTime'],
+          );
+        },
+      );
+    }
+
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -288,9 +365,22 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
-      itemCount: stories.length,
+      itemCount: totalItems,
       itemBuilder: (context, index) {
-        final story = stories[index];
+        // Show loading cards first
+        if (index < loadingCardsList.length) {
+          final loadingCardData = loadingCardsList[index];
+          return LoadingStoryCard(
+            tempStoryId: loadingCardData['tempStoryId'],
+            prompt: loadingCardData['prompt'],
+            ageRange: loadingCardData['ageRange'],
+            startTime: loadingCardData['startTime'],
+          );
+        }
+
+        // Show regular stories after loading cards
+        final storyIndex = index - loadingCardsList.length;
+        final story = stories[storyIndex];
         return StoryCard(
           story: story,
           onTap: () => _navigateToStoryReader(context, story),

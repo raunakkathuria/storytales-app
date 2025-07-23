@@ -120,6 +120,17 @@ For a more detailed changelog with implementation status, see [docs/CHANGELOG.md
 - Rich analytics data including prompt context, API endpoints, environment details, and timestamps
 - Both user-friendly and technical error details captured for comprehensive monitoring
 
+## [1.0.5] - 2025-07-24 - Enhanced Loading Experience
+
+### Added
+- **Animated Loading Story Card**: Implemented a new `LoadingStoryCard` widget with a central animated wizard (60px size) and magical sparkle effects.
+- **Simplified Status Messages**: Reduced and refined status messages during story generation to 4 concise, cycling options ("Creating your story...", "Weaving magic...", "Adding characters...", "Almost ready...").
+- **Loading Card Priority**: Ensured loading cards appear first in the story grid for immediate visual feedback.
+
+### Changed
+- **Countdown Timer**: Reduced the story generation countdown from 5 seconds to 3 seconds for a snappier user experience.
+- **Loading Card UI**: Removed the cancel button and simplified the overall layout of the loading card to focus on the animated wizard and status messages.
+
 ## [Unreleased] - Phase 2 (In Progress)
 
 ### Completed

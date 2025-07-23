@@ -146,8 +146,8 @@ class StoryGenerationBloc
   ) async {
     _cancelCountdownTimer();
 
-    // Emit countdown states
-    for (int i = 5; i >= 0; i--) {
+    // Emit countdown states (reduced from 5 to 3 seconds)
+    for (int i = 3; i >= 0; i--) {
       if (!emit.isDone) {
         emit(StoryGenerationCountdown(secondsRemaining: i));
         if (i > 0) {
@@ -175,13 +175,22 @@ class StoryGenerationBloc
   ) async {
     // Generate a temporary story ID
     final tempStoryId = 'temp_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}';
+    final startTime = DateTime.now();
 
     // Emit background generation state
     emit(StoryGenerationInBackground(
       tempStoryId: tempStoryId,
       prompt: event.prompt,
       ageRange: event.ageRange,
-      startTime: DateTime.now(),
+      startTime: startTime,
+    ));
+
+    // Emit loading card state for the library to display
+    emit(ShowLoadingCard(
+      tempStoryId: tempStoryId,
+      prompt: event.prompt,
+      ageRange: event.ageRange,
+      startTime: startTime,
     ));
 
     // Start background generation
@@ -203,6 +212,10 @@ class StoryGenerationBloc
     BackgroundGenerationCompletedWithStory event,
     Emitter<StoryGenerationState> emit,
   ) {
+    // Remove the loading card first
+    emit(RemoveLoadingCard(tempStoryId: event.tempStoryId));
+
+    // Then emit the completion state
     emit(BackgroundGenerationComplete(story: event.story));
   }
 
