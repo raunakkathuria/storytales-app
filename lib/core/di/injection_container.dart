@@ -133,6 +133,7 @@ Future<void> init() async {
   final firestore = FirebaseFirestore.instance;
   sl.registerSingleton<FirebaseFirestore>(firestore);
 
+
   // Initialize and register LoggingService
   final loggingService = LoggingService();
   loggingService.init();
@@ -165,6 +166,7 @@ Future<void> init() async {
   // Register ImageService
   final imageService = ImageService();
   sl.registerSingleton<ImageService>(imageService);
+
 
   //! Data sources
   // Register Dio

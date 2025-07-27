@@ -9,14 +9,12 @@ class StoryCard extends StatelessWidget {
   final Story story;
   final VoidCallback onTap;
   final VoidCallback onFavoriteToggle;
-  final VoidCallback onDelete;
 
   const StoryCard({
     super.key,
     required this.story,
     required this.onTap,
     required this.onFavoriteToggle,
-    required this.onDelete,
   });
 
   @override
@@ -90,22 +88,10 @@ class StoryCard extends StatelessWidget {
     return Positioned(
       top: 8,
       right: 8,
-      child: Row(
-        children: [
-          // Favorite button
-          _buildIconButton(
-            icon: story.isFavorite ? Icons.favorite : Icons.favorite_border,
-            color: story.isFavorite ? StoryTalesTheme.errorColor : StoryTalesTheme.surfaceColor,
-            onTap: onFavoriteToggle,
-          ),
-
-          // Delete button
-          _buildIconButton(
-            icon: Icons.delete_outline,
-            color: StoryTalesTheme.surfaceColor,
-            onTap: onDelete,
-          ),
-        ],
+      child: _buildIconButton(
+        icon: story.isFavorite ? Icons.favorite : Icons.favorite_border,
+        color: story.isFavorite ? StoryTalesTheme.errorColor : StoryTalesTheme.surfaceColor,
+        onTap: onFavoriteToggle,
       ),
     );
   }

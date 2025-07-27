@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storytales/core/theme/theme.dart';
+import 'package:storytales/core/utils/responsive_text_util.dart';
 import 'package:storytales/core/widgets/animated_logo.dart';
 import 'package:storytales/core/widgets/dialog_form.dart';
 import 'package:storytales/core/widgets/responsive_button.dart';
@@ -103,7 +104,72 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
   Widget build(BuildContext context) {
     return BlocConsumer<StoryGenerationBloc, StoryGenerationState>(
       listener: (context, state) {
-        if (state is StoryGenerationLoading) {
+        if (state is StoryGenerationCountdown) {
+          setState(() {
+            _isLoading = true;
+          });
+        } else if (state is StoryGenerationInBackground) {
+          // Close the dialog when background generation starts
+          Navigator.pop(context);
+
+          // Show a snackbar to inform the user
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const ResponsiveText(
+                  text: 'Your story is being created! It will appear in your library when ready.',
+                  style: TextStyle(
+                    fontFamily: StoryTalesTheme.fontFamilyBody,
+                    fontSize: 16,
+                  ),
+                ),
+                backgroundColor: StoryTalesTheme.primaryColor,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        } else if (state is BackgroundGenerationComplete) {
+          // Show notification that story is ready
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const ResponsiveText(
+                  text: 'Your story is ready!',
+                  style: TextStyle(
+                    fontFamily: StoryTalesTheme.fontFamilyBody,
+                    fontSize: 16,
+                  ),
+                ),
+                backgroundColor: StoryTalesTheme.successColor,
+                action: SnackBarAction(
+                  label: 'Read Now',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StoryReaderPage(storyId: state.story.id),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          }
+        } else if (state is BackgroundGenerationFailure) {
+          // Show error notification
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: ResponsiveText(
+                text: 'Story creation failed: ${state.error}',
+                style: const TextStyle(
+                  fontFamily: StoryTalesTheme.fontFamilyBody,
+                  fontSize: 16,
+                ),
+              ),
+              backgroundColor: StoryTalesTheme.errorColor,
+            ),
+          );
+        } else if (state is StoryGenerationLoading) {
           // Only start cycling messages when loading first begins
           if (!_isLoading) {
             _startMessageCycling();
@@ -190,6 +256,9 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
   }
 
   Widget _buildFormContent() {
+    // Get responsive font size for form fields
+    final responsiveFontSize = ResponsiveTextUtil.getScaledFontSize(context, 16.0);
+
     return Form(
       key: _formKey,
       child: Column(
@@ -200,13 +269,13 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
           TextFormField(
             controller: _promptController,
             decoration: const InputDecoration(
-              labelText: 'Story Prompt',
-              hintText: 'Enter a prompt for your story (e.g., "A friendly dragon")',
+              labelText: 'Your story',
+              hintText: 'Tell me what you want your story to be about (like "A friendly dragon")',
               border: OutlineInputBorder(),
               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
-            style: const TextStyle(
-              fontSize: 16,
+            style: TextStyle(
+              fontSize: responsiveFontSize,
               fontFamily: StoryTalesTheme.fontFamilyBody,
               color: StoryTalesTheme.textColor,
             ),
@@ -214,10 +283,10 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
             minLines: 3,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter a prompt';
+                return 'Please tell me about your story';
               }
               if (value.trim().length < 3) {
-                return 'Prompt is too short';
+                return 'Please tell me more about your story';
               }
               return null;
             },
@@ -235,9 +304,9 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
             isExpanded: true,
             value: _selectedAgeRange,
             icon: const Icon(Icons.arrow_drop_down),
-            style: const TextStyle(
+            style: TextStyle(
               color: StoryTalesTheme.textColor,
-              fontSize: 16,
+              fontSize: responsiveFontSize,
               fontFamily: StoryTalesTheme.fontFamilyBody,
             ),
             validator: (value) => value == null ? 'Please select an age range' : null,
@@ -266,6 +335,132 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
   }
 
   Widget _buildLoadingIndicator() {
+    return BlocBuilder<StoryGenerationBloc, StoryGenerationState>(
+      builder: (context, state) {
+        if (state is StoryGenerationCountdown) {
+          return _buildCountdownIndicator(state.secondsRemaining);
+        } else {
+          return _buildProgressIndicator();
+        }
+      },
+    );
+  }
+
+  Widget _buildCountdownIndicator(int secondsRemaining) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Close button in top right
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: () {
+                context.read<StoryGenerationBloc>().add(const CancelStoryGeneration());
+                Navigator.pop(context);
+              },
+              icon: const Icon(
+                Icons.close,
+                color: StoryTalesTheme.textLightColor,
+                size: 24,
+              ),
+            ),
+          ],
+        ),
+
+        // Animated logo
+        const AnimatedLogo(size: 80),
+
+        const SizedBox(height: 24),
+
+        // Title
+        ResponsiveText(
+          text: 'Your magical story is being created!',
+          style: const TextStyle(
+            color: StoryTalesTheme.primaryColor,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: StoryTalesTheme.fontFamilyHeading,
+          ),
+          textAlign: TextAlign.center,
+        ),
+
+        const SizedBox(height: 16),
+
+        // Countdown message - improved layout with better text
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Column(
+            children: [
+              ResponsiveText(
+                text: 'Your story will appear in your library when ready.',
+                style: const TextStyle(
+                  color: StoryTalesTheme.textColor,
+                  fontSize: 16,
+                  fontFamily: StoryTalesTheme.fontFamilyBody,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+              ),
+              const SizedBox(height: 8),
+              ResponsiveText(
+                text: 'This will close in $secondsRemaining seconds.',
+                style: const TextStyle(
+                  color: StoryTalesTheme.textLightColor,
+                  fontSize: 14,
+                  fontFamily: StoryTalesTheme.fontFamilyBody,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Countdown circle
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: StoryTalesTheme.primaryColor,
+              width: 4,
+            ),
+          ),
+          child: Center(
+            child: ResponsiveText(
+              text: '$secondsRemaining',
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: StoryTalesTheme.primaryColor,
+                fontFamily: StoryTalesTheme.fontFamilyHeading,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Cancel button
+        ResponsiveButton.outlined(
+          text: 'Cancel',
+          onPressed: () {
+            context.read<StoryGenerationBloc>().add(const CancelStoryGeneration());
+            Navigator.pop(context);
+          },
+          icon: Icons.cancel,
+          borderColor: StoryTalesTheme.primaryColor,
+          textColor: StoryTalesTheme.primaryColor,
+          fontSize: 16,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgressIndicator() {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -288,15 +483,26 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
 
         const SizedBox(height: 16),
 
-        // Description with cycling messages
-        ResponsiveText(
-          text: _loadingMessages[_currentMessageIndex],
-          style: const TextStyle(
-            color: StoryTalesTheme.textColor,
-            fontSize: 16,
-            fontFamily: StoryTalesTheme.fontFamilyBody,
+        // Description with cycling messages - fixed height container to prevent dialog resizing
+        SizedBox(
+          height: 60, // Fixed height to accommodate 2-3 lines of responsive text
+          width: double.infinity,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: ResponsiveText(
+                text: _loadingMessages[_currentMessageIndex],
+                style: const TextStyle(
+                  color: StoryTalesTheme.textColor,
+                  fontSize: 16,
+                  fontFamily: StoryTalesTheme.fontFamilyBody,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3, // Allow up to 3 lines for responsive text
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ),
-          textAlign: TextAlign.center,
         ),
 
         const SizedBox(height: 24),
@@ -388,7 +594,7 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
       bloc.add(const CheckCanGenerateStory());
 
       // The BlocConsumer will handle the CanGenerateStory state and
-      // automatically trigger the GenerateStory event when appropriate
+      // automatically trigger the countdown when appropriate
     }
   }
 
@@ -396,7 +602,7 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
   void _onCanGenerateStory() {
     final bloc = context.read<StoryGenerationBloc>();
     bloc.add(
-      GenerateStory(
+      StartGenerationCountdown(
         prompt: _promptController.text.trim(),
         ageRange: _selectedAgeRange,
         theme: null,

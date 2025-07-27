@@ -87,3 +87,83 @@ class FreeStoriesRemainingState extends StoryGenerationState {
   @override
   List<Object?> get props => [freeStoriesRemaining];
 }
+
+/// State when showing the countdown before starting background generation.
+class StoryGenerationCountdown extends StoryGenerationState {
+  final int secondsRemaining;
+
+  const StoryGenerationCountdown({required this.secondsRemaining});
+
+  @override
+  List<Object?> get props => [secondsRemaining];
+}
+
+/// State when a story is being generated in the background.
+class StoryGenerationInBackground extends StoryGenerationState {
+  final String tempStoryId;
+  final String prompt;
+  final String? ageRange;
+  final DateTime startTime;
+
+  const StoryGenerationInBackground({
+    required this.tempStoryId,
+    required this.prompt,
+    this.ageRange,
+    required this.startTime,
+  });
+
+  @override
+  List<Object?> get props => [tempStoryId, prompt, ageRange, startTime];
+}
+
+/// State when background generation completes successfully.
+class BackgroundGenerationComplete extends StoryGenerationState {
+  final Story story;
+
+  const BackgroundGenerationComplete({required this.story});
+
+  @override
+  List<Object?> get props => [story];
+}
+
+/// State when background generation fails.
+class BackgroundGenerationFailure extends StoryGenerationState {
+  final String tempStoryId;
+  final String error;
+
+  const BackgroundGenerationFailure({
+    required this.tempStoryId,
+    required this.error,
+  });
+
+  @override
+  List<Object?> get props => [tempStoryId, error];
+}
+
+/// State when a loading card should be displayed in the library.
+class ShowLoadingCard extends StoryGenerationState {
+  final String tempStoryId;
+  final String prompt;
+  final String? ageRange;
+  final DateTime startTime;
+
+  const ShowLoadingCard({
+    required this.tempStoryId,
+    required this.prompt,
+    this.ageRange,
+    required this.startTime,
+  });
+
+  @override
+  List<Object?> get props => [tempStoryId, prompt, ageRange, startTime];
+}
+
+/// State when a loading card should be removed from the library.
+class RemoveLoadingCard extends StoryGenerationState {
+  final String tempStoryId;
+
+  const RemoveLoadingCard({required this.tempStoryId});
+
+  @override
+  List<Object?> get props => [tempStoryId];
+}
