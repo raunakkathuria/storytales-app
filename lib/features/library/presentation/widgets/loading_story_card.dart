@@ -255,7 +255,9 @@ class _LoadingStoryCardState extends State<LoadingStoryCard>
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    context.read<StoryGenerationBloc>().add(const CancelStoryGeneration());
+                    context.read<StoryGenerationBloc>().add(
+                      ClearFailedStoryGeneration(tempStoryId: widget.tempStoryId),
+                    );
                   },
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
@@ -329,41 +331,6 @@ class _LoadingStoryCardState extends State<LoadingStoryCard>
                 overflow: TextOverflow.ellipsis,
               ),
 
-              const SizedBox(height: 12),
-
-              // Action buttons
-              Row(
-                children: [
-                  // Retry button
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        context.read<StoryGenerationBloc>().add(
-                          StartGenerationCountdown(
-                            prompt: widget.prompt,
-                            ageRange: widget.ageRange,
-                            theme: null,
-                            genre: null,
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: const ResponsiveText(
-                        text: 'Try Again',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: StoryTalesTheme.primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
         ],

@@ -27,6 +27,7 @@ class StoryGenerationBloc
     on<BackgroundGenerationCompleted>(_onBackgroundGenerationCompleted);
     on<BackgroundGenerationCompletedWithStory>(_onBackgroundGenerationCompletedWithStory);
     on<BackgroundGenerationFailed>(_onBackgroundGenerationFailed);
+    on<ClearFailedStoryGeneration>(_onClearFailedStoryGeneration);
   }
 
   /// Handle the CheckCanGenerateStory event.
@@ -230,6 +231,15 @@ class StoryGenerationBloc
     ));
   }
 
+  /// Handle the ClearFailedStoryGeneration event.
+  void _onClearFailedStoryGeneration(
+    ClearFailedStoryGeneration event,
+    Emitter<StoryGenerationState> emit,
+  ) {
+    // Emit RemoveLoadingCard to explicitly remove the failed card
+    emit(RemoveLoadingCard(tempStoryId: event.tempStoryId));
+  }
+
   /// Start background story generation.
   void _startBackgroundGeneration(
     String tempStoryId,
@@ -250,8 +260,12 @@ class StoryGenerationBloc
     StartBackgroundGeneration generationEvent,
   ) async {
     try {
+      final enhancedPrompt = "${generationEvent.prompt}. "
+        "Generate a high-detail, sharp focus, Pixar style 3D render. "
+        "Ensure all characters are clearly defined with distinct features and cinematic lighting.";
+
       final story = await _repository.generateStory(
-        prompt: generationEvent.prompt,
+        prompt: enhancedPrompt,
         ageRange: generationEvent.ageRange,
         theme: generationEvent.theme,
         genre: generationEvent.genre,

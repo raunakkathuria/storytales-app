@@ -79,6 +79,7 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
   double _progress = 0.0;
   int _currentMessageIndex = 0;
   Timer? _messageTimer;
+  String? _failedTempStoryId; // To store the tempStoryId of a failed generation
 
   final List<String> _ageRanges = ['0-2 years', '3-5 years', '6-8 years', '9-12 years', '13+ years'];
 
@@ -156,6 +157,8 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
             );
           }
         } else if (state is BackgroundGenerationFailure) {
+          // Store the tempStoryId of the failed generation
+          _failedTempStoryId = state.tempStoryId;
           // Show error notification
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -208,29 +211,12 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
             ),
           );
         } else if (state is StoryGenerationFailure) {
+          // Keep _isLoading true to show the loading indicator area,
+          // which will now display the error message.
           setState(() {
-            _isLoading = false;
+            _isLoading = true;
           });
-
-          // Show error snackbar
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: ResponsiveText(
-                text: state.error,
-                style: const TextStyle(
-                  fontFamily: StoryTalesTheme.fontFamilyBody,
-                  fontSize: 16,
-                ),
-              ),
-              backgroundColor: StoryTalesTheme.errorColor,
-              action: state.isRetryable
-                  ? SnackBarAction(
-                      label: 'Retry',
-                      onPressed: () => _generateStory(),
-                    )
-                  : null,
-            ),
-          );
+          // No SnackBar needed, error will be displayed in the dialog
         }
       },
       builder: (context, state) {
@@ -339,6 +325,8 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
       builder: (context, state) {
         if (state is StoryGenerationCountdown) {
           return _buildCountdownIndicator(state.secondsRemaining);
+        } else if (state is StoryGenerationFailure) {
+          return _buildErrorDisplay(state.error);
         } else {
           return _buildProgressIndicator();
         }
@@ -639,5 +627,90 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
         });
       }
     });
+  }
+
+  Widget _buildErrorDisplay(String errorMessage) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Close button in top right
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: () {
+                // Clear the failed story generation and close the dialog
+                if (_failedTempStoryId != null) {
+                  context.read<StoryGenerationBloc>().add(ClearFailedStoryGeneration(tempStoryId: _failedTempStoryId!));
+                }
+                Navigator.pop(context);
+              },
+              icon: const Icon(
+                Icons.close,
+                color: StoryTalesTheme.textLightColor,
+                size: 24,
+              ),
+            ),
+          ],
+        ),
+
+        // Error icon
+        const Icon(
+          Icons.error_outline,
+          color: StoryTalesTheme.errorColor,
+          size: 60,
+        ),
+
+        const SizedBox(height: 24),
+
+        // Error title
+        ResponsiveText(
+          text: 'Story creation failed!',
+          style: const TextStyle(
+            color: StoryTalesTheme.errorColor,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: StoryTalesTheme.fontFamilyHeading,
+          ),
+          textAlign: TextAlign.center,
+        ),
+
+        const SizedBox(height: 16),
+
+        // Error message
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: ResponsiveText(
+            text: errorMessage,
+            style: const TextStyle(
+              color: StoryTalesTheme.textColor,
+              fontSize: 16,
+              fontFamily: StoryTalesTheme.fontFamilyBody,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Close button
+        ResponsiveButton.primary(
+          text: 'Close',
+          onPressed: () {
+            // Clear the failed story generation and close the dialog
+            if (_failedTempStoryId != null) {
+              context.read<StoryGenerationBloc>().add(ClearFailedStoryGeneration(tempStoryId: _failedTempStoryId!));
+            }
+            Navigator.pop(context);
+          },
+          icon: Icons.close,
+          fontSize: 16,
+        ),
+
+        const SizedBox(height: 24),
+      ],
+    );
   }
 }

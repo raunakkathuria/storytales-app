@@ -119,3 +119,13 @@ class BackgroundGenerationFailed extends StoryGenerationEvent {
   @override
   List<Object?> get props => [tempStoryId, error];
 }
+
+/// Event to clear a failed story generation from the UI.
+class ClearFailedStoryGeneration extends StoryGenerationEvent {
+  final String tempStoryId;
+
+  const ClearFailedStoryGeneration({required this.tempStoryId});
+
+  @override
+  List<Object?> get props => [tempStoryId];
+}
