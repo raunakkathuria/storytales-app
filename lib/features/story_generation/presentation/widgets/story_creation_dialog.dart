@@ -383,7 +383,6 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
           children: [
             IconButton(
               onPressed: () {
-                context.read<StoryGenerationBloc>().add(const CancelStoryGeneration());
                 Navigator.pop(context);
               },
               icon: const Icon(
@@ -471,14 +470,13 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
 
         const SizedBox(height: 24),
 
-        // Cancel button
+        // Close button
         ResponsiveButton.outlined(
-          text: 'Cancel',
+          text: 'Close',
           onPressed: () {
-            context.read<StoryGenerationBloc>().add(const CancelStoryGeneration());
             Navigator.pop(context);
           },
-          icon: Icons.cancel,
+          icon: Icons.close,
           borderColor: StoryTalesTheme.primaryColor,
           textColor: StoryTalesTheme.primaryColor,
           fontSize: 16,
@@ -568,14 +566,13 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
 
         const SizedBox(height: 24),
 
-        // Cancel button
+        // Close button
         ResponsiveButton.outlined(
-          text: 'Cancel',
+          text: 'Close',
           onPressed: () {
-            context.read<StoryGenerationBloc>().add(const CancelStoryGeneration());
             Navigator.pop(context);
           },
-          icon: Icons.cancel,
+          icon: Icons.close,
           borderColor: StoryTalesTheme.primaryColor,
           textColor: StoryTalesTheme.primaryColor,
           fontSize: 16,

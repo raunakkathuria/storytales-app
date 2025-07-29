@@ -73,10 +73,6 @@ class StoryGenerationFailure extends StoryGenerationState {
   List<Object?> get props => [error, isRetryable];
 }
 
-/// State when the story generation has been canceled.
-class StoryGenerationCanceled extends StoryGenerationState {
-  const StoryGenerationCanceled();
-}
 
 /// State when displaying the number of free stories remaining.
 class FreeStoriesRemainingState extends StoryGenerationState {

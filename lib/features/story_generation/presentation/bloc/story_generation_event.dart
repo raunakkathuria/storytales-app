@@ -31,10 +31,6 @@ class GenerateStory extends StoryGenerationEvent {
   List<Object?> get props => [prompt, ageRange, theme, genre];
 }
 
-/// Event to cancel story generation.
-class CancelStoryGeneration extends StoryGenerationEvent {
-  const CancelStoryGeneration();
-}
 
 /// Event to reset the story generation state.
 class ResetStoryGeneration extends StoryGenerationEvent {

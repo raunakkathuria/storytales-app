@@ -19,7 +19,6 @@ class StoryGenerationBloc
         super(const StoryGenerationInitial()) {
     on<CheckCanGenerateStory>(_onCheckCanGenerateStory);
     on<GenerateStory>(_onGenerateStory);
-    on<CancelStoryGeneration>(_onCancelStoryGeneration);
     on<ResetStoryGeneration>(_onResetStoryGeneration);
     on<GetFreeStoriesRemaining>(_onGetFreeStoriesRemaining);
     on<StartGenerationCountdown>(_onStartGenerationCountdown);
@@ -85,14 +84,6 @@ class StoryGenerationBloc
     }
   }
 
-  /// Handle the CancelStoryGeneration event.
-  void _onCancelStoryGeneration(
-    CancelStoryGeneration event,
-    Emitter<StoryGenerationState> emit,
-  ) {
-    _cancelProgressTimer();
-    emit(const StoryGenerationCanceled());
-  }
 
   /// Handle the ResetStoryGeneration event.
   void _onResetStoryGeneration(
