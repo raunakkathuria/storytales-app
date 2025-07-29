@@ -88,11 +88,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - N/A (Initial release)
 
+## [1.0.2] - 2025-06-24
+
+### Added
+- Enhanced story creation dialog with improved responsiveness and user experience
+- Fixed dialog sizing issues to prevent dynamic resizing based on text content
+- Improved text wrapping and overflow handling in loading dialogs
+- Updated form field text to use child-friendly terminology ("Your story" instead of "Story Prompt")
+- Enhanced validation messages with more encouraging, conversational language
+- Better error handling for dialog layout issues
+
+### Changed
+- Story creation dialog now uses responsive font sizing for better accessibility
+- Loading dialog maintains consistent dimensions while cycling through messages
+- Improved dialog layout to prevent Flutter rendering errors and overflow issues
+- Enhanced user experience with more intuitive form field labels and hints
+
+### Fixed
+- Fixed story creation dialog text sizing inconsistencies across different devices
+- Resolved dropdown text truncation issues in age range selection
+- Fixed Flutter assertion errors in loading dialog layout (`!semantics.parentDataDirty`)
+- Eliminated RenderFlex overflow errors in dialog components
+- Fixed dialog button alignment issues on small screens
+- Improved text contrast and readability in form fields
+
+## [1.0.3] - 2025-07-20
+
+### Added
+- **Enhanced API Client with Comprehensive Logging**
+  - Added detailed request/response logging for debugging
+  - Implemented DioException error handling with full error details
+  - Added API key configuration logging (masked for security)
+  - Enhanced connectivity error handling with fallback mechanisms
+
+- **Development Environment Configuration Management**
+  - Created Environment class for managing dev/staging/production configs
+  - Added environment-specific configuration loading
+  - Implemented proper configuration validation and error handling
+
+- **Background Generation Test Suite**
+  - Added comprehensive test coverage for background story generation
+  - Implemented countdown mechanism testing
+  - Added state transition verification tests
+  - Created test utilities for BLoC testing scenarios
+
+- **Production Firebase Setup**
+  - Configured Firebase production project integration
+  - Added emulator fallback support for development
+  - Implemented graceful error handling for emulator connection failures
+  - Enhanced Firebase initialization with environment detection
+
+### Fixed
+- **Library Auto-Refresh Issue**
+  - Fixed critical issue where library wasn't refreshing after background story generation
+  - Resolved BLoC emitter disposal problem that prevented state emission
+  - Implemented proper event-driven architecture using Timer.run() for post-dialog events
+  - Added BackgroundGenerationComplete event handling in LibraryBloc
+
+- **BLoC State Management**
+  - Fixed emitter lifecycle management to prevent "done" emitter usage
+  - Implemented proper event scheduling after dialog disposal
+  - Added error handling for BLoC state transitions
+  - Enhanced state emission reliability for background processes
+
+### Changed
+- **Firebase Integration**
+  - Improved emulator connection with graceful fallback to production services
+  - Enhanced Firebase initialization with better error handling
+  - Added environment-specific Firebase configuration
+  - Implemented debug logging for Firebase connection status
+
+- **API Client Enhancements**
+  - Enhanced error logging with detailed DioException information
+  - Added request/response logging for better debugging
+  - Improved connectivity handling with mock data fallback
+  - Added API endpoint and configuration validation
+
 ## [Unreleased] - Phase 2 (In Progress)
 
-### In Development
-- **Authentication & User Management** (docs/specification/phase-two/authentication-user-management.md)
-  - Firebase Authentication with email link (passwordless) sign-in [Implemented]
+### Completed
+- **Authentication & User Management** ✅ (docs/specification/phase-two/authentication-user-management.md)
+  - Firebase Authentication with OTP (one-time password) authentication [Implemented]
   - Persistent authentication across app restarts [Implemented]
   - User profiles stored in Firestore [Implemented]
   - Account management and settings screen [Implemented]
@@ -123,6 +199,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Made display name field optional in profile settings
   - Standardized age ranges to match API format: "0-2 years", "3-5 years", "6-8 years", "9-12 years", "13+ years"
   - Updated story generation to properly handle age range format with "years" suffix
+
+- **Background Story Generation** ✅
+  - Implemented timer-based countdown mechanism during story generation
+  - Added background processing with proper BLoC state management
+  - Created library auto-refresh when background generation completes
+  - Implemented event-driven architecture for post-dialog state updates
+  - Added BackgroundGenerationComplete event and state handling
+  - Fixed BLoC emitter lifecycle management for background processes
+  - Enhanced story generation dialog with countdown display
+  - Added comprehensive test coverage for background generation scenarios
+
+- **Production Configuration** ✅
+  - Firebase production setup with environment-specific configuration
+  - Enhanced API client with comprehensive logging and error handling
+  - Development environment management with emulator support
+  - Production API endpoint configuration and validation
+  - Environment-based configuration loading system
+  - Enhanced debugging and monitoring capabilities
+
+### In Development
 
 ### Coming Soon
 - **Cross-Device Synchronization** (docs/specification/phase-two/cross-device-synchronization.md)

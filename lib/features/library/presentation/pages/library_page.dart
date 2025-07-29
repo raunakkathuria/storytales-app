@@ -9,6 +9,7 @@ import 'package:storytales/features/library/presentation/bloc/library_bloc.dart'
 import 'package:storytales/features/library/presentation/bloc/library_event.dart';
 import 'package:storytales/features/library/presentation/bloc/library_state.dart';
 import 'package:storytales/features/library/presentation/widgets/story_card.dart';
+import 'package:storytales/features/library/presentation/widgets/loading_story_card.dart';
 import 'package:storytales/features/story_generation/presentation/widgets/story_creation_dialog.dart';
 import 'package:storytales/features/story_reader/presentation/pages/story_reader_page.dart';
 import 'package:storytales/features/authentication/presentation/widgets/auth_wrapper.dart';
@@ -16,6 +17,8 @@ import 'package:storytales/features/subscription/presentation/pages/subscription
 import 'package:storytales/features/subscription/presentation/bloc/subscription_bloc.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_event.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_state.dart';
+import 'package:storytales/features/story_generation/presentation/bloc/story_generation_bloc.dart';
+import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
 
 /// The main library page that displays the user's stories.
 class LibraryPage extends StatefulWidget {
@@ -28,6 +31,7 @@ class LibraryPage extends StatefulWidget {
 class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedIndex = 0; // Track the selected bottom nav index separately
+  final Map<String, Map<String, dynamic>> _loadingCards = {}; // Track loading cards
 
   @override
   void initState() {
@@ -110,84 +114,155 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
         ],
       ),
       body: SafeArea(
-        child: BlocBuilder<LibraryBloc, LibraryState>(
-          builder: (context, state) {
-            if (state is LibraryLoading) {
-              return const Center(
-                child: CircularProgressIndicator(),
+        child: BlocListener<StoryGenerationBloc, StoryGenerationState>(
+          listener: (context, state) {
+            // Handle loading card display
+            if (state is ShowLoadingCard) {
+              setState(() {
+                _loadingCards[state.tempStoryId] = {
+                  'tempStoryId': state.tempStoryId,
+                  'prompt': state.prompt,
+                  'ageRange': state.ageRange,
+                  'startTime': state.startTime,
+                };
+              });
+            }
+
+            // Handle loading card removal
+            if (state is RemoveLoadingCard) {
+              setState(() {
+                _loadingCards.remove(state.tempStoryId);
+              });
+            }
+
+            // When a story is generated in the background, refresh the library
+            if (state is BackgroundGenerationComplete) {
+              // Refresh the library to show the new story
+              context.read<LibraryBloc>().add(const LoadAllStories());
+
+              // Also refresh the subscription state to update free stories count
+              context.read<SubscriptionBloc>().add(const RefreshFreeStoriesCount());
+            }
+
+            // Also handle background generation failure
+            if (state is BackgroundGenerationFailure) {
+              // Show error message to user
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Story generation failed: ${state.error}'),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 5),
+                ),
               );
-            } else if (state is LibraryLoaded) {
-              return _buildStoryGrid(state.stories);
-            } else if (state is LibraryEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const ResponsiveIcon(
-                        icon: Icons.auto_stories,
-                        sizeCategory: IconSizeCategory.large,
-                        color: StoryTalesTheme.accentColor,
-                      ),
-                      const SizedBox(height: 16),
-                      ResponsiveText(
-                        text: state.message,
-                        style: StoryTalesTheme.bodyMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      if (state.activeTab == LibraryTab.all)
+            }
+          },
+          child: BlocBuilder<LibraryBloc, LibraryState>(
+            builder: (context, state) {
+              if (state is LibraryLoading) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              } else if (state is LibraryLoaded) {
+                return _buildStoryGrid(state.stories);
+              } else if (state is LibraryEmpty) {
+                // Check if we have loading cards to show
+                final showLoadingCards = _selectedIndex == 0;
+                final loadingCardsList = showLoadingCards ? _loadingCards.values.toList() : <Map<String, dynamic>>[];
+
+                if (loadingCardsList.isNotEmpty) {
+                  // Show loading cards instead of empty state
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.75,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: loadingCardsList.length,
+                    itemBuilder: (context, index) {
+                      final loadingCardData = loadingCardsList[index];
+                      return LoadingStoryCard(
+                        tempStoryId: loadingCardData['tempStoryId'],
+                        prompt: loadingCardData['prompt'],
+                        ageRange: loadingCardData['ageRange'],
+                        startTime: loadingCardData['startTime'],
+                      );
+                    },
+                  );
+                }
+
+                // Show regular empty state
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const ResponsiveIcon(
+                          icon: Icons.auto_stories,
+                          sizeCategory: IconSizeCategory.large,
+                          color: StoryTalesTheme.accentColor,
+                        ),
+                        const SizedBox(height: 16),
+                        ResponsiveText(
+                          text: state.message,
+                          style: StoryTalesTheme.bodyMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        if (state.activeTab == LibraryTab.all)
+                          ElevatedButton(
+                            onPressed: () => _navigateToStoryGeneration(context),
+                            child: const ResponsiveText(
+                              text: 'Create Your First Story',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: StoryTalesTheme.fontFamilyBody,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              } else if (state is LibraryError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const ResponsiveIcon(
+                          icon: Icons.error_outline,
+                          sizeCategory: IconSizeCategory.large,
+                          color: StoryTalesTheme.errorColor,
+                        ),
+                        const SizedBox(height: 16),
+                        ResponsiveText(
+                          text: 'Error: ${state.message}',
+                          style: StoryTalesTheme.bodyMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
                         ElevatedButton(
-                          onPressed: () => _navigateToStoryGeneration(context),
+                          onPressed: () => context.read<LibraryBloc>().add(const LoadAllStories()),
                           child: const ResponsiveText(
-                            text: 'Create Your First Story',
+                            text: 'Try Again',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontFamily: StoryTalesTheme.fontFamilyBody,
                             ),
                           ),
                         ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            } else if (state is LibraryError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const ResponsiveIcon(
-                        icon: Icons.error_outline,
-                        sizeCategory: IconSizeCategory.large,
-                        color: StoryTalesTheme.errorColor,
-                      ),
-                      const SizedBox(height: 16),
-                      ResponsiveText(
-                        text: 'Error: ${state.message}',
-                        style: StoryTalesTheme.bodyMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () => context.read<LibraryBloc>().add(const LoadAllStories()),
-                        child: const ResponsiveText(
-                          text: 'Try Again',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontFamily: StoryTalesTheme.fontFamilyBody,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -254,25 +329,89 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
   }
 
   Widget _buildStoryGrid(List<Story> stories) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+    // Only show loading cards on "All Stories" tab (index 0)
+    final showLoadingCards = _selectedIndex == 0;
+    final loadingCardsList = showLoadingCards ? _loadingCards.values.toList() : <Map<String, dynamic>>[];
+    final totalItems = loadingCardsList.length + stories.length;
+
+    // Show empty state with loading cards if no regular stories but has loading cards
+    if (stories.isEmpty && loadingCardsList.isNotEmpty) {
+      return RefreshIndicator(
+        onRefresh: _handleRefresh,
+        child: GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.75,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          itemCount: loadingCardsList.length,
+          itemBuilder: (context, index) {
+            final loadingCardData = loadingCardsList[index];
+            return LoadingStoryCard(
+              tempStoryId: loadingCardData['tempStoryId'],
+              prompt: loadingCardData['prompt'],
+              ageRange: loadingCardData['ageRange'],
+              startTime: loadingCardData['startTime'],
+            );
+          },
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      child: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.75,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+        ),
+        itemCount: totalItems,
+        itemBuilder: (context, index) {
+          // Show loading cards first
+          if (index < loadingCardsList.length) {
+            final loadingCardData = loadingCardsList[index];
+            return LoadingStoryCard(
+              tempStoryId: loadingCardData['tempStoryId'],
+              prompt: loadingCardData['prompt'],
+              ageRange: loadingCardData['ageRange'],
+              startTime: loadingCardData['startTime'],
+            );
+          }
+
+          // Show regular stories after loading cards
+          final storyIndex = index - loadingCardsList.length;
+          final story = stories[storyIndex];
+          return StoryCard(
+            story: story,
+            onTap: () => _navigateToStoryReader(context, story),
+            onFavoriteToggle: () => _toggleFavorite(context, story),
+          );
+        },
       ),
-      itemCount: stories.length,
-      itemBuilder: (context, index) {
-        final story = stories[index];
-        return StoryCard(
-          story: story,
-          onTap: () => _navigateToStoryReader(context, story),
-          onFavoriteToggle: () => _toggleFavorite(context, story),
-          onDelete: () => _deleteStory(context, story),
-        );
-      },
     );
+  }
+
+  /// Handle pull-to-refresh action
+  Future<void> _handleRefresh() async {
+    // Determine which tab is currently active and refresh accordingly
+    if (_selectedIndex == 0) {
+      // All Stories tab
+      context.read<LibraryBloc>().add(const LoadAllStories());
+    } else if (_selectedIndex == 2) {
+      // Favorites tab
+      context.read<LibraryBloc>().add(const LoadFavoriteStories());
+    }
+
+    // Also refresh the subscription state to update free stories count
+    context.read<SubscriptionBloc>().add(const RefreshFreeStoriesCount());
+
+    // Wait a bit to ensure the refresh completes
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 
   void _navigateToStoryGeneration(BuildContext context) async {
@@ -322,20 +461,4 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
     context.read<LibraryBloc>().add(ToggleFavorite(storyId: story.id));
   }
 
-  void _deleteStory(BuildContext context, Story story) {
-    ConfirmationDialog.show(
-      context: context,
-      title: 'Delete Story',
-      content: 'Are you sure you want to delete "${story.title}"?',
-      confirmText: 'Yes',
-      cancelText: 'No',
-      onConfirm: () {
-        context.read<LibraryBloc>().add(DeleteStory(storyId: story.id));
-
-        // Refresh the free stories count in the subscription bloc
-        // This ensures the subscription page shows the correct count after a story is deleted
-        context.read<SubscriptionBloc>().add(const RefreshFreeStoriesCount());
-      },
-    );
-  }
 }

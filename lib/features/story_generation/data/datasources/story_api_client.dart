@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:storytales/core/config/app_config.dart';
 import 'package:storytales/core/di/injection_container.dart';
+import 'package:storytales/core/services/analytics/analytics_service.dart';
 import 'package:storytales/core/services/connectivity/connectivity_service.dart';
 import 'package:storytales/core/services/image/image_service.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
@@ -13,6 +14,7 @@ class StoryApiClient {
   final Dio _dio;
   final ConnectivityService _connectivityService;
   final LoggingService _loggingService;
+  final AnalyticsService _analyticsService;
   final AppConfig _appConfig;
 
   StoryApiClient({
@@ -22,7 +24,8 @@ class StoryApiClient {
   })  : _dio = dio,
         _connectivityService = connectivityService,
         _appConfig = appConfig,
-        _loggingService = sl<LoggingService>();
+        _loggingService = sl<LoggingService>(),
+        _analyticsService = sl<AnalyticsService>();
 
   /// Generate a story using the local API.
   Future<Map<String, dynamic>> generateStory({
@@ -34,12 +37,13 @@ class StoryApiClient {
     // Check connectivity only if we're not using mock data
     final isConnected = await _connectivityService.isConnected();
     if (!isConnected && !_appConfig.useMockData) {
-      throw Exception('No internet connection');
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t reach the magical story realm right now. Please check your internet connection and we\'ll try to reconnect!');
     }
 
     // Log the current configuration for debugging
     _loggingService.info('Using API endpoint: ${_appConfig.apiBaseUrl}');
     _loggingService.info('Mock data enabled: ${_appConfig.useMockData}');
+    _loggingService.info('API key configured: ${_appConfig.apiKey.isNotEmpty ? 'Yes (${_appConfig.apiKey.length} chars)' : 'No'}');
 
     try {
       // Convert ageRange to integer for the API
@@ -73,6 +77,18 @@ class StoryApiClient {
         }
       }
 
+      // Prepare request data
+      final requestData = {
+        'age': age,
+        'character_name': characterName,
+        'description': prompt,
+      };
+
+      // Log request details for debugging
+      _loggingService.info('Making API request to: ${_appConfig.apiBaseUrl}/story');
+      _loggingService.info('Request data: ${json.encode(requestData)}');
+      _loggingService.info('Headers: Content-Type: application/json, x-api-key: ${_appConfig.apiKey.substring(0, 8)}...');
+
       // Make the API call to the configured endpoint
       final response = await _dio.post(
         '${_appConfig.apiBaseUrl}/story',
@@ -85,58 +101,154 @@ class StoryApiClient {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'x-api-key': _appConfig.apiKey,
           },
           sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
           receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
         ),
       );
 
+      _loggingService.info('API Response Status: ${response.statusCode}');
+
       if (response.statusCode == 200) {
         final apiResponse = response.data;
+        _loggingService.info('API Response received successfully');
 
         // Process the response to handle null image URLs
         return _processApiResponse(apiResponse);
       } else {
+        _loggingService.error('API Error - Status: ${response.statusCode}, Data: ${response.data}');
         throw Exception('Failed to generate story: ${response.statusCode}');
       }
     } catch (e) {
-      // Error handling with fallback for development
+      // Enhanced error logging
+      if (e is DioException) {
+        _loggingService.error('DioException Details:');
+        _loggingService.error('- Type: ${e.type}');
+        _loggingService.error('- Message: ${e.message}');
+        _loggingService.error('- Response Status: ${e.response?.statusCode}');
+        _loggingService.error('- Response Data: ${e.response?.data}');
+        _loggingService.error('- Response Headers: ${e.response?.headers}');
+      }
       _loggingService.error('Error calling API: $e');
 
-      // Check if we should use mock data based on configuration
-      if (!_appConfig.useMockData) {
-        // In production, we don't want to use mock data, so rethrow the error
-        throw Exception('Failed to generate story: $e');
+      // Always throw the error to inform the user - no silent fallbacks
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while crafting your tale. Please try again!';
+      String errorType = 'unknown_error';
+      String technicalDetails = e.toString();
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorType = 'timeout_error';
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to weave your tale! The magical connection seems slow. Please check your internet and let\'s try again!';
+            technicalDetails = 'Timeout: ${e.type.name} - ${e.message}';
+            break;
+          case DioExceptionType.connectionError:
+            errorType = 'connection_error';
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t reach the magical story realm right now. Please check your internet connection and we\'ll try to reconnect!';
+            technicalDetails = 'Connection error: ${e.message}';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 401) {
+              errorType = 'auth_error';
+              errorMessage = '🔮 The Story Wizard\'s magical key isn\'t working properly. We\'re checking with the wizard council to fix this!';
+              technicalDetails = 'Authentication failed: HTTP $statusCode';
+            } else if (statusCode == 429) {
+              errorType = 'rate_limit_error';
+              errorMessage = '✨ Wow! So many story requests! Our Story Wizard is a bit overwhelmed. Please wait a moment and try again!';
+              technicalDetails = 'Rate limited: HTTP $statusCode';
+            } else if (statusCode == 500) {
+              errorType = 'server_error';
+              errorMessage = '🏰 The Story Wizard\'s castle is having some magical difficulties right now. We\'re working to fix it - please try again in a little while!';
+              technicalDetails = 'Server error: HTTP $statusCode - ${e.response?.data}';
+            } else {
+              errorType = 'api_error';
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode). Let\'s try casting the story spell again!';
+              technicalDetails = 'API error: HTTP $statusCode - ${e.response?.data}';
+            }
+            break;
+          case DioExceptionType.cancel:
+            errorType = 'cancelled_error';
+            errorMessage = '📖 The story creation was cancelled. No worries - the Story Wizard is ready whenever you are!';
+            technicalDetails = 'Request cancelled by user';
+            break;
+          default:
+            errorType = 'dio_error';
+            errorMessage = '🌙 Something unexpected happened in the magical story realm. Our Story Wizard is investigating - please try again!';
+            technicalDetails = 'DioException: ${e.type.name} - ${e.message}';
+        }
+      } else {
+        errorType = 'unknown_error';
+        errorMessage = '🔮 The Story Wizard encountered an unknown magical phenomenon. We\'re extremely sorry and checking with the wizard council!';
+        technicalDetails = 'Unknown error: ${e.toString()}';
       }
 
-      // Fall back to sample response during development
-      final jsonString = await rootBundle.loadString('assets/data/sample-ai-response.json');
-      final sampleResponse = json.decode(jsonString);
+      // Log detailed analytics for story generation failures
+      await _analyticsService.logError(
+        errorType: 'story_generation_$errorType',
+        errorMessage: errorMessage, // User-friendly message
+        errorDetails: json.encode({
+          'technical_error': technicalDetails,
+          'prompt_length': prompt.length,
+          'age_range': ageRange,
+          'theme': theme,
+          'genre': genre,
+          'api_endpoint': _appConfig.apiBaseUrl,
+          'environment': _appConfig.environment,
+          'timestamp': DateTime.now().toIso8601String(),
+        }),
+      );
 
-      // Update the sample response with the provided parameters
-      if (sampleResponse is Map<String, dynamic> &&
-          sampleResponse.containsKey('metadata') &&
-          sampleResponse.containsKey('data')) {
-        final metadata = sampleResponse['metadata'] as Map<String, dynamic>;
-
-        if (ageRange != null) {
-          metadata['age_range'] = ageRange;
-        }
-
-        if (theme != null) {
-          metadata['theme'] = theme;
-        }
-
-        if (genre != null) {
-          metadata['genre'] = genre;
-        }
-
-        metadata['original_prompt'] = prompt;
-        metadata['created_at'] = DateTime.now().toIso8601String();
-      }
-
-      return sampleResponse;
+      throw Exception(errorMessage);
     }
+  }
+
+  /// Generate a sample story for development/testing purposes.
+  /// This method explicitly returns mock data and should only be used
+  /// when the user explicitly chooses to view a sample story.
+  Future<Map<String, dynamic>> generateSampleStory({
+    String? prompt,
+    String? ageRange,
+    String? theme,
+    String? genre,
+  }) async {
+    _loggingService.info('Generating sample story for development/testing');
+
+    // Load the sample response
+    final jsonString = await rootBundle.loadString('assets/data/sample-ai-response.json');
+    final sampleResponse = json.decode(jsonString);
+
+    // Update the sample response with the provided parameters if available
+    if (sampleResponse is Map<String, dynamic> &&
+        sampleResponse.containsKey('metadata') &&
+        sampleResponse.containsKey('data')) {
+      final metadata = sampleResponse['metadata'] as Map<String, dynamic>;
+
+      if (ageRange != null) {
+        metadata['age_range'] = ageRange;
+      }
+
+      if (theme != null) {
+        metadata['theme'] = theme;
+      }
+
+      if (genre != null) {
+        metadata['genre'] = genre;
+      }
+
+      if (prompt != null) {
+        metadata['original_prompt'] = prompt;
+      }
+
+      metadata['created_at'] = DateTime.now().toIso8601String();
+    }
+
+    // Process the mock response to transform image URLs
+    return _processApiResponse(sampleResponse);
   }
 
   /// Process the API response to handle null image URLs and ensure correct format
@@ -145,14 +257,14 @@ class StoryApiClient {
     final metadata = apiResponse['metadata'] as Map<String, dynamic>;
     final data = apiResponse['data'] as Map<String, dynamic>;
 
-    // Process cover image URL - use placeholder if null
-    final coverImageUrl = data['cover_image_url'] ?? ImageService.placeholderImagePath;
+    // Process cover image URL - transform mock URLs to use configured API base URL
+    final coverImageUrl = _transformImageUrl(data['cover_image_url']);
 
     // Process pages and handle null image URLs
     final pages = (data['pages'] as List).map((page) {
       return {
         'content': page['content'],
-        'image_url': page['image_url'] ?? ImageService.placeholderImagePath,
+        'image_url': _transformImageUrl(page['image_url']),
       };
     }).toList();
 
@@ -167,5 +279,20 @@ class StoryApiClient {
         'questions': data['questions'],
       },
     };
+  }
+
+  /// Transform image URLs from mock data to use the configured API base URL
+  String _transformImageUrl(String? originalUrl) {
+    if (originalUrl == null) {
+      return ImageService.placeholderImagePath;
+    }
+
+    // If the URL contains the mock domain, replace it with the configured API base URL
+    if (originalUrl.contains('ai-service.example.com')) {
+      return originalUrl.replaceAll('https://ai-service.example.com', _appConfig.apiBaseUrl);
+    }
+
+    // If it's already a valid URL or placeholder, return as is
+    return originalUrl;
   }
 }

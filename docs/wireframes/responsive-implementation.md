@@ -133,12 +133,11 @@ The loading indicator in the story creation dialog uses responsive components:
 
 ```dart
 ResponsiveButton.outlined(
-  text: 'Cancel',
+  text: 'Close',
   onPressed: () {
-    context.read<StoryGenerationBloc>().add(const CancelStoryGeneration());
     Navigator.pop(context);
   },
-  icon: Icons.cancel,
+  icon: Icons.close,
   borderColor: StoryTalesTheme.primaryColor,
   textColor: StoryTalesTheme.primaryColor,
   fontSize: 16,

@@ -18,7 +18,6 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     on<LoadAllStories>(_onLoadAllStories);
     on<LoadFavoriteStories>(_onLoadFavoriteStories);
     on<ToggleFavorite>(_onToggleFavorite);
-    on<DeleteStory>(_onDeleteStory);
     on<FilterByTab>(_onFilterByTab);
   }
 
@@ -145,49 +144,6 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     }
   }
 
-  /// Handle the DeleteStory event.
-  Future<void> _onDeleteStory(
-    DeleteStory event,
-    Emitter<LibraryState> emit,
-  ) async {
-    emit(StoryDeleting(storyId: event.storyId));
-
-    try {
-      // Get the story before deleting it for analytics
-      final story = await _repository.getStoryById(event.storyId);
-
-      // Delete the story
-      await _repository.deleteStory(event.storyId);
-
-      // Log analytics event
-      await _analyticsService.logStoryDeleted(
-        storyId: story.id,
-        storyTitle: story.title,
-      );
-
-      emit(StoryDeleted(storyId: event.storyId));
-
-      // Reload the appropriate list based on the current tab
-      if (state is LibraryLoaded) {
-        final currentState = state as LibraryLoaded;
-        if (currentState.activeTab == LibraryTab.all) {
-          add(const LoadAllStories());
-        } else {
-          add(const LoadFavoriteStories());
-        }
-      } else {
-        add(const LoadAllStories());
-      }
-    } catch (e) {
-      emit(LibraryError(message: e.toString()));
-
-      // Log analytics event for error
-      await _analyticsService.logError(
-        errorType: 'story_delete_error',
-        errorMessage: e.toString(),
-      );
-    }
-  }
 
   /// Handle the FilterByTab event.
   void _onFilterByTab(
