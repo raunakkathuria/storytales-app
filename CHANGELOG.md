@@ -180,3 +180,20 @@ For a more detailed changelog with implementation status, see [docs/CHANGELOG.md
   - Bug reporting system
   - Feature request system
   - User satisfaction surveys
+
+## [1.0.6] - 2025-07-30 - Error Handling & Dialog Improvements
+
+### Added
+- Comprehensive error handling with user-friendly, creative "Story Wizard" themed error messages for various API failure types (timeout, connection, authentication, rate limiting, server errors).
+- Automatic clearing of failed story generation cards when a user attempts to create a new story.
+
+### Changed
+- Replaced "Cancel" button with "Close" in story generation dialog countdown and progress indicators.
+- Modified dialog button actions to only close the dialog without cancelling the background story generation process.
+- Updated styling of informational and error snackbar messages to use larger font sizes and appropriate brand colors.
+- Eliminated redundant error pop-ups by ensuring `BackgroundGenerationFailure` state only triggers in-dialog error display.
+
+### Removed
+- `CancelStoryGeneration` event and its corresponding handler from the BLoC.
+- Unused `StoryGenerationCanceled` state.
+- Outdated reference to `CancelStoryGeneration` in `docs/wireframes/responsive-implementation.md`.
