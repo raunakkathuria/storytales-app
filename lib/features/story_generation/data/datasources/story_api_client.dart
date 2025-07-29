@@ -37,7 +37,7 @@ class StoryApiClient {
     // Check connectivity only if we're not using mock data
     final isConnected = await _connectivityService.isConnected();
     if (!isConnected && !_appConfig.useMockData) {
-      throw Exception('No internet connection');
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t reach the magical story realm right now. Please check your internet connection and we\'ll try to reconnect!');
     }
 
     // Log the current configuration for debugging

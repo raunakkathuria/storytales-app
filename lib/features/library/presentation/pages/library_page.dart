@@ -336,7 +336,33 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
 
     // Show empty state with loading cards if no regular stories but has loading cards
     if (stories.isEmpty && loadingCardsList.isNotEmpty) {
-      return GridView.builder(
+      return RefreshIndicator(
+        onRefresh: _handleRefresh,
+        child: GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.75,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          itemCount: loadingCardsList.length,
+          itemBuilder: (context, index) {
+            final loadingCardData = loadingCardsList[index];
+            return LoadingStoryCard(
+              tempStoryId: loadingCardData['tempStoryId'],
+              prompt: loadingCardData['prompt'],
+              ageRange: loadingCardData['ageRange'],
+              startTime: loadingCardData['startTime'],
+            );
+          },
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      child: GridView.builder(
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
@@ -344,50 +370,48 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         ),
-        itemCount: loadingCardsList.length,
+        itemCount: totalItems,
         itemBuilder: (context, index) {
-          final loadingCardData = loadingCardsList[index];
-          return LoadingStoryCard(
-            tempStoryId: loadingCardData['tempStoryId'],
-            prompt: loadingCardData['prompt'],
-            ageRange: loadingCardData['ageRange'],
-            startTime: loadingCardData['startTime'],
+          // Show loading cards first
+          if (index < loadingCardsList.length) {
+            final loadingCardData = loadingCardsList[index];
+            return LoadingStoryCard(
+              tempStoryId: loadingCardData['tempStoryId'],
+              prompt: loadingCardData['prompt'],
+              ageRange: loadingCardData['ageRange'],
+              startTime: loadingCardData['startTime'],
+            );
+          }
+
+          // Show regular stories after loading cards
+          final storyIndex = index - loadingCardsList.length;
+          final story = stories[storyIndex];
+          return StoryCard(
+            story: story,
+            onTap: () => _navigateToStoryReader(context, story),
+            onFavoriteToggle: () => _toggleFavorite(context, story),
           );
         },
-      );
+      ),
+    );
+  }
+
+  /// Handle pull-to-refresh action
+  Future<void> _handleRefresh() async {
+    // Determine which tab is currently active and refresh accordingly
+    if (_selectedIndex == 0) {
+      // All Stories tab
+      context.read<LibraryBloc>().add(const LoadAllStories());
+    } else if (_selectedIndex == 2) {
+      // Favorites tab
+      context.read<LibraryBloc>().add(const LoadFavoriteStories());
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: totalItems,
-      itemBuilder: (context, index) {
-        // Show loading cards first
-        if (index < loadingCardsList.length) {
-          final loadingCardData = loadingCardsList[index];
-          return LoadingStoryCard(
-            tempStoryId: loadingCardData['tempStoryId'],
-            prompt: loadingCardData['prompt'],
-            ageRange: loadingCardData['ageRange'],
-            startTime: loadingCardData['startTime'],
-          );
-        }
+    // Also refresh the subscription state to update free stories count
+    context.read<SubscriptionBloc>().add(const RefreshFreeStoriesCount());
 
-        // Show regular stories after loading cards
-        final storyIndex = index - loadingCardsList.length;
-        final story = stories[storyIndex];
-        return StoryCard(
-          story: story,
-          onTap: () => _navigateToStoryReader(context, story),
-          onFavoriteToggle: () => _toggleFavorite(context, story),
-        );
-      },
-    );
+    // Wait a bit to ensure the refresh completes
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 
   void _navigateToStoryGeneration(BuildContext context) async {

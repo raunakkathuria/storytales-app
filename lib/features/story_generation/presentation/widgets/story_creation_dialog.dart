@@ -24,6 +24,48 @@ class StoryCreationDialog extends StatefulWidget {
   static Future<void> show(BuildContext context) async {
     // Get the StoryGenerationBloc from the parent context
     final bloc = context.read<StoryGenerationBloc>();
+    final currentState = bloc.state;
+
+    // First check if there's already a story generation in progress
+    if (_isGenerationInProgress(currentState)) {
+      // Auto-clear error cards and allow new generation
+      if (currentState is BackgroundGenerationFailure) {
+        // Clear the error card automatically
+        bloc.add(ClearFailedStoryGeneration(tempStoryId: currentState.tempStoryId));
+        // Continue with the generation process - don't return early
+      } else {
+        // Show a helpful message for active generations
+        String message;
+        if (currentState is StoryGenerationInBackground) {
+          message = '✨ Your story is being created! Please wait for it to finish.';
+        } else {
+          message = '🧙‍♂️ A magical story is already in progress! Please wait a moment.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              message,
+              style: const TextStyle(
+                fontFamily: StoryTalesTheme.fontFamilyBody,
+                fontSize: 18, // Increased font size
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            backgroundColor: StoryTalesTheme.primaryColor, // Use primary color for info messages
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Got it',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+        return;
+      }
+    }
 
     // Check if the user can generate a story by dispatching an event
     // and waiting for the result
@@ -65,6 +107,14 @@ class StoryCreationDialog extends StatefulWidget {
       // Return a completed future since we're not showing a dialog
       return Future.value();
     }
+  }
+
+  /// Check if there's a story generation in progress or failed states that need to be cleared
+  static bool _isGenerationInProgress(StoryGenerationState state) {
+    return state is StoryGenerationLoading ||
+           state is StoryGenerationCountdown ||
+           state is StoryGenerationInBackground ||
+           state is BackgroundGenerationFailure;
   }
 
   @override
@@ -159,19 +209,8 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
         } else if (state is BackgroundGenerationFailure) {
           // Store the tempStoryId of the failed generation
           _failedTempStoryId = state.tempStoryId;
-          // Show error notification
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: ResponsiveText(
-                text: 'Story creation failed: ${state.error}',
-                style: const TextStyle(
-                  fontFamily: StoryTalesTheme.fontFamilyBody,
-                  fontSize: 16,
-                ),
-              ),
-              backgroundColor: StoryTalesTheme.errorColor,
-            ),
-          );
+          // Don't show SnackBar here - the error will be displayed in the dialog itself
+          // via _buildErrorDisplay when the dialog is in loading state
         } else if (state is StoryGenerationLoading) {
           // Only start cycling messages when loading first begins
           if (!_isLoading) {
@@ -574,16 +613,64 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
 
   void _generateStory() {
     if (_formKey.currentState?.validate() ?? false) {
-      // Instead of creating a subscription, we'll use the BlocConsumer
-      // to handle the state changes. Just trigger the check directly.
       final bloc = context.read<StoryGenerationBloc>();
+      final currentState = bloc.state;
 
-      // Trigger the check
+      // Check if there's already a story generation in progress
+      if (_isGenerationInProgress(currentState)) {
+        // Auto-clear error cards and allow new generation
+        if (currentState is BackgroundGenerationFailure) {
+          // Clear the error card automatically
+          bloc.add(ClearFailedStoryGeneration(tempStoryId: currentState.tempStoryId));
+          // Continue with the generation process - don't return early
+        } else {
+          // Show a helpful message for active generations
+          String message;
+          if (currentState is StoryGenerationInBackground) {
+            message = '✨ Your story is being created! Please wait for it to finish.';
+          } else {
+            message = '🧙‍♂️ A magical story is already in progress! Please wait a moment.';
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                message,
+                style: const TextStyle(
+                  fontFamily: StoryTalesTheme.fontFamilyBody,
+                  fontSize: 18, // Increased font size
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              backgroundColor: StoryTalesTheme.primaryColor, // Use primary color for info messages
+              duration: const Duration(seconds: 4),
+              action: SnackBarAction(
+                label: 'Got it',
+                textColor: Colors.white,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                },
+              ),
+            ),
+          );
+          return;
+        }
+      }
+
+      // Trigger the check only if no generation is in progress
       bloc.add(const CheckCanGenerateStory());
 
       // The BlocConsumer will handle the CanGenerateStory state and
       // automatically trigger the countdown when appropriate
     }
+  }
+
+  /// Check if there's a story generation in progress or failed states that need to be cleared
+  bool _isGenerationInProgress(StoryGenerationState state) {
+    return state is StoryGenerationLoading ||
+           state is StoryGenerationCountdown ||
+           state is StoryGenerationInBackground ||
+           state is BackgroundGenerationFailure;
   }
 
   // This method will be called by the BlocConsumer when it receives CanGenerateStory

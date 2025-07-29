@@ -201,7 +201,7 @@ class _LoadingStoryCardState extends State<LoadingStoryCard>
 
   Widget _buildCentralWizard() {
     return const Center(
-      child: AnimatedLogo(size: 60),
+      child: AnimatedLogo(size: 120),
     );
   }
 
@@ -220,7 +220,7 @@ class _LoadingStoryCardState extends State<LoadingStoryCard>
                 text: _statusMessages[_currentStatusIndex],
                 style: const TextStyle(
                   color: StoryTalesTheme.primaryColor,
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                   fontFamily: StoryTalesTheme.fontFamilyBody,
                   shadows: [
