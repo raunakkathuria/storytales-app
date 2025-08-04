@@ -54,6 +54,14 @@ class FetchApiStory extends LibraryEvent {
   List<Object?> get props => [storyId];
 }
 
+/// Event to retry loading stories when there's a network issue.
+class RetryLoadStories extends LibraryEvent {
+  const RetryLoadStories();
+
+  @override
+  List<Object?> get props => [];
+}
+
 /// Enum for library tabs.
 enum LibraryTab {
   all,

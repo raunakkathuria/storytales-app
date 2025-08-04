@@ -249,10 +249,10 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const ResponsiveIcon(
-                          icon: Icons.auto_stories,
+                        ResponsiveIcon(
+                          icon: state.showRetryButton ? Icons.wifi_off : Icons.auto_stories,
                           sizeCategory: IconSizeCategory.large,
-                          color: StoryTalesTheme.accentColor,
+                          color: state.showRetryButton ? StoryTalesTheme.errorColor : StoryTalesTheme.accentColor,
                         ),
                         const SizedBox(height: 16),
                         ResponsiveText(
@@ -261,7 +261,18 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 24),
-                        if (state.activeTab == LibraryTab.all)
+                        if (state.showRetryButton)
+                          ElevatedButton(
+                            onPressed: () => context.read<LibraryBloc>().add(const RetryLoadStories()),
+                            child: const ResponsiveText(
+                              text: 'Retry',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: StoryTalesTheme.fontFamilyBody,
+                              ),
+                            ),
+                          )
+                        else if (state.activeTab == LibraryTab.all)
                           ElevatedButton(
                             onPressed: () => _navigateToStoryGeneration(context),
                             child: const ResponsiveText(

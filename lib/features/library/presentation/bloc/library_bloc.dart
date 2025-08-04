@@ -21,6 +21,7 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     on<FilterByTab>(_onFilterByTab);
     on<LoadApiPreGeneratedStories>(_onLoadApiPreGeneratedStories);
     on<FetchApiStory>(_onFetchApiStory);
+    on<RetryLoadStories>(_onRetryLoadStories);
   }
 
   /// Handle the LoadAllStories event.
@@ -31,20 +32,49 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     emit(const LibraryLoading());
 
     try {
-      // Load pre-generated stories from assets if this is the first time
-      await _repository.loadPreGeneratedStories();
+      // First, get any existing stories from the database
+      final existingStories = await _repository.getAllStories();
 
-      // Also try to load pre-generated stories from the API
-      // This is done in the background and won't fail the entire operation
+      // Try to load pre-generated stories from the API in the background
       try {
         await _repository.loadApiPreGeneratedStories();
       } catch (apiError) {
-        // Log the API error but don't fail the entire operation
+        // If we have existing stories, show them and log the API error
+        if (existingStories.isNotEmpty) {
+          await _analyticsService.logError(
+            errorType: 'api_pregenerated_stories_background_load_error',
+            errorMessage: apiError.toString(),
+            errorDetails: 'Failed to load API stories in background during LoadAllStories',
+          );
+
+          emit(LibraryLoaded(
+            stories: existingStories,
+            activeTab: LibraryTab.all,
+          ));
+          return;
+        }
+
+        // If no existing stories and API failed, check if it's a network error
+        if (_isNetworkError(apiError)) {
+          emit(const LibraryEmpty(
+            activeTab: LibraryTab.all,
+            message: 'Please connect to the internet to load stories',
+            showRetryButton: true,
+          ));
+        } else {
+          emit(const LibraryEmpty(
+            activeTab: LibraryTab.all,
+            message: 'Unable to load stories. Please check your connection and try again.',
+            showRetryButton: true,
+          ));
+        }
+
         await _analyticsService.logError(
-          errorType: 'api_pregenerated_stories_background_load_error',
+          errorType: 'api_pregenerated_stories_load_error',
           errorMessage: apiError.toString(),
-          errorDetails: 'Failed to load API stories in background during LoadAllStories',
+          errorDetails: 'Failed to load API stories during initial LoadAllStories',
         );
+        return;
       }
 
       // Get all stories (including any newly loaded API stories)
@@ -53,7 +83,8 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
       if (stories.isEmpty) {
         emit(const LibraryEmpty(
           activeTab: LibraryTab.all,
-          message: 'No stories found. Create your first story!',
+          message: 'Please connect to the internet to load stories',
+          showRetryButton: true,
         ));
       } else {
         emit(LibraryLoaded(
@@ -250,5 +281,25 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
         message: e.toString(),
       ));
     }
+  }
+
+  /// Handle the RetryLoadStories event.
+  Future<void> _onRetryLoadStories(
+    RetryLoadStories event,
+    Emitter<LibraryState> emit,
+  ) async {
+    // Simply trigger LoadAllStories again
+    add(const LoadAllStories());
+  }
+
+  /// Check if an error is a network-related error.
+  bool _isNetworkError(dynamic error) {
+    final errorString = error.toString().toLowerCase();
+    return errorString.contains('network') ||
+           errorString.contains('connection') ||
+           errorString.contains('timeout') ||
+           errorString.contains('unreachable') ||
+           errorString.contains('no internet') ||
+           errorString.contains('socketexception');
   }
 }

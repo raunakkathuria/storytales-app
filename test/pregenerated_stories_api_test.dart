@@ -1,13 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:storytales/core/services/local_storage/database_service.dart';
 import 'package:storytales/features/library/data/repositories/story_repository_impl.dart';
 import 'package:storytales/features/story_generation/data/datasources/story_api_client.dart';
 
 import 'pregenerated_stories_api_test.mocks.dart';
 
-@GenerateMocks([DatabaseService, StoryApiClient])
+@GenerateMocks([DatabaseService, StoryApiClient, Transaction])
 void main() {
   group('Pre-Generated Stories API Integration', () {
     late StoryRepositoryImpl repository;
@@ -45,17 +46,18 @@ void main() {
       // Mock database queries to simulate no existing stories
       when(mockDatabaseService.query(
         'stories',
-        where: anyNamed('where'),
-        whereArgs: anyNamed('whereArgs'),
+        where: 'id = ?',
+        whereArgs: ['story1'],
       )).thenAnswer((_) async => []);
 
       // Mock transaction
+      final mockTransaction = MockTransaction();
+      when(mockTransaction.insert(any, any)).thenAnswer((_) async => 1);
+
       when(mockDatabaseService.transaction(any))
           .thenAnswer((invocation) async {
         final callback = invocation.positionalArguments[0] as Function;
-        final mockTxn = MockDatabaseService();
-        when(mockTxn.insert(any, any)).thenAnswer((_) async => 1);
-        await callback(mockTxn);
+        await callback(mockTransaction);
         return null;
       });
 
@@ -66,13 +68,8 @@ void main() {
       verify(mockStoryApiClient.fetchPreGeneratedStories()).called(1);
       verify(mockDatabaseService.query(
         'stories',
-        where: 'id LIKE ?',
-        whereArgs: ['api_pre_gen_%'],
-      )).called(1);
-      verify(mockDatabaseService.query(
-        'stories',
         where: 'id = ?',
-        whereArgs: ['api_pre_gen_story1'],
+        whereArgs: ['story1'],
       )).called(1);
     });
 
@@ -98,16 +95,10 @@ void main() {
       // Mock database to return existing story (simulate duplicate)
       when(mockDatabaseService.query(
         'stories',
-        where: 'id LIKE ?',
-        whereArgs: ['api_pre_gen_%'],
-      )).thenAnswer((_) async => []);
-
-      when(mockDatabaseService.query(
-        'stories',
         where: 'id = ?',
-        whereArgs: ['api_pre_gen_story1'],
+        whereArgs: ['story1'],
       )).thenAnswer((_) async => [
-        {'id': 'api_pre_gen_story1', 'title': 'Existing Story'}
+        {'id': 'story1', 'title': 'Existing Story'}
       ]);
 
       // Act

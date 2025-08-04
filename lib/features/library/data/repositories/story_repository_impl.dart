@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:storytales/core/services/local_storage/database_service.dart';
@@ -240,34 +237,6 @@ class StoryRepositoryImpl implements StoryRepository {
     final story = await getStoryById(id);
     final updatedStory = story.copyWith(isFavorite: !story.isFavorite);
     await updateStory(updatedStory);
-  }
-
-
-  @override
-  Future<void> loadPreGeneratedStories() async {
-    // Check if pre-generated stories are already loaded
-    final existingStories = await _databaseService.query(
-      'stories',
-      where: 'is_pregenerated = ?',
-      whereArgs: [1],
-    );
-
-    if (existingStories.isNotEmpty) {
-      // Pre-generated stories already loaded
-      return;
-    }
-
-    // Load pre-generated stories from JSON asset
-    final jsonString = await rootBundle.loadString('assets/data/pre_generated_stories.json');
-    final jsonData = json.decode(jsonString);
-    final stories = (jsonData['stories'] as List)
-        .map((storyJson) => StoryModel.fromPreGeneratedJson(storyJson))
-        .toList();
-
-    // Save pre-generated stories to database
-    for (var story in stories) {
-      await saveStory(story);
-    }
   }
 
   @override

@@ -22,45 +22,6 @@ class StoryModel extends Story {
     required super.questions,
   });
 
-  /// Convert from pre-generated stories JSON format
-  factory StoryModel.fromPreGeneratedJson(Map<String, dynamic> json) {
-    final metadata = json['metadata'];
-    final data = json['data'];
-    final uuid = const Uuid();
-    final storyId = 'pre_gen_${uuid.v4()}';
-
-    final pages = (data['pages'] as List).asMap().entries.map((entry) {
-      return StoryPageModel(
-        id: 'page_${uuid.v4()}',
-        storyId: storyId,
-        pageNumber: entry.key,
-        content: entry.value['content'],
-        imagePath: entry.value['image_url'],
-      );
-    }).toList();
-
-    final questions = List<String>.from(data['questions']);
-
-    return StoryModel(
-      id: storyId,
-      title: data['title'],
-      summary: data['summary'],
-      coverImagePath: data['cover_image_url'],
-      createdAt: DateTime.parse(metadata['created_at']),
-      author: metadata['author'],
-      ageRange: metadata['age_range'],
-      readingTime: metadata['reading_time'],
-      originalPrompt: metadata['original_prompt'],
-      genre: metadata['genre'],
-      theme: metadata['theme'],
-      tags: List<String>.from(metadata['tags']),
-      isPregenerated: true,
-      isFavorite: false,
-      pages: pages,
-      questions: questions,
-    );
-  }
-
   /// Convert from AI response JSON format
   factory StoryModel.fromAiResponseJson(Map<String, dynamic> json) {
     final metadata = json['metadata'];
@@ -157,7 +118,7 @@ class StoryModel extends Story {
         storyId: storyId,
         pageNumber: index,
         content: pageData['content'] as String? ?? '',
-        imagePath: pageData['image_url'] as String? ?? 'assets/images/stories/placeholder.jpg',
+        imagePath: pageData['image_url'] as String? ?? '',
       );
     }).toList();
 
@@ -168,7 +129,7 @@ class StoryModel extends Story {
       id: storyId,
       title: json['title'] as String? ?? 'Untitled Story',
       summary: json['summary'] as String? ?? 'A wonderful story awaits!',
-      coverImagePath: pages.isNotEmpty ? pages.first.imagePath : 'assets/images/stories/placeholder.jpg',
+      coverImagePath: pages.isNotEmpty ? pages.first.imagePath : '',
       createdAt: DateTime.parse(json['created_at']),
       author: 'StoryTales API',
       ageRange: json['age_range'] as String?,

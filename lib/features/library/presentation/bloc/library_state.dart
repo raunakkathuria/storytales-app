@@ -84,14 +84,16 @@ class FavoriteToggled extends LibraryState {
 class LibraryEmpty extends LibraryState {
   final LibraryTab activeTab;
   final String message;
+  final bool showRetryButton;
 
   const LibraryEmpty({
     required this.activeTab,
     required this.message,
+    this.showRetryButton = false,
   });
 
   @override
-  List<Object?> get props => [activeTab, message];
+  List<Object> get props => [activeTab, message, showRetryButton];
 }
 
 /// State when an API story is being fetched.

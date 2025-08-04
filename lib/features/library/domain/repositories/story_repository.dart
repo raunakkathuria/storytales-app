@@ -20,10 +20,6 @@ abstract class StoryRepository {
   /// Toggle the favorite status of a story.
   Future<void> toggleFavorite(String id);
 
-
-  /// Load pre-generated stories from the assets and save them to the local database.
-  Future<void> loadPreGeneratedStories();
-
   /// Fetch and load pre-generated stories from the API.
   Future<void> loadApiPreGeneratedStories();
 
