@@ -19,6 +19,8 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     on<LoadFavoriteStories>(_onLoadFavoriteStories);
     on<ToggleFavorite>(_onToggleFavorite);
     on<FilterByTab>(_onFilterByTab);
+    on<LoadApiPreGeneratedStories>(_onLoadApiPreGeneratedStories);
+    on<FetchApiStory>(_onFetchApiStory);
   }
 
   /// Handle the LoadAllStories event.
@@ -29,10 +31,23 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     emit(const LibraryLoading());
 
     try {
-      // Load pre-generated stories if this is the first time
+      // Load pre-generated stories from assets if this is the first time
       await _repository.loadPreGeneratedStories();
 
-      // Get all stories
+      // Also try to load pre-generated stories from the API
+      // This is done in the background and won't fail the entire operation
+      try {
+        await _repository.loadApiPreGeneratedStories();
+      } catch (apiError) {
+        // Log the API error but don't fail the entire operation
+        await _analyticsService.logError(
+          errorType: 'api_pregenerated_stories_background_load_error',
+          errorMessage: apiError.toString(),
+          errorDetails: 'Failed to load API stories in background during LoadAllStories',
+        );
+      }
+
+      // Get all stories (including any newly loaded API stories)
       final stories = await _repository.getAllStories();
 
       if (stories.isEmpty) {
@@ -154,6 +169,86 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
       add(const LoadAllStories());
     } else {
       add(const LoadFavoriteStories());
+    }
+  }
+
+  /// Handle the LoadApiPreGeneratedStories event.
+  Future<void> _onLoadApiPreGeneratedStories(
+    LoadApiPreGeneratedStories event,
+    Emitter<LibraryState> emit,
+  ) async {
+    try {
+      // Load pre-generated stories from the API
+      await _repository.loadApiPreGeneratedStories();
+
+      // Log analytics event for successful API story loading
+      await _analyticsService.logEvent(
+        eventName: 'api_pregenerated_stories_loaded',
+        parameters: {
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      );
+
+      // After loading API stories, refresh the current view
+      // Check the current state to determine which tab to reload
+      if (state is LibraryLoaded) {
+        final currentState = state as LibraryLoaded;
+        if (currentState.activeTab == LibraryTab.all) {
+          add(const LoadAllStories());
+        } else {
+          add(const LoadFavoriteStories());
+        }
+      } else {
+        // Default to loading all stories
+        add(const LoadAllStories());
+      }
+    } catch (e) {
+      // Don't emit an error state here, just log it
+      // The user will still see their existing stories
+      await _analyticsService.logError(
+        errorType: 'api_pregenerated_stories_load_error',
+        errorMessage: e.toString(),
+        errorDetails: 'Failed to load pre-generated stories from API',
+      );
+
+      // Optionally, you could show a snackbar or toast message to inform the user
+      // that new stories couldn't be loaded, but existing stories are still available
+    }
+  }
+
+  /// Handle the FetchApiStory event.
+  Future<void> _onFetchApiStory(
+    FetchApiStory event,
+    Emitter<LibraryState> emit,
+  ) async {
+    emit(ApiStoryFetching(storyId: event.storyId));
+
+    try {
+      // Fetch the full story from the API and save it locally
+      await _repository.fetchAndSaveApiStoryById(event.storyId);
+
+      // Log analytics event for successful API story fetch
+      await _analyticsService.logEvent(
+        eventName: 'api_story_fetched',
+        parameters: {
+          'story_id': event.storyId,
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      );
+
+      emit(ApiStoryFetched(storyId: event.storyId));
+    } catch (e) {
+      // Log analytics event for error
+      await _analyticsService.logError(
+        errorType: 'api_story_fetch_error',
+        errorMessage: e.toString(),
+        errorDetails: 'Failed to fetch API story with ID: ${event.storyId}',
+      );
+
+      emit(ApiStoryFetchError(
+        storyId: event.storyId,
+        message: e.toString(),
+      ));
     }
   }
 }

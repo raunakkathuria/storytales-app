@@ -39,6 +39,21 @@ class FilterByTab extends LibraryEvent {
   List<Object?> get props => [tab];
 }
 
+/// Event to load pre-generated stories from the API.
+class LoadApiPreGeneratedStories extends LibraryEvent {
+  const LoadApiPreGeneratedStories();
+}
+
+/// Event to fetch a single API story by ID.
+class FetchApiStory extends LibraryEvent {
+  final String storyId;
+
+  const FetchApiStory({required this.storyId});
+
+  @override
+  List<Object?> get props => [storyId];
+}
+
 /// Enum for library tabs.
 enum LibraryTab {
   all,

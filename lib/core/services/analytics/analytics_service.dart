@@ -149,4 +149,15 @@ class AnalyticsService {
   Future<void> logAppOpen() async {
     await _analytics.logAppOpen();
   }
+
+  /// Log a custom event with parameters.
+  Future<void> logEvent({
+    required String eventName,
+    Map<String, Object>? parameters,
+  }) async {
+    await _analytics.logEvent(
+      name: eventName,
+      parameters: parameters,
+    );
+  }
 }

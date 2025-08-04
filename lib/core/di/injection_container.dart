@@ -169,8 +169,12 @@ Future<void> init() async {
 
 
   //! Data sources
-  // Register Dio
+  // Register Dio with base URL configuration
   final dio = Dio();
+  // Configure Dio with the base URL from app config
+  dio.options.baseUrl = appConfig.apiBaseUrl;
+  dio.options.connectTimeout = Duration(seconds: appConfig.apiTimeoutSeconds);
+  dio.options.receiveTimeout = Duration(seconds: appConfig.apiTimeoutSeconds);
   sl.registerSingleton<Dio>(dio);
 
   sl.registerLazySingleton<StoryApiClient>(
@@ -198,6 +202,7 @@ Future<void> init() async {
   sl.registerLazySingleton<StoryRepository>(
     () => StoryRepositoryImpl(
       databaseService: sl(),
+      storyApiClient: sl(),
     ),
   );
 

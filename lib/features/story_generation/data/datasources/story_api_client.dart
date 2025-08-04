@@ -281,6 +281,235 @@ class StoryApiClient {
     };
   }
 
+  /// Fetch pre-generated stories from the API.
+  Future<List<Map<String, dynamic>>> fetchPreGeneratedStories() async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t reach the magical story realm right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    // Log the current configuration for debugging
+    _loggingService.info('Fetching pre-generated stories from: ${_appConfig.apiBaseUrl}/stories');
+
+    try {
+      // Make the API call to fetch pre-generated stories
+      final response = await _dio.get(
+        '/stories',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('Pre-generated stories API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        _loggingService.info('Pre-generated stories API Response received successfully');
+
+        // Extract the stories array from the response
+        if (apiResponse is Map<String, dynamic> && apiResponse.containsKey('stories')) {
+          final stories = apiResponse['stories'] as List;
+          return stories.cast<Map<String, dynamic>>();
+        } else {
+          throw Exception('Invalid API response format: missing stories array');
+        }
+      } else {
+        _loggingService.error('Pre-generated stories API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to fetch pre-generated stories: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Enhanced error logging
+      if (e is DioException) {
+        _loggingService.error('DioException Details for pre-generated stories:');
+        _loggingService.error('- Type: ${e.type}');
+        _loggingService.error('- Message: ${e.message}');
+        _loggingService.error('- Response Status: ${e.response?.statusCode}');
+        _loggingService.error('- Response Data: ${e.response?.data}');
+        _loggingService.error('- Response Headers: ${e.response?.headers}');
+      }
+      _loggingService.error('Error fetching pre-generated stories: $e');
+
+      // Provide user-friendly error messages
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while fetching stories. Please try again!';
+      String errorType = 'unknown_error';
+      String technicalDetails = e.toString();
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorType = 'timeout_error';
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to gather the magical stories! The connection seems slow. Please check your internet and let\'s try again!';
+            technicalDetails = 'Timeout: ${e.type.name} - ${e.message}';
+            break;
+          case DioExceptionType.connectionError:
+            errorType = 'connection_error';
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t reach the magical story library right now. Please check your internet connection and we\'ll try to reconnect!';
+            technicalDetails = 'Connection error: ${e.message}';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 404) {
+              errorType = 'not_found_error';
+              errorMessage = '📚 The Story Wizard\'s library seems to be temporarily unavailable. We\'re working to restore access to all the magical stories!';
+              technicalDetails = 'Stories endpoint not found: HTTP $statusCode';
+            } else if (statusCode == 500) {
+              errorType = 'server_error';
+              errorMessage = '🏰 The Story Wizard\'s library is having some magical difficulties right now. We\'re working to fix it - please try again in a little while!';
+              technicalDetails = 'Server error: HTTP $statusCode - ${e.response?.data}';
+            } else {
+              errorType = 'api_error';
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while accessing the story library. Let\'s try again!';
+              technicalDetails = 'API error: HTTP $statusCode - ${e.response?.data}';
+            }
+            break;
+          case DioExceptionType.cancel:
+            errorType = 'cancelled_error';
+            errorMessage = '📖 The story fetching was cancelled. No worries - the Story Wizard is ready whenever you are!';
+            technicalDetails = 'Request cancelled by user';
+            break;
+          default:
+            errorType = 'dio_error';
+            errorMessage = '🌙 Something unexpected happened while accessing the magical story library. Our Story Wizard is investigating - please try again!';
+            technicalDetails = 'DioException: ${e.type.name} - ${e.message}';
+        }
+      }
+
+      // Log detailed analytics for pre-generated stories fetch failures
+      await _analyticsService.logError(
+        errorType: 'pregenerated_stories_fetch_$errorType',
+        errorMessage: errorMessage, // User-friendly message
+        errorDetails: json.encode({
+          'technical_error': technicalDetails,
+          'api_endpoint': '${_appConfig.apiBaseUrl}/stories',
+          'environment': _appConfig.environment,
+          'timestamp': DateTime.now().toIso8601String(),
+        }),
+      );
+
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Fetch a single story by ID from the API.
+  Future<Map<String, dynamic>> fetchStoryById(String storyId) async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t reach the magical story realm right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    // Log the current configuration for debugging
+    _loggingService.info('Fetching story by ID from: ${_appConfig.apiBaseUrl}/stories/$storyId');
+
+    try {
+      // Make the API call to fetch the specific story
+      final response = await _dio.get(
+        '/stories/$storyId',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('Story by ID API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        _loggingService.info('Story by ID API Response received successfully');
+
+        // The response format is different from the list endpoint
+        // It returns a single story object with nested story_data
+        return apiResponse as Map<String, dynamic>;
+      } else {
+        _loggingService.error('Story by ID API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to fetch story: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Enhanced error logging
+      if (e is DioException) {
+        _loggingService.error('DioException Details for story by ID:');
+        _loggingService.error('- Type: ${e.type}');
+        _loggingService.error('- Message: ${e.message}');
+        _loggingService.error('- Response Status: ${e.response?.statusCode}');
+        _loggingService.error('- Response Data: ${e.response?.data}');
+        _loggingService.error('- Response Headers: ${e.response?.headers}');
+      }
+      _loggingService.error('Error fetching story by ID: $e');
+
+      // Provide user-friendly error messages
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while fetching the story. Please try again!';
+      String errorType = 'unknown_error';
+      String technicalDetails = e.toString();
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorType = 'timeout_error';
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to retrieve this magical story! The connection seems slow. Please check your internet and let\'s try again!';
+            technicalDetails = 'Timeout: ${e.type.name} - ${e.message}';
+            break;
+          case DioExceptionType.connectionError:
+            errorType = 'connection_error';
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t reach the magical story right now. Please check your internet connection and we\'ll try to reconnect!';
+            technicalDetails = 'Connection error: ${e.message}';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 404) {
+              errorType = 'not_found_error';
+              errorMessage = '📚 This magical story seems to have wandered off! It might have been moved or is temporarily unavailable. Please try selecting another story!';
+              technicalDetails = 'Story not found: HTTP $statusCode';
+            } else if (statusCode == 500) {
+              errorType = 'server_error';
+              errorMessage = '🏰 The Story Wizard\'s library is having some magical difficulties right now. We\'re working to fix it - please try again in a little while!';
+              technicalDetails = 'Server error: HTTP $statusCode - ${e.response?.data}';
+            } else {
+              errorType = 'api_error';
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while retrieving this story. Let\'s try again!';
+              technicalDetails = 'API error: HTTP $statusCode - ${e.response?.data}';
+            }
+            break;
+          case DioExceptionType.cancel:
+            errorType = 'cancelled_error';
+            errorMessage = '📖 The story fetching was cancelled. No worries - the Story Wizard is ready whenever you are!';
+            technicalDetails = 'Request cancelled by user';
+            break;
+          default:
+            errorType = 'dio_error';
+            errorMessage = '🌙 Something unexpected happened while retrieving this magical story. Our Story Wizard is investigating - please try again!';
+            technicalDetails = 'DioException: ${e.type.name} - ${e.message}';
+        }
+      }
+
+      // Log detailed analytics for story fetch failures
+      await _analyticsService.logError(
+        errorType: 'story_fetch_by_id_$errorType',
+        errorMessage: errorMessage, // User-friendly message
+        errorDetails: json.encode({
+          'technical_error': technicalDetails,
+          'story_id': storyId,
+          'api_endpoint': '${_appConfig.apiBaseUrl}/stories/$storyId',
+          'environment': _appConfig.environment,
+          'timestamp': DateTime.now().toIso8601String(),
+        }),
+      );
+
+      throw Exception(errorMessage);
+    }
+  }
+
   /// Transform image URLs from mock data to use the configured API base URL
   String _transformImageUrl(String? originalUrl) {
     if (originalUrl == null) {

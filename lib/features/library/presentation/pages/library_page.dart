@@ -114,48 +114,98 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
         ],
       ),
       body: SafeArea(
-        child: BlocListener<StoryGenerationBloc, StoryGenerationState>(
-          listener: (context, state) {
-            // Handle loading card display
-            if (state is ShowLoadingCard) {
-              setState(() {
-                _loadingCards[state.tempStoryId] = {
-                  'tempStoryId': state.tempStoryId,
-                  'prompt': state.prompt,
-                  'ageRange': state.ageRange,
-                  'startTime': state.startTime,
-                };
-              });
-            }
+        child: MultiBlocListener(
+          listeners: [
+            BlocListener<StoryGenerationBloc, StoryGenerationState>(
+              listener: (context, state) {
+                // Handle loading card display
+                if (state is ShowLoadingCard) {
+                  setState(() {
+                    _loadingCards[state.tempStoryId] = {
+                      'tempStoryId': state.tempStoryId,
+                      'prompt': state.prompt,
+                      'ageRange': state.ageRange,
+                      'startTime': state.startTime,
+                    };
+                  });
+                }
 
-            // Handle loading card removal
-            if (state is RemoveLoadingCard) {
-              setState(() {
-                _loadingCards.remove(state.tempStoryId);
-              });
-            }
+                // Handle loading card removal
+                if (state is RemoveLoadingCard) {
+                  setState(() {
+                    _loadingCards.remove(state.tempStoryId);
+                  });
+                }
 
-            // When a story is generated in the background, refresh the library
-            if (state is BackgroundGenerationComplete) {
-              // Refresh the library to show the new story
-              context.read<LibraryBloc>().add(const LoadAllStories());
+                // When a story is generated in the background, refresh the library
+                if (state is BackgroundGenerationComplete) {
+                  // Refresh the library to show the new story
+                  context.read<LibraryBloc>().add(const LoadAllStories());
 
-              // Also refresh the subscription state to update free stories count
-              context.read<SubscriptionBloc>().add(const RefreshFreeStoriesCount());
-            }
+                  // Also refresh the subscription state to update free stories count
+                  context.read<SubscriptionBloc>().add(const RefreshFreeStoriesCount());
+                }
 
-            // Also handle background generation failure
-            if (state is BackgroundGenerationFailure) {
-              // Show error message to user
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Story generation failed: ${state.error}'),
-                  backgroundColor: Colors.red,
-                  duration: const Duration(seconds: 5),
-                ),
-              );
-            }
-          },
+                // Also handle background generation failure
+                if (state is BackgroundGenerationFailure) {
+                  // Show error message to user
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Story generation failed: ${state.error}'),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 5),
+                    ),
+                  );
+                }
+              },
+            ),
+            BlocListener<LibraryBloc, LibraryState>(
+              listener: (context, state) {
+                // Handle API story fetching states
+                if (state is ApiStoryFetching) {
+                  // Show loading indicator
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(
+                      child: Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text('Loading story...'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                } else if (state is ApiStoryFetched) {
+                  // Dismiss loading dialog and navigate to story reader
+                  Navigator.of(context).pop(); // Dismiss loading dialog
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StoryReaderPage(storyId: state.storyId),
+                    ),
+                  );
+                } else if (state is ApiStoryFetchError) {
+                  // Dismiss loading dialog and show error
+                  Navigator.of(context).pop(); // Dismiss loading dialog
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to load story: ${state.message}'),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 5),
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
           child: BlocBuilder<LibraryBloc, LibraryState>(
             builder: (context, state) {
               if (state is LibraryLoading) {
@@ -449,12 +499,35 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
   }
 
   void _navigateToStoryReader(BuildContext context, Story story) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => StoryReaderPage(storyId: story.id),
-      ),
-    );
+    // Check if the story has full content (multiple pages) or just summary
+    if (_needsFullStoryContent(story)) {
+      // Fetch the full story from API first
+      context.read<LibraryBloc>().add(FetchApiStory(storyId: story.id));
+    } else {
+      // Navigate directly to story reader
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => StoryReaderPage(storyId: story.id),
+        ),
+      );
+    }
+  }
+
+  /// Check if a story needs to be fetched from API to get full content.
+  /// Stories from the /stories endpoint typically only have summary content
+  /// and need individual fetching to get the full story pages.
+  bool _needsFullStoryContent(Story story) {
+    // For API pre-generated stories, check if they only have summary content
+    if (story.isPregenerated && story.pages.length == 1) {
+      final pageContent = story.pages.first.content.trim();
+      final storySummary = story.summary.trim();
+
+      // If the page content matches the summary, it needs full fetch
+      return pageContent == storySummary;
+    }
+
+    return false;
   }
 
   void _toggleFavorite(BuildContext context, Story story) {
