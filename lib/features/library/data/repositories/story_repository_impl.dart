@@ -1,21 +1,22 @@
-import 'dart:convert';
-
-import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:storytales/core/services/local_storage/database_service.dart';
 import 'package:storytales/features/library/data/models/story_model.dart';
 import 'package:storytales/features/library/domain/entities/story.dart';
 import 'package:storytales/features/library/domain/repositories/story_repository.dart';
+import 'package:storytales/features/story_generation/data/datasources/story_api_client.dart';
 
 /// Implementation of the [StoryRepository] interface.
 class StoryRepositoryImpl implements StoryRepository {
   final DatabaseService _databaseService;
+  final StoryApiClient _storyApiClient;
   final Uuid _uuid = const Uuid();
 
   StoryRepositoryImpl({
     required DatabaseService databaseService,
-  }) : _databaseService = databaseService;
+    required StoryApiClient storyApiClient,
+  }) : _databaseService = databaseService,
+       _storyApiClient = storyApiClient;
 
   @override
   Future<List<Story>> getAllStories() async {
@@ -238,31 +239,68 @@ class StoryRepositoryImpl implements StoryRepository {
     await updateStory(updatedStory);
   }
 
+  @override
+  Future<void> loadApiPreGeneratedStories() async {
+    try {
+      // Fetch pre-generated stories from the API
+      final apiStories = await _storyApiClient.fetchPreGeneratedStories();
+
+      // Convert API stories to StoryModel and save them
+      for (var apiStoryJson in apiStories) {
+        // Check if this specific story already exists (using UUID directly)
+        final storyId = apiStoryJson['id'];
+        final existingStory = await _databaseService.query(
+          'stories',
+          where: 'id = ?',
+          whereArgs: [storyId],
+        );
+
+        // Only save if the story doesn't already exist
+        if (existingStory.isEmpty) {
+          final storyModel = StoryModel.fromApiPreGeneratedJson(apiStoryJson);
+          await saveStory(storyModel);
+        }
+      }
+    } catch (e) {
+      // Re-throw the exception so the calling code can handle it appropriately
+      // The StoryApiClient already provides user-friendly error messages
+      rethrow;
+    }
+  }
 
   @override
-  Future<void> loadPreGeneratedStories() async {
-    // Check if pre-generated stories are already loaded
-    final existingStories = await _databaseService.query(
-      'stories',
-      where: 'is_pregenerated = ?',
-      whereArgs: [1],
-    );
+  Future<Story> fetchAndSaveApiStoryById(String storyId) async {
+    try {
+      // Check if the story already exists locally (using UUID directly)
+      try {
+        final existingStory = await getStoryById(storyId);
 
-    if (existingStories.isNotEmpty) {
-      // Pre-generated stories already loaded
-      return;
-    }
+        // Check if the existing story has full content or just summary
+        if (existingStory.pages.length == 1 &&
+            existingStory.pages.first.content.trim() == existingStory.summary.trim()) {
+          // Continue to fetch from API to get full content
+        } else {
+          // If it has full content, return it
+          return existingStory;
+        }
+      } catch (e) {
+        // Story doesn't exist locally, continue to fetch from API
+      }
 
-    // Load pre-generated stories from JSON asset
-    final jsonString = await rootBundle.loadString('assets/data/pre_generated_stories.json');
-    final jsonData = json.decode(jsonString);
-    final stories = (jsonData['stories'] as List)
-        .map((storyJson) => StoryModel.fromPreGeneratedJson(storyJson))
-        .toList();
+      // Fetch the story from the API
+      final apiStoryResponse = await _storyApiClient.fetchStoryById(storyId);
 
-    // Save pre-generated stories to database
-    for (var story in stories) {
-      await saveStory(story);
+      // Convert API response to StoryModel
+      final storyModel = StoryModel.fromSingleApiStoryJson(apiStoryResponse);
+
+      // Save story to database (this will update the existing story if it exists)
+      await updateStory(storyModel);
+
+      return storyModel;
+    } catch (e) {
+      // Re-throw the exception so the calling code can handle it appropriately
+      // The StoryApiClient already provides user-friendly error messages
+      rethrow;
     }
   }
 

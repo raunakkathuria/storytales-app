@@ -27,8 +27,8 @@ class ImageService {
     ),
   );
 
-  /// Default placeholder image path
-  static const String placeholderImagePath = 'assets/images/stories/placeholder.jpg';
+  /// Default placeholder image path - using a simple colored container instead
+  static const String placeholderImagePath = '';
 
   /// Get image widget based on path type (network, file, or asset)
   Widget getImage({
@@ -53,17 +53,21 @@ class ImageService {
           ),
         );
 
+    // Handle empty or invalid image paths
+    if (imagePath.isEmpty) {
+      return Builder(
+        builder: (context) => (errorWidget != null) ? errorWidget(context, imagePath, 'Empty image path') : defaultError(context, imagePath, 'Empty image path'),
+      );
+    }
+
     // For local file paths, validate existence
     if (imagePath.startsWith('/')) {
       final file = File(imagePath);
       if (!file.existsSync()) {
         _loggingService.warning('Image file not found: $imagePath, using fallback');
-        // Use fallback asset
-        return Image.asset(
-          placeholderImagePath,
-          fit: fit,
-          errorBuilder: (context, error, stackTrace) =>
-              (errorWidget != null) ? errorWidget(context, imagePath, error) : defaultError(context, imagePath, error),
+        // Use fallback error widget
+        return Builder(
+          builder: (context) => (errorWidget != null) ? errorWidget(context, imagePath, 'File not found') : defaultError(context, imagePath, 'File not found'),
         );
       }
 

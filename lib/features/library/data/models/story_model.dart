@@ -22,45 +22,6 @@ class StoryModel extends Story {
     required super.questions,
   });
 
-  /// Convert from pre-generated stories JSON format
-  factory StoryModel.fromPreGeneratedJson(Map<String, dynamic> json) {
-    final metadata = json['metadata'];
-    final data = json['data'];
-    final uuid = const Uuid();
-    final storyId = 'pre_gen_${uuid.v4()}';
-
-    final pages = (data['pages'] as List).asMap().entries.map((entry) {
-      return StoryPageModel(
-        id: 'page_${uuid.v4()}',
-        storyId: storyId,
-        pageNumber: entry.key,
-        content: entry.value['content'],
-        imagePath: entry.value['image_url'],
-      );
-    }).toList();
-
-    final questions = List<String>.from(data['questions']);
-
-    return StoryModel(
-      id: storyId,
-      title: data['title'],
-      summary: data['summary'],
-      coverImagePath: data['cover_image_url'],
-      createdAt: DateTime.parse(metadata['created_at']),
-      author: metadata['author'],
-      ageRange: metadata['age_range'],
-      readingTime: metadata['reading_time'],
-      originalPrompt: metadata['original_prompt'],
-      genre: metadata['genre'],
-      theme: metadata['theme'],
-      tags: List<String>.from(metadata['tags']),
-      isPregenerated: true,
-      isFavorite: false,
-      pages: pages,
-      questions: questions,
-    );
-  }
-
   /// Convert from AI response JSON format
   factory StoryModel.fromAiResponseJson(Map<String, dynamic> json) {
     final metadata = json['metadata'];
@@ -98,6 +59,127 @@ class StoryModel extends Story {
       pages: pages,
       questions: questions,
     );
+  }
+
+  /// Convert from pre-generated stories API response format
+  factory StoryModel.fromApiPreGeneratedJson(Map<String, dynamic> json) {
+    final uuid = const Uuid();
+    final storyId = json['id']; // Use UUID directly from API
+
+    // Create a single page with the summary as content since the API doesn't provide full story pages
+    final pages = [
+      StoryPageModel(
+        id: 'page_${uuid.v4()}',
+        storyId: storyId,
+        pageNumber: 0,
+        content: json['summary'],
+        imagePath: json['cover_image_url'],
+      ),
+    ];
+
+    // Generate some basic questions based on the story theme and genre
+    final questions = _generateQuestionsForApiStory(json);
+
+    return StoryModel(
+      id: storyId,
+      title: json['title'],
+      summary: json['summary'],
+      coverImagePath: json['cover_image_url'],
+      createdAt: DateTime.parse(json['created_at']),
+      author: 'StoryTales API',
+      ageRange: json['age_range'],
+      readingTime: json['reading_time'], // Use reading time from API
+      originalPrompt: 'Pre-generated story from API',
+      genre: json['genre'],
+      theme: json['theme'],
+      tags: [json['genre'].toLowerCase(), json['theme'].toLowerCase()],
+      isPregenerated: true,
+      isFavorite: false,
+      pages: pages,
+      questions: questions,
+    );
+  }
+
+  /// Convert from single story API response format (with story_data)
+  factory StoryModel.fromSingleApiStoryJson(Map<String, dynamic> json) {
+    final storyId = json['id']; // Use UUID directly from API
+
+    // Extract story data from the nested structure
+    final storyData = json['story_data']['data'] as Map<String, dynamic>;
+    final apiPages = storyData['pages'] as List? ?? [];
+
+    // Convert API pages to StoryPageModel
+    final pages = apiPages.asMap().entries.map((entry) {
+      final index = entry.key;
+      final pageData = entry.value as Map<String, dynamic>;
+
+      return StoryPageModel(
+        id: '${storyId}_page_$index',
+        storyId: storyId,
+        pageNumber: index,
+        content: pageData['content'] as String? ?? '',
+        imagePath: pageData['image_url'] as String? ?? '',
+      );
+    }).toList();
+
+    // Extract questions if available
+    final questions = (storyData['questions'] as List?)?.cast<String>() ?? [];
+
+    return StoryModel(
+      id: storyId,
+      title: json['title'] as String? ?? 'Untitled Story',
+      summary: json['summary'] as String? ?? 'A wonderful story awaits!',
+      coverImagePath: pages.isNotEmpty ? pages.first.imagePath : '',
+      createdAt: DateTime.parse(json['created_at']),
+      author: 'StoryTales API',
+      ageRange: json['age_range'] as String?,
+      readingTime: json['reading_time'] as String? ?? '5 minutes', // Use reading time from API or fallback
+      originalPrompt: 'Pre-generated story from API',
+      genre: json['genre'] as String?,
+      theme: json['theme'] as String?,
+      tags: [
+        if (json['genre'] != null) (json['genre'] as String).toLowerCase(),
+        if (json['theme'] != null) (json['theme'] as String).toLowerCase(),
+      ],
+      isPregenerated: true,
+      isFavorite: false,
+      pages: pages,
+      questions: questions,
+    );
+  }
+
+  /// Generate basic questions for API pre-generated stories
+  static List<String> _generateQuestionsForApiStory(Map<String, dynamic> json) {
+    final theme = json['theme'] as String;
+    final genre = json['genre'] as String;
+
+    // Generate theme-based questions
+    final questions = <String>[];
+
+    if (theme.toLowerCase().contains('courage') || theme.toLowerCase().contains('bravery')) {
+      questions.add('What made the main character brave in this story?');
+      questions.add('Can you think of a time when you were brave?');
+    } else if (theme.toLowerCase().contains('friendship')) {
+      questions.add('How did the characters show friendship in this story?');
+      questions.add('What makes a good friend?');
+    } else if (theme.toLowerCase().contains('family')) {
+      questions.add('How did the family members help each other?');
+      questions.add('What does family mean to you?');
+    } else {
+      questions.add('What was your favorite part of the story?');
+      questions.add('What did you learn from this story?');
+    }
+
+    // Add a genre-based question
+    if (genre.toLowerCase().contains('adventure')) {
+      questions.add('What adventure would you like to go on?');
+    } else if (genre.toLowerCase().contains('fantasy')) {
+      questions.add('If you had magical powers, what would you do?');
+    } else {
+      questions.add('How would you continue this story?');
+    }
+
+    return questions;
   }
 
   /// Convert from database map

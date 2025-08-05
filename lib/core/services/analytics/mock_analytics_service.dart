@@ -105,4 +105,13 @@ class MockAnalyticsService implements AnalyticsService {
     _logger.info('$_loggerName: logAppOpen()');
     return;
   }
+
+  @override
+  Future<void> logEvent({
+    required String eventName,
+    Map<String, Object>? parameters,
+  }) async {
+    _logger.info('$_loggerName: logEvent(eventName: $eventName, parameters: $parameters)');
+    return;
+  }
 }

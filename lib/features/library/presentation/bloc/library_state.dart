@@ -84,12 +84,48 @@ class FavoriteToggled extends LibraryState {
 class LibraryEmpty extends LibraryState {
   final LibraryTab activeTab;
   final String message;
+  final bool showRetryButton;
 
   const LibraryEmpty({
     required this.activeTab,
     required this.message,
+    this.showRetryButton = false,
   });
 
   @override
-  List<Object?> get props => [activeTab, message];
+  List<Object> get props => [activeTab, message, showRetryButton];
+}
+
+/// State when an API story is being fetched.
+class ApiStoryFetching extends LibraryState {
+  final String storyId;
+
+  const ApiStoryFetching({required this.storyId});
+
+  @override
+  List<Object?> get props => [storyId];
+}
+
+/// State when an API story has been fetched successfully.
+class ApiStoryFetched extends LibraryState {
+  final String storyId;
+
+  const ApiStoryFetched({required this.storyId});
+
+  @override
+  List<Object?> get props => [storyId];
+}
+
+/// State when there is an error fetching an API story.
+class ApiStoryFetchError extends LibraryState {
+  final String storyId;
+  final String message;
+
+  const ApiStoryFetchError({
+    required this.storyId,
+    required this.message,
+  });
+
+  @override
+  List<Object?> get props => [storyId, message];
 }
