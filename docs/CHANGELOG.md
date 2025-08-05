@@ -164,6 +164,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improved connectivity handling with mock data fallback
   - Added API endpoint and configuration validation
 
+## [1.0.7] - 2025-08-06
+
+### Added
+- **Pre-Generated Stories API Integration**
+  - Transitioned from asset-based pre-generated stories to fully API-driven approach
+  - Enhanced StoryApiClient with `fetchPreGeneratedStories()` and `fetchStoryById()` methods
+  - Added comprehensive error handling for network failures and API issues
+  - Implemented repository layer updates with `loadApiPreGeneratedStories()` and `fetchAndSaveApiStoryById()` methods
+  - Enhanced StoryModel with API response parsing methods (`fromApiPreGeneratedJson`, `fromSingleApiStoryJson`)
+  - Added network-aware error handling with retry functionality in LibraryBloc
+  - Implemented `RetryLoadStories` event and `showRetryButton` state for improved UX
+  - Added comprehensive test coverage: 3 tests for API integration scenarios (success, duplicates, errors)
+  - Enhanced background generation tests for countdown and completion states
+  - Implemented duplicate prevention logic using story UUIDs to prevent duplicate API stories
+  - Added transaction-based database operations for consistency and proper error handling
+
+### Changed
+- **Removed Story Assets**: Eliminated pre-generated story JSON file and image assets to reduce app bundle size
+- **Enhanced ImageService**: Added graceful empty path handling with fallback widgets for missing images
+- **Updated StoryModel**: Now uses API UUIDs directly instead of prefixed IDs for better consistency
+- **Improved Error Messages**: Creative, magical-themed error messages for various network failure scenarios
+- **Enhanced Analytics**: Detailed error tracking with categorized failure types for better monitoring
+
+### Technical Improvements
+- **Dynamic Content Loading**: Fresh stories available without app updates through API integration
+- **Scalable Architecture**: Easy addition of new stories via API without requiring app releases
+- **Network-Aware UI**: Clear feedback for connectivity issues with user-friendly retry functionality
+- **Clean Architecture**: Proper separation of concerns with BLoC pattern maintained throughout
+- **Comprehensive Logging**: Enhanced API client with detailed request/response logging for debugging
+- **Production Ready**: Robust error handling, analytics integration, and comprehensive test coverage
+
+### Benefits
+- **Reduced App Bundle Size**: Removed story assets to minimize app download and installation size
+- **Better User Experience**: Network-aware error handling with intuitive retry functionality
+- **Improved Scalability**: Dynamic content loading enables rapid content updates without app store releases
+- **Enhanced Reliability**: Comprehensive error handling and fallback mechanisms for network issues
+
 ## [Unreleased] - Phase 2 (In Progress)
 
 ### Completed
@@ -218,6 +255,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Environment-based configuration loading system
   - Enhanced debugging and monitoring capabilities
 
+- **Pre-Generated Stories API** ✅ (docs/specification/phase-two/pre-generated-stories-api.md)
+  - Transitioned from asset-based pre-generated stories to fully API-driven approach [Implemented]
+  - Enhanced StoryApiClient with fetchPreGeneratedStories() and fetchStoryById() methods [Implemented]
+  - Added comprehensive error handling for network failures and API issues [Implemented]
+  - Implemented repository layer updates with loadApiPreGeneratedStories() and fetchAndSaveApiStoryById() [Implemented]
+  - Enhanced StoryModel with API response parsing methods (fromApiPreGeneratedJson, fromSingleApiStoryJson) [Implemented]
+  - Added network-aware error handling with retry functionality in LibraryBloc [Implemented]
+  - Implemented RetryLoadStories event and showRetryButton state for improved UX [Implemented]
+  - Removed pre-generated story assets (JSON file and images) to reduce app bundle size [Implemented]
+  - Enhanced ImageService with graceful empty path handling and fallback widgets [Implemented]
+  - Updated StoryModel to use API UUIDs directly instead of prefixed IDs [Implemented]
+  - Added creative, magical-themed error messages for various network failure scenarios [Implemented]
+  - Enhanced analytics with detailed error tracking and categorized failure types [Implemented]
+  - Implemented duplicate prevention logic using story UUIDs [Implemented]
+  - Added comprehensive test coverage: 3 tests for API integration scenarios (success, duplicates, errors) [Implemented]
+  - Enhanced background generation tests for countdown and completion states [Implemented]
+  - Implemented transaction-based database operations for consistency [Implemented]
+  - Added dynamic content loading enabling fresh stories without app updates [Implemented]
+  - Created scalable architecture for easy addition of new stories via API [Implemented]
+
 ### In Development
 
 ### Coming Soon
@@ -232,12 +289,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tags system for flexible categorization
   - Enhanced UI with animations
   - Organization tools (batch operations, collections, reading lists)
-
-- **Pre-Generated Stories API** (docs/specification/phase-two/pre-generated-stories-api.md)
-  - Cloud Functions API for serving pre-generated stories
-  - Curated story collections
-  - Discovery UI for browsing and discovering stories
-  - Integration with the existing library system
 
 - **In-App Feedback** (docs/specification/phase-two/in-app-feedback.md)
   - Feedback collection system

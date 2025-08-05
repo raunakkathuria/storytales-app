@@ -155,6 +155,12 @@ For a more detailed changelog with implementation status, see [docs/CHANGELOG.md
   - Enhanced API client with comprehensive logging
   - Development environment management with emulator support
 
+- **Pre-Generated Stories API** ✅
+  - API integration for fetching curated stories from server
+  - Transition from asset-based to API-driven approach
+  - Network-aware error handling with retry functionality
+  - Comprehensive test coverage and analytics integration
+
 ### In Development
 - **Cross-Device Synchronization**
   - Cloud-based story storage
@@ -169,17 +175,42 @@ For a more detailed changelog with implementation status, see [docs/CHANGELOG.md
   - Enhanced UI with animations
   - Organization tools (batch operations, collections, reading lists)
 
-- **Pre-Generated Stories API**
-  - Cloud Functions API for serving pre-generated stories
-  - Curated story collections
-  - Discovery UI for browsing and discovering stories
-  - Integration with the existing library system
-
 - **In-App Feedback**
   - Feedback collection system
   - Bug reporting system
   - Feature request system
   - User satisfaction surveys
+
+## [1.0.7] - 2025-08-06 - Pre-Generated Stories API Integration
+
+### Added
+- **Pre-Generated Stories API Integration**: Transitioned from asset-based pre-generated stories to a fully API-driven approach
+- **Enhanced StoryApiClient**: Added `fetchPreGeneratedStories()` and `fetchStoryById()` methods with comprehensive error handling
+- **Repository Layer Updates**: New `loadApiPreGeneratedStories()` and `fetchAndSaveApiStoryById()` methods in `StoryRepositoryImpl`
+- **Enhanced Data Models**: Added API response parsing methods (`fromApiPreGeneratedJson`, `fromSingleApiStoryJson`) to `StoryModel`
+- **Network-Aware Error Handling**: LibraryBloc now includes retry functionality with user-friendly error messages
+- **Retry Mechanism**: Added `RetryLoadStories` event and `showRetryButton` state for improved UX
+- **Comprehensive Test Coverage**: 3 tests for API integration scenarios (success, duplicates, errors) plus enhanced background generation tests
+
+### Changed
+- **Removed Story Assets**: Eliminated pre-generated story JSON file and image assets to reduce app bundle size
+- **Enhanced ImageService**: Added graceful empty path handling with fallback widgets
+- **Updated StoryModel**: Now uses API UUIDs directly instead of prefixed IDs for better consistency
+- **Improved Error Messages**: Creative, magical-themed error messages for various network failure scenarios
+- **Enhanced Analytics**: Detailed error tracking with categorized failure types for better monitoring
+
+### Technical Improvements
+- **Dynamic Content Loading**: Fresh stories available without app updates through API integration
+- **Scalable Architecture**: Easy addition of new stories via API without app releases
+- **Network-Aware UI**: Clear feedback for connectivity issues with retry functionality
+- **Duplicate Prevention**: Smart logic using story UUIDs to prevent duplicate API stories
+- **Transaction-Based Operations**: Database consistency with proper error handling
+- **Clean Architecture**: Proper separation of concerns with BLoC pattern maintained
+
+### Benefits
+- **Reduced App Bundle Size**: Removed story assets to minimize app size
+- **Better User Experience**: Network-aware error handling with user-friendly retry functionality
+- **Production Ready**: Comprehensive logging, analytics integration, and robust error handling
 
 ## [1.0.6] - 2025-07-30 - Error Handling & Dialog Improvements
 
