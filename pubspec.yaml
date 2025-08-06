@@ -31,8 +31,6 @@ dependencies:
   firebase_core: ^3.13.0
   firebase_analytics: ^11.4.5
   firebase_crashlytics: ^4.3.5
-  firebase_auth: ^5.5.3
-  cloud_firestore: ^5.6.7
   # Note: firebase_dynamic_links is discontinued, using app_links instead
   app_links: ^6.4.0
 
