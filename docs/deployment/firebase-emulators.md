@@ -1,15 +1,20 @@
 # Firebase Emulators for Local Development
 
+> **⚠️ UPDATED - August 2025**
+>
+> **Authentication & Firestore Removed**: Firebase Authentication and Firestore have been removed from StoryTales. This document now covers only the remaining Firebase services (Analytics and Crashlytics).
+
 This document provides instructions for setting up and using Firebase emulators for local development and testing of the StoryTales app.
 
 ## Overview
 
-Firebase emulators allow you to run local versions of Firebase services, which is useful for:
+Firebase emulators allow you to run local versions of Firebase services. With the current StoryTales configuration, emulators are primarily used for:
 
-- Developing and testing without affecting production data
-- Working offline without an internet connection
-- Testing authentication flows without creating real users
-- Developing and testing Firestore rules
+- Developing and testing without affecting production Analytics data
+- Working offline during development
+- Testing crash reporting in a controlled environment
+
+**Note**: Authentication and Firestore emulators are no longer needed since these services have been removed from the app.
 
 ## Prerequisites
 
@@ -31,31 +36,13 @@ npm install -g firebase-tools
 firebase login
 ```
 
-### 3. Initialize Firebase Emulators
+### 3. Current Configuration
 
-In the project root directory:
-
-```bash
-firebase init emulators
-```
-
-During the initialization, select the following emulators:
-- Authentication (for testing sign-in)
-- Firestore (for user profiles)
-
-### 4. Configure firebase.json
-
-The `firebase.json` file should include the emulator configuration. Here's an example:
+The current `firebase.json` file is configured for the remaining Firebase services:
 
 ```json
 {
   "emulators": {
-    "auth": {
-      "port": 9099
-    },
-    "firestore": {
-      "port": 8080
-    },
     "ui": {
       "enabled": true,
       "port": 4000
@@ -64,56 +51,28 @@ The `firebase.json` file should include the emulator configuration. Here's an ex
 }
 ```
 
-## Running the Emulators
+**Note**: Authentication and Firestore emulator configurations have been removed since these services are no longer used.
 
-Start the emulators with:
+## Current Usage
 
-```bash
-firebase emulators:start
-```
+With the simplified Firebase setup, emulators are primarily used for:
 
-This will start the local emulators with a UI available at http://localhost:4000 by default.
+1. **Development Environment**: Testing the app without affecting production Analytics data
+2. **Offline Development**: Working on core features without internet connectivity
+3. **Debugging**: Monitoring Firebase service calls in a controlled environment
 
-## Connecting the App to Emulators
+## App Configuration
 
-The StoryTales app is already configured to connect to the Firebase emulators in debug mode. The configuration is in `lib/main.dart`:
+The StoryTales app automatically detects the development environment and configures Firebase services accordingly. The app maintains fallback mechanisms to ensure functionality even when emulators are not running.
 
-```dart
-// Connect to Firebase emulators in debug mode
-if (kDebugMode) {
-  // Connect to Auth emulator
-  await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+## ~~Removed Sections~~
 
-  // Connect to Firestore emulator
-  FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
-}
-```
+The following sections are no longer applicable since Authentication and Firestore have been removed:
 
-## Testing Email Link Authentication
-
-When testing email link authentication with the emulator:
-
-1. Start the emulators with `firebase emulators:start`
-2. Run the app in debug mode
-3. Navigate to the sign-in screen and enter an email address
-4. Check the Authentication emulator UI (http://localhost:4000/auth) to see the email link
-5. Click on the link in the emulator UI or copy it to use in your app
-
-## Working with Firestore Data
-
-The Firestore emulator starts with an empty database. You can:
-
-1. Create test data through the emulator UI
-2. Let your app create the data as it runs
-3. Import/export data for reuse:
-
-```bash
-# Export data
-firebase emulators:export ./emulator-data
-
-# Start with exported data
-firebase emulators:start --import=./emulator-data
-```
+- ~~Email Link Authentication Testing~~
+- ~~Firestore Data Management~~
+- ~~Authentication Emulator Setup~~
+- ~~Firestore Emulator Configuration~~
 
 ## Troubleshooting
 
@@ -121,20 +80,20 @@ firebase emulators:start --import=./emulator-data
 
 1. **Port conflicts**: If you see errors about ports being in use, you can change the ports in `firebase.json`.
 
-2. **Connection refused**: Make sure the emulators are running before starting the app.
+2. **Firebase initialization errors**: Ensure Firebase is properly initialized in the app before using any Firebase services.
 
-3. **Authentication issues**: For email link authentication, make sure to use the link from the emulator UI.
+3. **Analytics not working**: Check that Firebase Analytics is properly configured and the app has the correct Firebase configuration files.
 
 ### Logs
 
-Check the emulator logs in the terminal where you started the emulators for detailed error information.
+Check the emulator logs in the terminal and Flutter console for detailed error information about Firebase service calls.
 
 ## Best Practices
 
-1. **Use separate test accounts** for development to avoid confusion.
+1. **Test core features** without Firebase dependencies to ensure app functionality.
 
-2. **Export emulator data** regularly to preserve your test setup.
+2. **Monitor Analytics events** in the Firebase console to verify proper tracking.
 
-3. **Clear emulator data** occasionally to test with a clean state.
+3. **Test both development and production** Firebase configurations before releasing.
 
-4. **Test both with emulators and production** before releasing to ensure everything works in both environments.
+4. **Keep Firebase configuration files updated** and properly secured.
