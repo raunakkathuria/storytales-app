@@ -6,7 +6,7 @@ StoryTales is an AI-powered storytelling app for children aged 3-12 that generat
 
 - **Phase 1**: ✅ Completed (April 2025) - Version 1.0.0
 - **Phase 1 Patch**: ✅ Released (April 23, 2025) - Version 1.0.1
-- **Phase 2**: 🚧 In Progress - Authentication & User Management features implemented
+- **Phase 2**: 🚧 In Progress - Core features enhanced, authentication system removed for future Supabase implementation
 
 For detailed implementation status, see the [CHANGELOG](docs/CHANGELOG.md).
 
@@ -18,9 +18,8 @@ StoryTales allows users to:
 - Save stories to a local library for offline reading
 - Access 2 free stories before hitting a subscription paywall
 - View discussion questions at the end of each story
-- Create user accounts and sync across devices (Phase 2)
 
-The app is built with Flutter using the BLoC pattern for state management, SQLite for local storage, Firebase for authentication and cloud storage, and Firebase Analytics for event tracking.
+The app is built with Flutter using the BLoC pattern for state management, SQLite for local storage, and Firebase Analytics for event tracking. Authentication features have been temporarily removed to prepare for future Supabase JWT implementation.
 
 ## Completed Features (Phase 1)
 
@@ -35,22 +34,22 @@ Phase 1 delivered a functional MVP with core features:
 ## Current Development (Phase 2)
 
 Phase 2 is enhancing the app with:
-- **Authentication & User Management** ✅ (Implemented)
-  - Firebase Authentication with OTP (one-time password)
-  - User profiles stored in Firestore
-  - Account management and settings screen
+- **Authentication & User Management** ❌ (Removed)
+  - Firebase Authentication system completely removed
+  - Preparing for future Supabase JWT authentication implementation
+  - Clean foundation without conflicting authentication systems
 - **Background Story Generation** ✅ (Implemented)
   - Timer-based countdown mechanism during story generation
   - Library auto-refresh when background generation completes
   - Enhanced BLoC state management for background processes
   - **Enhanced Loading Experience**: Implemented an animated wizard and simplified status messages for a more engaging loading experience.
 - **Production Configuration** ✅ (Implemented)
-  - Firebase production setup with emulator fallback
+  - Firebase production setup with emulator fallback (Analytics & Crashlytics only)
   - Enhanced API client with comprehensive logging
   - Environment-specific configuration management
-- **Cross-Device Synchronization** 🚧 (In Progress)
-  - Cloud-based story storage
-  - Conflict resolution for offline changes
+- **Cross-Device Synchronization** 📅 (Postponed)
+  - Awaiting future authentication system implementation
+  - Will be implemented with Supabase JWT authentication
 - **Enhanced Library Features** 📅 (Planned)
   - Advanced search and filtering
   - Tags system for categorization
@@ -117,24 +116,28 @@ Phase 2 is enhancing the app with:
 ### Core Features
 
 - **Story Generation**: AI integration for generating short, child-friendly stories
-- **Pre-Generated Stories**: Bundled stories available offline after installation
+- **Pre-Generated Stories**: API-driven stories available with network connectivity
 - **Story Library**: Tab-based library with "All Stories" and "Favorites" tabs
 - **Subscription Model**: 2 free stories, then subscription required
 - **Offline Access**: Read saved stories without internet
 - **UI & Error Handling**: Child-friendly interface with consistent branding and comprehensive, magical-themed error messages
-- **Authentication**: User accounts with OTP authentication (Phase 2)
-- **Cloud Sync**: Cross-device synchronization of stories (Phase 2)
 
 ### Technical Stack
 
 - **Flutter** (3.10+) for cross-platform development
 - **BLoC Pattern** for state management
 - **SQLite** for local storage
-- **Dio** for HTTP requests to the AI service
-- **Firebase Authentication** for user accounts
-- **Firebase Firestore** for cloud storage
+- **Dio** for HTTP requests to the AI service and pre-generated stories API
 - **Firebase Analytics** for event tracking
+- **Firebase Crashlytics** for crash reporting
 - **In-App Purchase** for subscription handling
+
+### Removed Components
+
+- **Firebase Authentication**: Removed to prepare for future Supabase JWT implementation
+- **Firebase Firestore**: Removed along with authentication system
+- **User Profiles**: Temporarily disabled pending new authentication system
+- **Cross-Device Sync**: Postponed until authentication system is reimplemented
 
 ## Getting Started
 
@@ -160,9 +163,10 @@ Phase 1 was considered complete when:
 ### Phase 2 (In Progress)
 
 Phase 2 will be considered complete when:
-- Authentication & user management features are fully implemented and tested
-- Cross-device synchronization is working reliably
 - Enhanced library features are implemented
-- Pre-generated stories API is integrated
+- Pre-generated stories API is integrated ✅
 - In-app feedback mechanisms are in place
 - User satisfaction metrics show improvement over Phase 1
+- Foundation is prepared for future Supabase authentication implementation
+
+**Note**: Authentication & user management and cross-device synchronization have been postponed to allow for a clean Supabase JWT implementation in the future.

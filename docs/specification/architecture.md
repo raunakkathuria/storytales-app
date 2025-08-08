@@ -7,7 +7,14 @@ This document provides an overview of the architecture for the StoryTales app. F
 - **Phase 1**: ✅ Completed (April 2025)
 - **Phase 2**: 🚧 In Progress - See [Phase 2 Overview](phase-two/overview.md) for details
 
-The architecture is currently transitioning from the Phase 1 local-only approach to the Phase 2 architecture that includes user authentication, cloud storage, and cross-device synchronization.
+**Important Update (August 2025)**: The Firebase Authentication system has been completely removed to prepare for future Supabase JWT implementation. The architecture has been simplified to focus on core storytelling features while maintaining a clean foundation for future authentication integration.
+
+**Current State**:
+- ✅ Core storytelling features fully functional
+- ✅ Pre-generated stories API integration
+- ✅ Firebase Analytics and Crashlytics
+- ❌ Authentication and user management temporarily removed
+- ❌ Cross-device synchronization postponed
 
 ---
 
@@ -112,13 +119,22 @@ Below is a more **detailed look** at the internal components within the Flutter 
 
 ---
 
-### Tech Stack Summary
+### Tech Stack Summary (Current)
 
 - **Flutter** (3.10+, Dart 3.0+) for cross-platform (iOS/Android) UI.
 - **flutter_bloc** for state management (BLoC pattern).
 - **sqflite** for local database operations.
-- **Dio** for network requests to the AI API.
+- **Dio** for network requests to the AI API and pre-generated stories API.
 - **SharedPreferences** for storing subscription flags and free-story usage counters.
+- **Firebase Analytics** for usage tracking and event monitoring.
+- **Firebase Crashlytics** for crash reporting and stability monitoring.
+
+### Removed Components (August 2025)
+
+- **Firebase Authentication**: Removed to prepare for Supabase JWT implementation
+- **Firebase Firestore**: Removed along with authentication system
+- **User Profile Management**: Temporarily disabled
+- **Cross-Device Synchronization**: Postponed until new authentication system
 
 ---
 

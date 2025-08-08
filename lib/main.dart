@@ -7,8 +7,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'firebase_options.dart';
 import 'package:storytales/core/di/injection_container.dart' as di;
 import 'package:storytales/core/theme/theme.dart';
-import 'package:storytales/features/authentication/presentation/bloc/auth_bloc.dart';
-import 'package:storytales/features/authentication/presentation/widgets/auth_wrapper.dart';
 import 'package:storytales/features/library/presentation/bloc/library_bloc.dart';
 import 'package:storytales/features/library/presentation/bloc/library_event.dart';
 import 'package:storytales/features/library/presentation/pages/library_page.dart';
@@ -49,9 +47,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<AuthBloc>(
-          create: (context) => di.sl<AuthBloc>(),
-        ),
         BlocProvider<LibraryBloc>(
           create: (context) => di.sl<LibraryBloc>()..add(const LoadAllStories()),
         ),
@@ -70,9 +65,7 @@ class MyApp extends StatelessWidget {
           title: 'StoryTales',
           debugShowCheckedModeBanner: false,
           theme: StoryTalesTheme.buildThemeData(context),
-          home: AuthWrapper(
-            child: const LibraryPage(),
-          ),
+          home: const LibraryPage(),
         ),
       ),
     );

@@ -133,6 +133,17 @@ For a more detailed changelog with implementation status, see [docs/CHANGELOG.md
 
 ## [Unreleased] - Phase 2 (In Progress)
 
+### Removed - 2025-08-06
+- **Firebase Authentication System Removal** 🔄
+  - Completely removed Firebase Authentication system to prepare for Supabase JWT authentication
+  - Removed firebase_auth and cloud_firestore dependencies from pubspec.yaml
+  - Deleted entire authentication feature directory with all Firebase auth components
+  - Removed AuthBloc, AuthWrapper, and all authentication UI components
+  - Updated dependency injection to remove all auth-related registrations
+  - Maintained core Firebase services (Analytics, Crashlytics) for other features
+  - **Benefits**: Clean foundation for Supabase JWT implementation, reduced bundle size, simplified architecture
+  - **Status**: Core app features remain fully functional, authentication features temporarily disabled
+
 ### Completed
 - **Authentication & User Management** ✅
   - Firebase Authentication with OTP (one-time password) authentication

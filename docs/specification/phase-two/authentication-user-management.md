@@ -1,8 +1,22 @@
 # Authentication & User Management - Phase 2
 
+> **⚠️ DEPRECATED - August 2025**
+>
+> **This specification is deprecated.** The Firebase Authentication system described in this document has been completely removed from the StoryTales app to prepare for future Supabase JWT authentication implementation.
+>
+> **Current Status**:
+> - ❌ Firebase Authentication system removed
+> - ❌ User profiles and account management disabled
+> - ❌ Cross-device synchronization postponed
+> - ✅ Core storytelling features remain fully functional
+>
+> **Future Plans**: This functionality will be reimplemented using Supabase JWT authentication when the backend APIs become available.
+
 ## Overview
 
-The Authentication & User Management feature introduces user accounts to StoryTales, enabling personalized experiences and cross-device synchronization. This document outlines the technical specifications, implementation details, and best practices for this feature.
+~~The Authentication & User Management feature introduces user accounts to StoryTales, enabling personalized experiences and cross-device synchronization. This document outlines the technical specifications, implementation details, and best practices for this feature.~~
+
+**Historical Note**: This document describes the Firebase Authentication system that was implemented and later removed. It is preserved for reference purposes only.
 
 ## Key Components
 
