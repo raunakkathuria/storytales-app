@@ -8,7 +8,6 @@ import 'package:storytales/core/models/job_response.dart';
 import 'package:storytales/core/models/job_status_response.dart';
 import 'package:storytales/core/services/analytics/analytics_service.dart';
 import 'package:storytales/core/services/connectivity/connectivity_service.dart';
-import 'package:storytales/core/services/image/image_service.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
 
 /// Client for interacting with the story generation API.
@@ -56,11 +55,8 @@ class StoryApiClient {
         genre: genre,
       );
 
-      // Poll for completion
-      final storyData = await _pollForJobCompletion(jobResponse.jobId);
-
-      // Process the completed story response
-      return _processApiResponse(storyData);
+      // Poll for completion and return raw API response
+      return await _pollForJobCompletion(jobResponse.jobId);
     } catch (e) {
       _loggingService.error('Error in story generation flow: $e');
       rethrow;
@@ -75,30 +71,12 @@ class StoryApiClient {
     String? genre,
   }) async {
     try {
-      // Convert ageRange to integer for the API
-      int age = 8; // Default age
-      if (ageRange != null) {
-        // Remove " years" suffix if present
-        final cleanRange = ageRange.replaceAll(' years', '');
-
-        // Parse age range like "6-8" to get the average
-        final parts = cleanRange.split('-');
-        if (parts.length == 2) {
-          final minAge = int.tryParse(parts[0]) ?? 8;
-          // Handle special case for "13+" format
-          final maxAge = parts[1] == "+" ?
-              minAge + 2 : // For "13+", use 15 as max (13+2)
-              int.tryParse(parts[1]) ?? 10;
-          age = (minAge + maxAge) ~/ 2;
-        } else {
-          age = int.tryParse(cleanRange) ?? 8;
-        }
-      }
-
-      // Prepare request data - send raw prompt to API
+      // Prepare request data - send raw data to API
       final requestData = {
-        'age': age,
-        'description': prompt,
+        'prompt': prompt,
+        'age_range': ageRange,
+        'theme': theme,
+        'genre': genre,
       };
 
       // Log request details for debugging
@@ -320,68 +298,11 @@ class StoryApiClient {
   }) async {
     _loggingService.info('Generating sample story for development/testing');
 
-    // Load the sample response
+    // Load and return static sample response without processing
     final jsonString = await rootBundle.loadString('assets/data/sample-ai-response.json');
-    final sampleResponse = json.decode(jsonString);
-
-    // Update the sample response with the provided parameters if available
-    if (sampleResponse is Map<String, dynamic> &&
-        sampleResponse.containsKey('metadata') &&
-        sampleResponse.containsKey('data')) {
-      final metadata = sampleResponse['metadata'] as Map<String, dynamic>;
-
-      if (ageRange != null) {
-        metadata['age_range'] = ageRange;
-      }
-
-      if (theme != null) {
-        metadata['theme'] = theme;
-      }
-
-      if (genre != null) {
-        metadata['genre'] = genre;
-      }
-
-      if (prompt != null) {
-        metadata['original_prompt'] = prompt;
-      }
-
-      metadata['created_at'] = DateTime.now().toIso8601String();
-    }
-
-    // Process the mock response to transform image URLs
-    return _processApiResponse(sampleResponse);
+    return json.decode(jsonString) as Map<String, dynamic>;
   }
 
-  /// Process the API response to handle null image URLs and ensure correct format
-  Map<String, dynamic> _processApiResponse(Map<String, dynamic> apiResponse) {
-    // Extract the response data
-    final metadata = apiResponse['metadata'] as Map<String, dynamic>;
-    final data = apiResponse['data'] as Map<String, dynamic>;
-
-    // Process cover image URL - transform mock URLs to use configured API base URL
-    final coverImageUrl = _transformImageUrl(data['cover_image_url']);
-
-    // Process pages and handle null image URLs
-    final pages = (data['pages'] as List).map((page) {
-      return {
-        'content': page['content'],
-        'image_url': _transformImageUrl(page['image_url']),
-      };
-    }).toList();
-
-    // Create a processed response that matches the expected format
-    return {
-      'metadata': metadata,
-      'data': {
-        'title': data['title'],
-        'summary': data['summary'],
-        'cover_image_url': coverImageUrl,
-        'pages': pages,
-        'questions': data['questions'],
-      },
-    };
-  }
 
   /// Fetch pre-generated stories from the API.
   Future<List<Map<String, dynamic>>> fetchPreGeneratedStories() async {
@@ -612,18 +533,4 @@ class StoryApiClient {
     }
   }
 
-  /// Transform image URLs from mock data to use the configured API base URL
-  String _transformImageUrl(String? originalUrl) {
-    if (originalUrl == null) {
-      return ImageService.placeholderImagePath;
-    }
-
-    // If the URL contains the mock domain, replace it with the configured API base URL
-    if (originalUrl.contains('ai-service.example.com')) {
-      return originalUrl.replaceAll('https://ai-service.example.com', _appConfig.apiBaseUrl);
-    }
-
-    // If it's already a valid URL or placeholder, return as is
-    return originalUrl;
-  }
 }
