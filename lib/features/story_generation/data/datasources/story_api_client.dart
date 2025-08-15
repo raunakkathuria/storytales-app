@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:storytales/core/config/app_config.dart';
 import 'package:storytales/core/di/injection_container.dart';
+import 'package:storytales/core/models/job_response.dart';
+import 'package:storytales/core/models/job_status_response.dart';
 import 'package:storytales/core/services/analytics/analytics_service.dart';
 import 'package:storytales/core/services/connectivity/connectivity_service.dart';
 import 'package:storytales/core/services/image/image_service.dart';
@@ -27,7 +29,7 @@ class StoryApiClient {
         _loggingService = sl<LoggingService>(),
         _analyticsService = sl<AnalyticsService>();
 
-  /// Generate a story using the local API.
+  /// Generate a story using the background job API.
   Future<Map<String, dynamic>> generateStory({
     required String prompt,
     String? ageRange,
@@ -45,6 +47,33 @@ class StoryApiClient {
     _loggingService.info('Mock data enabled: ${_appConfig.useMockData}');
     _loggingService.info('API key configured: ${_appConfig.apiKey.isNotEmpty ? 'Yes (${_appConfig.apiKey.length} chars)' : 'No'}');
 
+    try {
+      // Start the background job
+      final jobResponse = await _startStoryGenerationJob(
+        prompt: prompt,
+        ageRange: ageRange,
+        theme: theme,
+        genre: genre,
+      );
+
+      // Poll for completion
+      final storyData = await _pollForJobCompletion(jobResponse.jobId);
+
+      // Process the completed story response
+      return _processApiResponse(storyData);
+    } catch (e) {
+      _loggingService.error('Error in story generation flow: $e');
+      rethrow;
+    }
+  }
+
+  /// Start a background story generation job
+  Future<JobResponse> _startStoryGenerationJob({
+    required String prompt,
+    String? ageRange,
+    String? theme,
+    String? genre,
+  }) async {
     try {
       // Convert ageRange to integer for the API
       int age = 8; // Default age
@@ -89,14 +118,10 @@ class StoryApiClient {
       _loggingService.info('Request data: ${json.encode(requestData)}');
       _loggingService.info('Headers: Content-Type: application/json, x-api-key: ${_appConfig.apiKey.substring(0, 8)}...');
 
-      // Make the API call to the configured endpoint
+      // Make the API call to start the background job
       final response = await _dio.post(
         '${_appConfig.apiBaseUrl}/story',
-        data: {
-          'age': age,
-          'character_name': characterName,
-          'description': prompt,
-        },
+        data: requestData,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -112,99 +137,187 @@ class StoryApiClient {
 
       if (response.statusCode == 200) {
         final apiResponse = response.data;
-        _loggingService.info('API Response received successfully');
+        _loggingService.info('Job started successfully');
 
-        // Process the response to handle null image URLs
-        return _processApiResponse(apiResponse);
+        // Parse the JobResponse
+        return JobResponse.fromJson(apiResponse as Map<String, dynamic>);
       } else {
         _loggingService.error('API Error - Status: ${response.statusCode}, Data: ${response.data}');
-        throw Exception('Failed to generate story: ${response.statusCode}');
+        throw Exception('Failed to start story generation: ${response.statusCode}');
       }
     } catch (e) {
-      // Enhanced error logging
-      if (e is DioException) {
-        _loggingService.error('DioException Details:');
-        _loggingService.error('- Type: ${e.type}');
-        _loggingService.error('- Message: ${e.message}');
-        _loggingService.error('- Response Status: ${e.response?.statusCode}');
-        _loggingService.error('- Response Data: ${e.response?.data}');
-        _loggingService.error('- Response Headers: ${e.response?.headers}');
-      }
-      _loggingService.error('Error calling API: $e');
+      await _handleApiError(e, 'story_generation', {
+        'prompt_length': prompt.length,
+        'age_range': ageRange,
+        'theme': theme,
+        'genre': genre,
+      });
+      rethrow;
+    }
+  }
 
-      // Always throw the error to inform the user - no silent fallbacks
-      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while crafting your tale. Please try again!';
-      String errorType = 'unknown_error';
-      String technicalDetails = e.toString();
+  /// Poll for job completion and return the final story data
+  Future<Map<String, dynamic>> _pollForJobCompletion(String jobId) async {
+    const maxAttempts = 60; // 5 minutes with 5-second intervals
+    const pollInterval = Duration(seconds: 5);
 
-      if (e is DioException) {
-        switch (e.type) {
-          case DioExceptionType.connectionTimeout:
-          case DioExceptionType.sendTimeout:
-          case DioExceptionType.receiveTimeout:
-            errorType = 'timeout_error';
-            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to weave your tale! The magical connection seems slow. Please check your internet and let\'s try again!';
-            technicalDetails = 'Timeout: ${e.type.name} - ${e.message}';
-            break;
-          case DioExceptionType.connectionError:
-            errorType = 'connection_error';
-            errorMessage = '🌟 Oh no! Our Story Wizard can\'t reach the magical story realm right now. Please check your internet connection and we\'ll try to reconnect!';
-            technicalDetails = 'Connection error: ${e.message}';
-            break;
-          case DioExceptionType.badResponse:
-            final statusCode = e.response?.statusCode;
-            if (statusCode == 401) {
-              errorType = 'auth_error';
-              errorMessage = '🔮 The Story Wizard\'s magical key isn\'t working properly. We\'re checking with the wizard council to fix this!';
-              technicalDetails = 'Authentication failed: HTTP $statusCode';
-            } else if (statusCode == 429) {
-              errorType = 'rate_limit_error';
-              errorMessage = '✨ Wow! So many story requests! Our Story Wizard is a bit overwhelmed. Please wait a moment and try again!';
-              technicalDetails = 'Rate limited: HTTP $statusCode';
-            } else if (statusCode == 500) {
-              errorType = 'server_error';
-              errorMessage = '🏰 The Story Wizard\'s castle is having some magical difficulties right now. We\'re working to fix it - please try again in a little while!';
-              technicalDetails = 'Server error: HTTP $statusCode - ${e.response?.data}';
-            } else {
-              errorType = 'api_error';
-              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode). Let\'s try casting the story spell again!';
-              technicalDetails = 'API error: HTTP $statusCode - ${e.response?.data}';
-            }
-            break;
-          case DioExceptionType.cancel:
-            errorType = 'cancelled_error';
-            errorMessage = '📖 The story creation was cancelled. No worries - the Story Wizard is ready whenever you are!';
-            technicalDetails = 'Request cancelled by user';
-            break;
-          default:
-            errorType = 'dio_error';
-            errorMessage = '🌙 Something unexpected happened in the magical story realm. Our Story Wizard is investigating - please try again!';
-            technicalDetails = 'DioException: ${e.type.name} - ${e.message}';
+    for (int attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        _loggingService.info('Checking job status (attempt ${attempt + 1}/$maxAttempts)');
+
+        final statusResponse = await _checkJobStatus(jobId);
+
+        if (statusResponse.isCompleted) {
+          _loggingService.info('Job completed successfully');
+          return await _getJobResult(jobId);
+        } else if (statusResponse.isFailed) {
+          final errorMsg = statusResponse.error ?? 'Unknown error occurred during story generation';
+          _loggingService.error('Job failed: $errorMsg');
+          throw Exception('🧙‍♂️ Our Story Wizard encountered a magical mishap: $errorMsg');
+        } else if (statusResponse.isProcessing) {
+          _loggingService.info('Job still processing: ${statusResponse.progress ?? "Working on your story..."}');
+          if (attempt < maxAttempts - 1) {
+            await Future.delayed(pollInterval);
+          }
         }
-      } else {
-        errorType = 'unknown_error';
-        errorMessage = '🔮 The Story Wizard encountered an unknown magical phenomenon. We\'re extremely sorry and checking with the wizard council!';
-        technicalDetails = 'Unknown error: ${e.toString()}';
+      } catch (e) {
+        if (attempt == maxAttempts - 1) {
+          _loggingService.error('Final polling attempt failed: $e');
+          rethrow;
+        }
+        _loggingService.warning('Polling attempt ${attempt + 1} failed, retrying: $e');
+        await Future.delayed(pollInterval);
       }
+    }
 
-      // Log detailed analytics for story generation failures
-      await _analyticsService.logError(
-        errorType: 'story_generation_$errorType',
-        errorMessage: errorMessage, // User-friendly message
-        errorDetails: json.encode({
-          'technical_error': technicalDetails,
-          'prompt_length': prompt.length,
-          'age_range': ageRange,
-          'theme': theme,
-          'genre': genre,
-          'api_endpoint': _appConfig.apiBaseUrl,
-          'environment': _appConfig.environment,
-          'timestamp': DateTime.now().toIso8601String(),
-        }),
+    throw Exception('🧙‍♂️ Our Story Wizard is taking longer than expected to craft your magical tale. Please try again!');
+  }
+
+  /// Check the status of a background job
+  Future<JobStatusResponse> _checkJobStatus(String jobId) async {
+    try {
+      final response = await _dio.get(
+        '${_appConfig.apiBaseUrl}/story/status/$jobId',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
       );
 
-      throw Exception(errorMessage);
+      if (response.statusCode == 200) {
+        return JobStatusResponse.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to check job status: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error checking job status: $e');
+      rethrow;
     }
+  }
+
+  /// Get the result of a completed background job
+  Future<Map<String, dynamic>> _getJobResult(String jobId) async {
+    try {
+      final response = await _dio.get(
+        '${_appConfig.apiBaseUrl}/story/result/$jobId',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get job result: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error getting job result: $e');
+      rethrow;
+    }
+  }
+
+  /// Handle API errors with consistent error messaging and analytics
+  Future<void> _handleApiError(dynamic error, String operation, Map<String, dynamic> context) async {
+    String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap. Please try again!';
+    String errorType = 'unknown_error';
+    String technicalDetails = error.toString();
+
+    if (error is DioException) {
+      _loggingService.error('DioException Details:');
+      _loggingService.error('- Type: ${error.type}');
+      _loggingService.error('- Message: ${error.message}');
+      _loggingService.error('- Response Status: ${error.response?.statusCode}');
+      _loggingService.error('- Response Data: ${error.response?.data}');
+      _loggingService.error('- Response Headers: ${error.response?.headers}');
+
+      switch (error.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          errorType = 'timeout_error';
+          errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to weave your tale! The magical connection seems slow. Please check your internet and let\'s try again!';
+          technicalDetails = 'Timeout: ${error.type.name} - ${error.message}';
+          break;
+        case DioExceptionType.connectionError:
+          errorType = 'connection_error';
+          errorMessage = '🌟 Oh no! Our Story Wizard can\'t reach the magical story realm right now. Please check your internet connection and we\'ll try to reconnect!';
+          technicalDetails = 'Connection error: ${error.message}';
+          break;
+        case DioExceptionType.badResponse:
+          final statusCode = error.response?.statusCode;
+          if (statusCode == 401) {
+            errorType = 'auth_error';
+            errorMessage = '🔮 The Story Wizard\'s magical key isn\'t working properly. We\'re checking with the wizard council to fix this!';
+            technicalDetails = 'Authentication failed: HTTP $statusCode';
+          } else if (statusCode == 429) {
+            errorType = 'rate_limit_error';
+            errorMessage = '✨ Wow! So many story requests! Our Story Wizard is a bit overwhelmed. Please wait a moment and try again!';
+            technicalDetails = 'Rate limited: HTTP $statusCode';
+          } else if (statusCode == 500) {
+            errorType = 'server_error';
+            errorMessage = '🏰 The Story Wizard\'s castle is having some magical difficulties right now. We\'re working to fix it - please try again in a little while!';
+            technicalDetails = 'Server error: HTTP $statusCode - ${error.response?.data}';
+          } else {
+            errorType = 'api_error';
+            errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode). Let\'s try casting the story spell again!';
+            technicalDetails = 'API error: HTTP $statusCode - ${error.response?.data}';
+          }
+          break;
+        case DioExceptionType.cancel:
+          errorType = 'cancelled_error';
+          errorMessage = '📖 The story creation was cancelled. No worries - the Story Wizard is ready whenever you are!';
+          technicalDetails = 'Request cancelled by user';
+          break;
+        default:
+          errorType = 'dio_error';
+          errorMessage = '🌙 Something unexpected happened in the magical story realm. Our Story Wizard is investigating - please try again!';
+          technicalDetails = 'DioException: ${error.type.name} - ${error.message}';
+      }
+    }
+
+    // Log detailed analytics
+    await _analyticsService.logError(
+      errorType: '${operation}_$errorType',
+      errorMessage: errorMessage,
+      errorDetails: json.encode({
+        'technical_error': technicalDetails,
+        'api_endpoint': _appConfig.apiBaseUrl,
+        'environment': _appConfig.environment,
+        'timestamp': DateTime.now().toIso8601String(),
+        ...context,
+      }),
+    );
+
+    throw Exception(errorMessage);
   }
 
   /// Generate a sample story for development/testing purposes.

@@ -138,17 +138,7 @@ class StoryGenerationBloc
   ) async {
     _cancelCountdownTimer();
 
-    // Emit countdown states (reduced from 5 to 3 seconds)
-    for (int i = 3; i >= 0; i--) {
-      if (!emit.isDone) {
-        emit(StoryGenerationCountdown(secondsRemaining: i));
-        if (i > 0) {
-          await Future.delayed(const Duration(seconds: 1));
-        }
-      }
-    }
-
-    // Start background generation after countdown
+    // Start background generation immediately (parallel with countdown)
     if (!emit.isDone) {
       add(StartBackgroundGeneration(
         prompt: event.prompt,
@@ -156,6 +146,16 @@ class StoryGenerationBloc
         theme: event.theme,
         genre: event.genre,
       ));
+    }
+
+    // Show countdown for magical UX while API call runs in background
+    for (int i = 3; i >= 0; i--) {
+      if (!emit.isDone) {
+        emit(StoryGenerationCountdown(secondsRemaining: i));
+        if (i > 0) {
+          await Future.delayed(const Duration(seconds: 1));
+        }
+      }
     }
   }
 
