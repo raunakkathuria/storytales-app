@@ -10,6 +10,7 @@ import 'package:storytales/core/services/analytics/analytics_service.dart';
 import 'package:storytales/core/services/connectivity/connectivity_service.dart';
 import 'package:storytales/core/services/image/image_service.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
+import 'package:storytales/core/services/prompt/prompt_enhancement_service.dart';
 
 /// Client for interacting with the story generation API.
 class StoryApiClient {
@@ -106,15 +107,20 @@ class StoryApiClient {
         }
       }
 
+      // Enhance the prompt for better image generation quality
+      final enhancedPrompt = PromptEnhancementService.enhanceForImageGeneration(prompt);
+
       // Prepare request data
       final requestData = {
         'age': age,
         'character_name': characterName,
-        'description': prompt,
+        'description': enhancedPrompt,
       };
 
       // Log request details for debugging
       _loggingService.info('Making API request to: ${_appConfig.apiBaseUrl}/story');
+      _loggingService.info('Original prompt: $prompt');
+      _loggingService.info('Enhanced prompt for image generation: $enhancedPrompt');
       _loggingService.info('Request data: ${json.encode(requestData)}');
       _loggingService.info('Headers: Content-Type: application/json, x-api-key: ${_appConfig.apiKey.substring(0, 8)}...');
 
