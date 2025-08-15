@@ -59,7 +59,7 @@ void main() {
         theme: anyNamed('theme'),
         genre: anyNamed('genre'),
       )).thenAnswer((_) async => _createMockStory());
-      // Mock saveStory to do nothing (void method)
+      when(mockLibraryRepository.saveStory(any)).thenAnswer((_) async {});
 
       // Start first story generation
       bloc.add(const StartStoryGeneration(
@@ -67,6 +67,7 @@ void main() {
         ageRange: '6-8 years',
       ));
 
+      // Wait for the first job to be added
       await expectLater(
         bloc.stream,
         emitsInOrder([
@@ -84,6 +85,7 @@ void main() {
         ageRange: '3-5 years',
       ));
 
+      // Wait for the second job to be added
       await expectLater(
         bloc.stream,
         emitsInOrder([
@@ -105,7 +107,7 @@ void main() {
         theme: anyNamed('theme'),
         genre: anyNamed('genre'),
       )).thenAnswer((_) async => _createMockStory());
-      // Mock saveStory to do nothing (void method)
+      when(mockLibraryRepository.saveStory(any)).thenAnswer((_) async {});
 
       // Start story generation
       bloc.add(const StartStoryGeneration(
@@ -183,7 +185,7 @@ void main() {
         theme: anyNamed('theme'),
         genre: anyNamed('genre'),
       )).thenAnswer((_) async => _createMockStory());
-      // Mock saveStory to do nothing (void method)
+      when(mockLibraryRepository.saveStory(any)).thenAnswer((_) async {});
 
       bloc.add(RetryJob(jobId: jobId));
 

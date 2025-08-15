@@ -17,6 +17,9 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
   // Track active timers for polling jobs
   final Map<String, Timer> _pollingTimers = {};
 
+  // Track progress timers for each job
+  final Map<String, Timer> _progressTimers = {};
+
   StoryWorkshopBloc({
     required StoryGenerationRepository storyRepository,
     required StoryRepository libraryRepository,
@@ -41,6 +44,13 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
       timer.cancel();
     }
     _pollingTimers.clear();
+
+    // Cancel all progress timers
+    for (final timer in _progressTimers.values) {
+      timer.cancel();
+    }
+    _progressTimers.clear();
+
     return super.close();
   }
 
@@ -104,6 +114,9 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
     try {
       _loggingService.info('Starting background generation for job: ${job.jobId}');
 
+      // Start progress timer for visual feedback
+      _startProgressTimer(job.jobId);
+
       // Start the story generation API call
       // Enhanced prompt for sharp, clear images
       final enhancedPrompt = PromptEnhancementService.enhanceForImageGeneration(job.prompt);
@@ -118,6 +131,9 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
       // Save the story to library
       await _libraryRepository.saveStory(storyData);
 
+      // Cancel progress timer
+      _cancelProgressTimer(job.jobId);
+
       // Mark job as completed and auto-remove
       add(CompleteJob(jobId: job.jobId));
 
@@ -125,6 +141,9 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
 
     } catch (e) {
       _loggingService.error('Story generation failed for job ${job.jobId}: $e');
+
+      // Cancel progress timer
+      _cancelProgressTimer(job.jobId);
 
       // Mark job as failed
       add(FailJob(
@@ -171,6 +190,9 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
     _pollingTimers[event.jobId]?.cancel();
     _pollingTimers.remove(event.jobId);
 
+    // Cancel progress timer if exists
+    _cancelProgressTimer(event.jobId);
+
     // Emit new state or initial if no jobs remain
     if (activeJobs.isEmpty && failedJobs.isEmpty) {
       emit(const StoryWorkshopInitial());
@@ -204,6 +226,9 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
     // Cancel polling timer if exists
     _pollingTimers[event.jobId]?.cancel();
     _pollingTimers.remove(event.jobId);
+
+    // Cancel progress timer if exists
+    _cancelProgressTimer(event.jobId);
 
     emit(StoryWorkshopActive(
       activeJobs: activeJobs,
@@ -304,5 +329,39 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
         }
       }
     }
+  }
+
+  /// Start a progress timer for a specific job to simulate progress updates.
+  void _startProgressTimer(String jobId) {
+    _cancelProgressTimer(jobId);
+
+    double progress = 0.0;
+    const totalDuration = Duration(seconds: 30); // 30 seconds as requested
+    const interval = Duration(milliseconds: 100);
+    final steps = totalDuration.inMilliseconds ~/ interval.inMilliseconds;
+    final increment = 1.0 / steps;
+
+    _progressTimers[jobId] = Timer.periodic(interval, (timer) {
+      progress += increment;
+      if (progress >= 1.0) {
+        progress = 0.99; // Cap at 99% until actual completion
+        timer.cancel();
+        _progressTimers.remove(jobId);
+      }
+
+      // Emit progress update if BLoC is still active
+      if (!isClosed) {
+        add(UpdateJobProgress(jobId: jobId, progress: progress));
+      } else {
+        timer.cancel();
+        _progressTimers.remove(jobId);
+      }
+    });
+  }
+
+  /// Cancel the progress timer for a specific job.
+  void _cancelProgressTimer(String jobId) {
+    _progressTimers[jobId]?.cancel();
+    _progressTimers.remove(jobId);
   }
 }
