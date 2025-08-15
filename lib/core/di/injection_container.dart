@@ -58,7 +58,11 @@ Future<void> init() async {
           genre TEXT,
           theme TEXT,
           is_pregenerated INTEGER NOT NULL,
-          is_favorite INTEGER NOT NULL
+          is_favorite INTEGER NOT NULL,
+          user_id INTEGER DEFAULT 0,
+          story_type TEXT DEFAULT 'pregenerated',
+          cache_updated_at TEXT,
+          cache_expires_at TEXT
         )
         ''',
       );
@@ -102,7 +106,16 @@ Future<void> init() async {
         ''',
       );
     },
-    version: 1,
+    version: 2,
+    onUpgrade: (db, oldVersion, newVersion) async {
+      if (oldVersion < 2) {
+        // Add new columns for user context and caching
+        await db.execute('ALTER TABLE stories ADD COLUMN user_id INTEGER DEFAULT 0');
+        await db.execute('ALTER TABLE stories ADD COLUMN story_type TEXT DEFAULT "pregenerated"');
+        await db.execute('ALTER TABLE stories ADD COLUMN cache_updated_at TEXT');
+        await db.execute('ALTER TABLE stories ADD COLUMN cache_expires_at TEXT');
+      }
+    },
   );
   sl.registerSingleton<Database>(database);
 

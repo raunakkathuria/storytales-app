@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storytales/core/services/device/device_service.dart';
 import 'package:storytales/core/services/api/user_api_client.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
+import 'package:storytales/core/models/user_stories_response.dart';
 import 'package:storytales/core/di/injection_container.dart';
 
 /// Service for managing user authentication and session state.
@@ -190,6 +191,27 @@ class AuthenticationService {
   Future<void> signOut() async {
     _loggingService.info('Signing out user and clearing authentication data');
     await _clearStoredUserData();
+  }
+
+  /// Gets paginated user stories for the current user.
+  Future<UserStoriesResponse> getUserStories({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt(_userIdKey);
+
+    if (userId == null) {
+      throw Exception('No user session found. Please restart the app.');
+    }
+
+    _loggingService.info('Fetching user stories for user $userId, page: $page, limit: $limit');
+
+    return await _userApiClient.getUserStories(
+      userId: userId,
+      page: page,
+      limit: limit,
+    );
   }
 
   /// Resets the user session by clearing data and creating a new anonymous user.
