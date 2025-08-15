@@ -1,8 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storytales/core/di/injection_container.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
-import 'package:storytales/core/services/prompt/prompt_enhancement_service.dart';
 import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart';
 import 'package:storytales/features/library/domain/repositories/story_repository.dart';
 import 'story_workshop_event.dart';
@@ -118,11 +118,8 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
       _startProgressTimer(job.jobId);
 
       // Start the story generation API call
-      // Enhanced prompt for sharp, clear images
-      final enhancedPrompt = PromptEnhancementService.enhanceForImageGeneration(job.prompt);
-
       final storyData = await _storyRepository.generateStory(
-        prompt: enhancedPrompt,
+        prompt: job.prompt,
         ageRange: job.ageRange,
         theme: job.theme,
         genre: job.genre,

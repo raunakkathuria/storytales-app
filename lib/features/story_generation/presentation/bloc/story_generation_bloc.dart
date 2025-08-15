@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:storytales/core/services/prompt/prompt_enhancement_service.dart';
 import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_event.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
@@ -64,11 +63,8 @@ class StoryGenerationBloc
     _startProgressTimer(emit);
 
     try {
-      // Enhanced prompt for sharp, clear images
-      final enhancedPrompt = PromptEnhancementService.enhanceForImageGeneration(event.prompt);
-
       final story = await _repository.generateStory(
-        prompt: enhancedPrompt,
+        prompt: event.prompt,
         ageRange: event.ageRange,
         theme: event.theme,
         genre: event.genre,
@@ -255,10 +251,8 @@ class StoryGenerationBloc
     StartBackgroundGeneration generationEvent,
   ) async {
     try {
-      final enhancedPrompt = PromptEnhancementService.enhanceForImageGeneration(generationEvent.prompt);
-
       final story = await _repository.generateStory(
-        prompt: enhancedPrompt,
+        prompt: generationEvent.prompt,
         ageRange: generationEvent.ageRange,
         theme: generationEvent.theme,
         genre: generationEvent.genre,

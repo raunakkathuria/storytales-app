@@ -10,7 +10,6 @@ import 'package:storytales/core/services/analytics/analytics_service.dart';
 import 'package:storytales/core/services/connectivity/connectivity_service.dart';
 import 'package:storytales/core/services/image/image_service.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
-import 'package:storytales/core/services/prompt/prompt_enhancement_service.dart';
 
 /// Client for interacting with the story generation API.
 class StoryApiClient {
@@ -96,31 +95,15 @@ class StoryApiClient {
         }
       }
 
-      // Extract character name from prompt or use default
-      String characterName = "Character";
-      // Simple logic to try to extract a name from the prompt
-      final words = prompt.split(' ');
-      if (words.length > 1) {
-        // Naively assume the second word might be a name if the first is "a" or "an"
-        if (words[0].toLowerCase() == 'a' || words[0].toLowerCase() == 'an') {
-          characterName = words[1];
-        }
-      }
-
-      // Enhance the prompt for better image generation quality
-      final enhancedPrompt = PromptEnhancementService.enhanceForImageGeneration(prompt);
-
-      // Prepare request data
+      // Prepare request data - send raw prompt to API
       final requestData = {
         'age': age,
-        'character_name': characterName,
-        'description': enhancedPrompt,
+        'description': prompt,
       };
 
       // Log request details for debugging
       _loggingService.info('Making API request to: ${_appConfig.apiBaseUrl}/story');
-      _loggingService.info('Original prompt: $prompt');
-      _loggingService.info('Enhanced prompt for image generation: $enhancedPrompt');
+      _loggingService.info('Prompt: $prompt');
       _loggingService.info('Request data: ${json.encode(requestData)}');
       _loggingService.info('Headers: Content-Type: application/json, x-api-key: ${_appConfig.apiKey.substring(0, 8)}...');
 
