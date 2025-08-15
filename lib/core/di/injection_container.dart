@@ -14,6 +14,9 @@ import 'package:storytales/core/services/connectivity/connectivity_service.dart'
 import 'package:storytales/core/services/image/image_service.dart';
 import 'package:storytales/core/services/local_storage/database_service.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
+import 'package:storytales/core/services/device/device_service.dart';
+import 'package:storytales/core/services/api/user_api_client.dart';
+import 'package:storytales/core/services/auth/authentication_service.dart';
 import 'package:storytales/features/library/data/repositories/story_repository_impl.dart';
 import 'package:storytales/features/library/domain/repositories/story_repository.dart';
 import 'package:storytales/features/library/presentation/bloc/library_bloc.dart';
@@ -145,6 +148,27 @@ Future<void> init() async {
   final imageService = ImageService();
   sl.registerSingleton<ImageService>(imageService);
 
+  // Register Device Service
+  sl.registerLazySingleton<DeviceService>(
+    () => DeviceService(),
+  );
+
+  // Register User API Client
+  sl.registerLazySingleton<UserApiClient>(
+    () => UserApiClient(
+      dio: sl(),
+      connectivityService: sl(),
+      appConfig: sl(),
+    ),
+  );
+
+  // Register Authentication Service
+  sl.registerLazySingleton<AuthenticationService>(
+    () => AuthenticationService(
+      deviceService: sl(),
+      userApiClient: sl(),
+    ),
+  );
 
   //! Data sources
   // Register Dio with base URL configuration

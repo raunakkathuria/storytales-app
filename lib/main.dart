@@ -6,6 +6,8 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 import 'firebase_options.dart';
 import 'package:storytales/core/di/injection_container.dart' as di;
+import 'package:storytales/core/services/auth/authentication_service.dart';
+import 'package:storytales/core/services/logging/logging_service.dart';
 import 'package:storytales/core/theme/theme.dart';
 import 'package:storytales/features/library/presentation/bloc/library_bloc.dart';
 import 'package:storytales/features/library/presentation/bloc/library_event.dart';
@@ -29,6 +31,16 @@ void main() async {
 
   // Initialize dependency injection
   await di.init();
+
+  // Initialize authentication system
+  try {
+    final authService = di.sl<AuthenticationService>();
+    await authService.initializeAuthentication();
+  } catch (e) {
+    // Log error but don't prevent app from starting
+    final loggingService = di.sl<LoggingService>();
+    loggingService.error('Failed to initialize authentication: $e');
+  }
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
