@@ -24,6 +24,7 @@ import 'package:storytales/features/story_generation/data/datasources/story_api_
 import 'package:storytales/features/story_generation/data/repositories/story_generation_repository_impl.dart';
 import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_bloc.dart';
+import 'package:storytales/features/story_generation/presentation/bloc/story_workshop_bloc.dart';
 import 'package:storytales/features/story_reader/presentation/bloc/story_reader_bloc.dart';
 import 'package:storytales/features/subscription/data/datasources/subscription_local_data_source.dart';
 import 'package:storytales/features/subscription/data/repositories/subscription_repository_impl.dart';
@@ -240,6 +241,13 @@ Future<void> init() async {
   sl.registerFactory<StoryGenerationBloc>(
     () => StoryGenerationBloc(
       repository: sl<StoryGenerationRepository>(),
+    ),
+  );
+
+  sl.registerFactory<StoryWorkshopBloc>(
+    () => StoryWorkshopBloc(
+      storyRepository: sl<StoryGenerationRepository>(),
+      libraryRepository: sl<StoryRepository>(),
     ),
   );
 

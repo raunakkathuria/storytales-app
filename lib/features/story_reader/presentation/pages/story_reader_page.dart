@@ -96,7 +96,8 @@ class _StoryReaderPageState extends State<StoryReaderPage> {
     return BlocConsumer<StoryReaderBloc, StoryReaderState>(
       listener: (context, state) {
         if (state is StoryReaderClosing) {
-          // Refresh the library before popping, respecting the active tab
+          // Store context references before async operations
+          final navigator = Navigator.of(context);
           final libraryBloc = BlocProvider.of<LibraryBloc>(context);
           final currentState = libraryBloc.state;
           if (currentState is LibraryLoaded && currentState.activeTab == LibraryTab.favorites) {
@@ -104,9 +105,10 @@ class _StoryReaderPageState extends State<StoryReaderPage> {
           } else {
             libraryBloc.add(const LoadAllStories());
           }
-          Navigator.pop(context);
+          navigator.pop();
         } else if (state is StoryReaderError) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          final scaffoldMessenger = ScaffoldMessenger.of(context);
+          scaffoldMessenger.showSnackBar(
             SnackBar(
               content: ResponsiveText(
                 text: state.message,

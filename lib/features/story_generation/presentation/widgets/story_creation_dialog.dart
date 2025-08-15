@@ -10,6 +10,9 @@ import 'package:storytales/core/widgets/responsive_text.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_bloc.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_event.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
+import 'package:storytales/features/story_generation/presentation/bloc/story_workshop_bloc.dart';
+import 'package:storytales/features/story_generation/presentation/bloc/story_workshop_event.dart';
+import 'package:storytales/features/story_generation/presentation/widgets/story_workshop_modal.dart';
 import 'package:storytales/features/story_reader/presentation/pages/story_reader_page.dart';
 import 'package:storytales/features/subscription/presentation/pages/subscription_page.dart';
 
@@ -97,8 +100,8 @@ class StoryCreationDialog extends StatefulWidget {
       );
     } else {
       // User cannot generate a story, navigate to the subscription page
-      Navigator.push(
-        context,
+      final navigator = Navigator.of(context);
+      navigator.push(
         MaterialPageRoute(
           builder: (context) => const SubscriptionPage(),
         ),
@@ -239,12 +242,14 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
           // User can generate a story, proceed with generation
           _onCanGenerateStory();
         } else if (state is CannotGenerateStory) {
+          // Store navigator reference before async operations
+          final navigator = Navigator.of(context);
+
           // Close the dialog
-          Navigator.pop(context);
+          navigator.pop();
 
           // Navigate to the subscription page
-          Navigator.push(
-            context,
+          navigator.push(
             MaterialPageRoute(
               builder: (context) => const SubscriptionPage(),
             ),
@@ -610,65 +615,47 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
 
   void _generateStory() {
     if (_formKey.currentState?.validate() ?? false) {
-      final bloc = context.read<StoryGenerationBloc>();
-      final currentState = bloc.state;
+      // Use the new workshop system for story generation
+      final workshopBloc = context.read<StoryWorkshopBloc>();
 
-      // Check if there's already a story generation in progress
-      if (_isGenerationInProgress(currentState)) {
-        // Auto-clear error cards and allow new generation
-        if (currentState is BackgroundGenerationFailure) {
-          // Clear the error card automatically
-          bloc.add(ClearFailedStoryGeneration(tempStoryId: currentState.tempStoryId));
-          // Continue with the generation process - don't return early
-        } else {
-          // Show a helpful message for active generations
-          String message;
-          if (currentState is StoryGenerationInBackground) {
-            message = '✨ Your story is being created! Please wait for it to finish.';
-          } else {
-            message = '🧙‍♂️ A magical story is already in progress! Please wait a moment.';
-          }
+      // Start story generation in the workshop
+      workshopBloc.add(StartStoryGeneration(
+        prompt: _promptController.text.trim(),
+        ageRange: _selectedAgeRange,
+        theme: null,
+        genre: null,
+      ));
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                message,
-                style: const TextStyle(
-                  fontFamily: StoryTalesTheme.fontFamilyBody,
-                  fontSize: 18, // Increased font size
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              backgroundColor: StoryTalesTheme.primaryColor, // Use primary color for info messages
-              duration: const Duration(seconds: 4),
-              action: SnackBarAction(
-                label: 'Got it',
-                textColor: Colors.white,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                },
-              ),
+      // Close the dialog
+      Navigator.pop(context);
+
+      // Show the workshop modal
+      StoryWorkshopModal.show(context);
+
+      // Show a snackbar to inform the user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const ResponsiveText(
+            text: 'Your story is being created! Check the Story Workshop for progress.',
+            style: TextStyle(
+              fontFamily: StoryTalesTheme.fontFamilyBody,
+              fontSize: 16,
             ),
-          );
-          return;
-        }
-      }
-
-      // Trigger the check only if no generation is in progress
-      bloc.add(const CheckCanGenerateStory());
-
-      // The BlocConsumer will handle the CanGenerateStory state and
-      // automatically trigger the countdown when appropriate
+          ),
+          backgroundColor: StoryTalesTheme.primaryColor,
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'View Workshop',
+            textColor: Colors.white,
+            onPressed: () {
+              StoryWorkshopModal.show(context);
+            },
+          ),
+        ),
+      );
     }
   }
 
-  /// Check if there's a story generation in progress or failed states that need to be cleared
-  bool _isGenerationInProgress(StoryGenerationState state) {
-    return state is StoryGenerationLoading ||
-           state is StoryGenerationCountdown ||
-           state is StoryGenerationInBackground ||
-           state is BackgroundGenerationFailure;
-  }
 
   // This method will be called by the BlocConsumer when it receives CanGenerateStory
   void _onCanGenerateStory() {

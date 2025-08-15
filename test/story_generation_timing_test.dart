@@ -78,8 +78,8 @@ void main() {
       expect(backgroundStartTime, lessThan(200),
         reason: 'Background generation should start immediately, not after countdown');
 
-      print('✅ Background generation started at ${backgroundStartTime}ms');
-      print('📋 All events: ${events.join(', ')}');
+      // Background generation started at ${backgroundStartTime}ms
+      // All events: ${events.join(', ')}
     });
 
     test('should show countdown states while background generation runs', () async {
@@ -116,7 +116,7 @@ void main() {
       expect(backgroundStates, isNotEmpty,
         reason: 'Should have background generation states');
 
-      print('✅ Countdown sequence: ${countdownStates.map((s) => s.secondsRemaining).join(', ')}');
+      // Countdown sequence: ${countdownStates.map((s) => s.secondsRemaining).join(', ')}
     });
   });
 }

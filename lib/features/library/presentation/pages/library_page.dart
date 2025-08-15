@@ -11,6 +11,7 @@ import 'package:storytales/features/library/presentation/bloc/library_state.dart
 import 'package:storytales/features/library/presentation/widgets/story_card.dart';
 import 'package:storytales/features/library/presentation/widgets/loading_story_card.dart';
 import 'package:storytales/features/story_generation/presentation/widgets/story_creation_dialog.dart';
+import 'package:storytales/features/story_generation/presentation/widgets/story_workshop_indicator.dart';
 import 'package:storytales/features/story_reader/presentation/pages/story_reader_page.dart';
 import 'package:storytales/features/subscription/presentation/pages/subscription_page.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_bloc.dart';
@@ -70,6 +71,8 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
         backgroundColor: StoryTalesTheme.surfaceColor, // White background
         elevation: 1, // Slight shadow for definition
         actions: [
+          // Story Workshop indicator
+          const StoryWorkshopIndicator(),
           // Subscription button
           BlocBuilder<SubscriptionBloc, SubscriptionState>(
             builder: (context, state) {
