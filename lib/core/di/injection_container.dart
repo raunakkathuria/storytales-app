@@ -14,6 +14,9 @@ import 'package:storytales/core/services/connectivity/connectivity_service.dart'
 import 'package:storytales/core/services/image/image_service.dart';
 import 'package:storytales/core/services/local_storage/database_service.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
+import 'package:storytales/core/services/device/device_service.dart';
+import 'package:storytales/core/services/api/user_api_client.dart';
+import 'package:storytales/core/services/auth/authentication_service.dart';
 import 'package:storytales/features/library/data/repositories/story_repository_impl.dart';
 import 'package:storytales/features/library/domain/repositories/story_repository.dart';
 import 'package:storytales/features/library/presentation/bloc/library_bloc.dart';
@@ -21,6 +24,7 @@ import 'package:storytales/features/story_generation/data/datasources/story_api_
 import 'package:storytales/features/story_generation/data/repositories/story_generation_repository_impl.dart';
 import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_bloc.dart';
+import 'package:storytales/features/story_generation/presentation/bloc/story_workshop_bloc.dart';
 import 'package:storytales/features/story_reader/presentation/bloc/story_reader_bloc.dart';
 import 'package:storytales/features/subscription/data/datasources/subscription_local_data_source.dart';
 import 'package:storytales/features/subscription/data/repositories/subscription_repository_impl.dart';
@@ -55,7 +59,11 @@ Future<void> init() async {
           genre TEXT,
           theme TEXT,
           is_pregenerated INTEGER NOT NULL,
-          is_favorite INTEGER NOT NULL
+          is_favorite INTEGER NOT NULL,
+          user_id INTEGER DEFAULT 0,
+          story_type TEXT DEFAULT 'pregenerated',
+          cache_updated_at TEXT,
+          cache_expires_at TEXT
         )
         ''',
       );
@@ -99,7 +107,16 @@ Future<void> init() async {
         ''',
       );
     },
-    version: 1,
+    version: 2,
+    onUpgrade: (db, oldVersion, newVersion) async {
+      if (oldVersion < 2) {
+        // Add new columns for user context and caching
+        await db.execute('ALTER TABLE stories ADD COLUMN user_id INTEGER DEFAULT 0');
+        await db.execute('ALTER TABLE stories ADD COLUMN story_type TEXT DEFAULT "pregenerated"');
+        await db.execute('ALTER TABLE stories ADD COLUMN cache_updated_at TEXT');
+        await db.execute('ALTER TABLE stories ADD COLUMN cache_expires_at TEXT');
+      }
+    },
   );
   sl.registerSingleton<Database>(database);
 
@@ -145,6 +162,27 @@ Future<void> init() async {
   final imageService = ImageService();
   sl.registerSingleton<ImageService>(imageService);
 
+  // Register Device Service
+  sl.registerLazySingleton<DeviceService>(
+    () => DeviceService(),
+  );
+
+  // Register User API Client
+  sl.registerLazySingleton<UserApiClient>(
+    () => UserApiClient(
+      dio: sl(),
+      connectivityService: sl(),
+      appConfig: sl(),
+    ),
+  );
+
+  // Register Authentication Service
+  sl.registerLazySingleton<AuthenticationService>(
+    () => AuthenticationService(
+      deviceService: sl(),
+      userApiClient: sl(),
+    ),
+  );
 
   //! Data sources
   // Register Dio with base URL configuration
@@ -203,6 +241,13 @@ Future<void> init() async {
   sl.registerFactory<StoryGenerationBloc>(
     () => StoryGenerationBloc(
       repository: sl<StoryGenerationRepository>(),
+    ),
+  );
+
+  sl.registerFactory<StoryWorkshopBloc>(
+    () => StoryWorkshopBloc(
+      storyRepository: sl<StoryGenerationRepository>(),
+      libraryRepository: sl<StoryRepository>(),
     ),
   );
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:storytales/core/services/prompt/prompt_enhancement_service.dart';
 import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_event.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
@@ -63,8 +64,11 @@ class StoryGenerationBloc
     _startProgressTimer(emit);
 
     try {
+      // Enhanced prompt for sharp, clear images
+      final enhancedPrompt = PromptEnhancementService.enhanceForImageGeneration(event.prompt);
+
       final story = await _repository.generateStory(
-        prompt: event.prompt,
+        prompt: enhancedPrompt,
         ageRange: event.ageRange,
         theme: event.theme,
         genre: event.genre,
@@ -138,17 +142,7 @@ class StoryGenerationBloc
   ) async {
     _cancelCountdownTimer();
 
-    // Emit countdown states (reduced from 5 to 3 seconds)
-    for (int i = 3; i >= 0; i--) {
-      if (!emit.isDone) {
-        emit(StoryGenerationCountdown(secondsRemaining: i));
-        if (i > 0) {
-          await Future.delayed(const Duration(seconds: 1));
-        }
-      }
-    }
-
-    // Start background generation after countdown
+    // Start background generation immediately (parallel with countdown)
     if (!emit.isDone) {
       add(StartBackgroundGeneration(
         prompt: event.prompt,
@@ -156,6 +150,16 @@ class StoryGenerationBloc
         theme: event.theme,
         genre: event.genre,
       ));
+    }
+
+    // Show countdown for magical UX while API call runs in background
+    for (int i = 3; i >= 0; i--) {
+      if (!emit.isDone) {
+        emit(StoryGenerationCountdown(secondsRemaining: i));
+        if (i > 0) {
+          await Future.delayed(const Duration(seconds: 1));
+        }
+      }
     }
   }
 
@@ -251,9 +255,7 @@ class StoryGenerationBloc
     StartBackgroundGeneration generationEvent,
   ) async {
     try {
-      final enhancedPrompt = "${generationEvent.prompt}. "
-        "Generate a high-detail, sharp focus, Pixar style 3D render. "
-        "Ensure all characters are clearly defined with distinct features and cinematic lighting.";
+      final enhancedPrompt = PromptEnhancementService.enhanceForImageGeneration(generationEvent.prompt);
 
       final story = await _repository.generateStory(
         prompt: enhancedPrompt,

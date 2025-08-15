@@ -6,11 +6,14 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 import 'firebase_options.dart';
 import 'package:storytales/core/di/injection_container.dart' as di;
+import 'package:storytales/core/services/auth/authentication_service.dart';
+import 'package:storytales/core/services/logging/logging_service.dart';
 import 'package:storytales/core/theme/theme.dart';
 import 'package:storytales/features/library/presentation/bloc/library_bloc.dart';
 import 'package:storytales/features/library/presentation/bloc/library_event.dart';
 import 'package:storytales/features/library/presentation/pages/library_page.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_bloc.dart';
+import 'package:storytales/features/story_generation/presentation/bloc/story_workshop_bloc.dart';
 import 'package:storytales/features/story_reader/presentation/bloc/story_reader_bloc.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_bloc.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_event.dart';
@@ -29,6 +32,16 @@ void main() async {
 
   // Initialize dependency injection
   await di.init();
+
+  // Initialize authentication system
+  try {
+    final authService = di.sl<AuthenticationService>();
+    await authService.initializeAuthentication();
+  } catch (e) {
+    // Log error but don't prevent app from starting
+    final loggingService = di.sl<LoggingService>();
+    loggingService.error('Failed to initialize authentication: $e');
+  }
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
@@ -52,6 +65,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<StoryGenerationBloc>(
           create: (context) => di.sl<StoryGenerationBloc>(),
+        ),
+        BlocProvider<StoryWorkshopBloc>(
+          create: (context) => di.sl<StoryWorkshopBloc>(),
         ),
         BlocProvider<StoryReaderBloc>(
           create: (context) => di.sl<StoryReaderBloc>(),

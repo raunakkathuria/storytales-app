@@ -37,6 +37,10 @@ dependencies:
   # In-app purchases
   in_app_purchase: ^3.1.13
 
+  # Authentication & User Management
+  device_info_plus: ^10.1.0
+  crypto: ^3.0.3
+
   # Utilities
   uuid: ^4.3.3
   intl: ^0.20.2
