@@ -131,6 +131,39 @@ For a more detailed changelog with implementation status, see [docs/CHANGELOG.md
 - **Countdown Timer**: Reduced the story generation countdown from 5 seconds to 3 seconds for a snappier user experience.
 - **Loading Card UI**: Removed the cancel button and simplified the overall layout of the loading card to focus on the animated wizard and status messages.
 
+## [1.0.8] - 2025-08-15 - Image Quality & Code Quality Improvements
+
+### Added
+- **Enhanced Image Generation Prompts**: Implemented optimized prompts for sharper, clearer story images
+- **Anti-Blur Technology**: Added specific prompt instructions to prevent depth-of-field blur and ensure crystal-clear character details
+- **Consistent Image Quality**: Applied enhanced prompts across all story generation paths (regular, background, and workshop)
+
+### Changed
+- **Improved Prompt Engineering**: Updated image generation prompts to use "crystal clear, Pixar-style 3D render" with "perfect sharp focus" and "bright, even lighting"
+- **Eliminated Blur-Inducing Terms**: Removed "cinematic lighting" and other terms that could cause unwanted blur effects
+- **Character Clarity Focus**: Enhanced prompts specifically target "distinct facial features" and "razor-sharp clarity throughout the entire scene"
+
+### Fixed
+- **Image Sharpness Issue**: Resolved blurred character images in story pages by optimizing AI generation prompts
+- **Code Quality Improvements**: Fixed 17 code quality issues including deprecated API usage, unused elements, and test print statements
+- **Modern Flutter APIs**: Updated all `withOpacity()` calls to use `withValues(alpha:)` for Flutter 3.27+ compatibility
+- **Test Code Cleanup**: Converted debug print statements to comments in test files
+
+### Technical Improvements
+- **Prompt Consistency**: Applied enhanced prompts across `StoryGenerationBloc` and `StoryWorkshopBloc` for uniform image quality
+- **Code Refactoring**: Created centralized `PromptEnhancementService` to eliminate code duplication and improve maintainability
+- **DRY Principle**: Removed duplicated prompt enhancement code from multiple BLoCs, now managed in single service
+- **Code Modernization**: Updated deprecated Flutter APIs to current standards
+- **Reduced Technical Debt**: Eliminated unused code and improved overall code quality metrics
+- **Better Test Hygiene**: Cleaned up test output by removing debug print statements
+- **Enhanced Testing**: Added comprehensive unit tests for prompt enhancement service
+
+### Benefits
+- **Sharper Story Images**: Characters and scenes now render with crystal-clear detail and sharp focus
+- **Consistent Quality**: Cover images and page images now maintain similar sharpness levels
+- **Future-Proof Code**: Updated to modern Flutter APIs and best practices
+- **Cleaner Codebase**: Reduced code quality issues from 21 to 4 (81% improvement)
+
 ## [Unreleased] - Phase 2 (In Progress)
 
 ### Removed - 2025-08-06
