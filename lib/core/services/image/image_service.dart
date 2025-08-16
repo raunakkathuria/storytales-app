@@ -1,157 +1,84 @@
-import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:storytales/core/di/injection_container.dart';
-import 'package:storytales/core/services/logging/logging_service.dart';
 import 'package:storytales/core/theme/theme.dart';
 
-/// Service for handling image loading, caching, and management.
+/// Simplified image service for API-driven image loading.
+/// The API provides final, optimized image URLs with proper caching headers.
 class ImageService {
   static final ImageService _instance = ImageService._internal();
   factory ImageService() => _instance;
   ImageService._internal();
 
-  // Get the logging service from the dependency injection container
-  final _loggingService = sl<LoggingService>();
-
-  // Custom cache manager with configured size and duration
-  final cacheManager = CacheManager(
-    Config(
-      'storytales_images_cache',
-      stalePeriod: const Duration(days: 30),
-      maxNrOfCacheObjects: 100,
-      repo: JsonCacheInfoRepository(databaseName: 'storytales_image_cache_db'),
-      fileService: HttpFileService(),
-    ),
-  );
-
-  /// Default placeholder image path - using a simple colored container instead
-  static const String placeholderImagePath = '';
-
-  /// Get image widget based on path type (network, file, or asset)
+  /// Get image widget for network URLs provided by the API.
+  /// The API handles all image optimization, CDN delivery, and caching headers.
   Widget getImage({
-    required String imagePath,
+    required String imageUrl,
     required BoxFit fit,
     Widget Function(BuildContext, String)? placeholder,
     Widget Function(BuildContext, String, dynamic)? errorWidget,
   }) {
-    defaultPlaceholder(context, url) => Container(
-          color: StoryTalesTheme.primaryColor.withValues(alpha: 0.1),
-          child: const Center(child: CircularProgressIndicator()),
-        );
-
-    defaultError(context, url, error) => Container(
-          color: StoryTalesTheme.primaryColor.withValues(alpha: 0.3),
-          child: const Center(
-            child: Icon(
-              Icons.image_not_supported,
-              color: StoryTalesTheme.accentColor,
-              size: 48,
-            ),
+    // Default loading placeholder
+    Widget defaultPlaceholder(BuildContext context, String url) {
+      return Container(
+        color: StoryTalesTheme.primaryColor.withValues(alpha: 0.1),
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: StoryTalesTheme.primaryColor,
           ),
-        );
+        ),
+      );
+    }
 
-    // Handle empty or invalid image paths
-    if (imagePath.isEmpty) {
+    // Default error widget
+    Widget defaultError(BuildContext context, String url, dynamic error) {
+      return Container(
+        color: StoryTalesTheme.primaryColor.withValues(alpha: 0.3),
+        child: const Center(
+          child: Icon(
+            Icons.image_not_supported,
+            color: StoryTalesTheme.accentColor,
+            size: 48,
+          ),
+        ),
+      );
+    }
+
+    // Handle empty or invalid URLs
+    if (imageUrl.isEmpty) {
       return Builder(
-        builder: (context) => (errorWidget != null) ? errorWidget(context, imagePath, 'Empty image path') : defaultError(context, imagePath, 'Empty image path'),
+        builder: (context) => (errorWidget != null)
+            ? errorWidget(context, imageUrl, 'Empty image URL')
+            : defaultError(context, imageUrl, 'Empty image URL'),
       );
     }
 
-    // For local file paths, validate existence
-    if (imagePath.startsWith('/')) {
-      final file = File(imagePath);
-      if (!file.existsSync()) {
-        _loggingService.warning('Image file not found: $imagePath, using fallback');
-        // Use fallback error widget
-        return Builder(
-          builder: (context) => (errorWidget != null) ? errorWidget(context, imagePath, 'File not found') : defaultError(context, imagePath, 'File not found'),
-        );
-      }
-
-      // File exists, load it
-      return Image.file(
-        file,
-        fit: fit,
-        errorBuilder: (context, error, stackTrace) =>
-            (errorWidget != null) ? errorWidget(context, imagePath, error) : defaultError(context, imagePath, error),
-      );
-    } else if (imagePath.startsWith('http')) {
-      // Network image with caching
-      return CachedNetworkImage(
-        imageUrl: imagePath,
-        fit: fit,
-        cacheManager: cacheManager,
-        placeholder: placeholder ?? defaultPlaceholder,
-        errorWidget: errorWidget ?? defaultError,
-      );
-    } else {
-      // Asset image
-      return Image.asset(
-        imagePath,
-        fit: fit,
-        errorBuilder: (context, error, stackTrace) =>
-            (errorWidget != null) ? errorWidget(context, imagePath, error) : defaultError(context, imagePath, error),
-      );
-    }
+    // Use cached network image for all API-provided URLs
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      fit: fit,
+      placeholder: placeholder ?? defaultPlaceholder,
+      errorWidget: errorWidget ?? defaultError,
+      // Use default caching - no custom configuration needed
+      // The API provides proper cache headers for optimal caching
+    );
   }
 
-  /// Download and cache an image, returning the local file path
-  Future<String> downloadAndCacheImage(String url, String fileName) async {
-    try {
-      // Use cache manager to download and cache
-      final file = await cacheManager.getSingleFile(url);
-
-      // If we need to store permanently (not just cache)
-      final appDir = await getApplicationDocumentsDirectory();
-      final imagesDir = Directory('${appDir.path}/images');
-      if (!await imagesDir.exists()) {
-        await imagesDir.create(recursive: true);
-      }
-
-      final permanentPath = '${imagesDir.path}/$fileName';
-      await file.copy(permanentPath);
-
-      return permanentPath;
-    } catch (e) {
-      _loggingService.error('Failed to download and cache image: $e');
-      // Return the placeholder image path
-      return placeholderImagePath;
-    }
-  }
-
-  /// Clear the cache
-  Future<void> clearCache() async {
-    await cacheManager.emptyCache();
-  }
-
-  /// Preload an image into memory cache
-  Future<void> preloadImage(BuildContext context, String imagePath) async {
-    if (imagePath.isEmpty) {
+  /// Preload an image into cache for better user experience.
+  /// Only works with network URLs provided by the API.
+  Future<void> preloadImage(BuildContext context, String imageUrl) async {
+    if (imageUrl.isEmpty || !imageUrl.startsWith('http')) {
       return;
     }
 
     try {
-      if (imagePath.startsWith('/')) {
-        // Local file
-        final file = File(imagePath);
-        if (file.existsSync()) {
-          await precacheImage(FileImage(file), context);
-        } else {
-          // Fallback to placeholder
-          await precacheImage(const AssetImage(placeholderImagePath), context);
-        }
-      } else if (imagePath.startsWith('http')) {
-        // Network image
-        await cacheManager.getSingleFile(imagePath);
-      } else {
-        // Asset image
-        await precacheImage(AssetImage(imagePath), context);
-      }
+      // Use cached network image's preloading
+      await precacheImage(
+        CachedNetworkImageProvider(imageUrl),
+        context,
+      );
     } catch (e) {
-      _loggingService.warning('Failed to preload image: $imagePath, error: $e');
+      // Silently fail - preloading is optional for performance
+      // The image will still load when displayed
     }
   }
 }

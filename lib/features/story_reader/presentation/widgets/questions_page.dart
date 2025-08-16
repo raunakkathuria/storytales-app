@@ -28,7 +28,7 @@ class QuestionsPage extends StatelessWidget {
       children: [
         // Background image
         ImageService().getImage(
-          imagePath: imagePath,
+          imageUrl: imagePath,
           fit: BoxFit.cover,
           placeholder: (context, url) => Container(
             color: StoryTalesTheme.primaryColor.withValues(alpha: 0.1),

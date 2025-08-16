@@ -165,7 +165,7 @@ class _StoryPageViewState extends State<StoryPageView> with AutomaticKeepAliveCl
     }
 
     return ImageService().getImage(
-      imagePath: imagePath,
+      imageUrl: imagePath,
       fit: BoxFit.cover,
       placeholder: (context, url) => _buildLoadingIndicator(),
       errorWidget: (context, url, error) => _buildFallbackImage(),
