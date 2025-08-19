@@ -120,6 +120,9 @@ class DialogForm extends StatelessWidget {
 
   /// Builds responsive action buttons that adapt to different screen sizes.
   Widget _buildResponsiveActions(BuildContext context) {
+    // Check if we should show the secondary button
+    final hasSecondaryAction = secondaryActionText.isNotEmpty;
+
     // Get screen width to determine layout
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -129,11 +132,13 @@ class DialogForm extends StatelessWidget {
     final useVerticalLayout = estimatedDialogWidth < 280;
 
     // Create buttons using the ResponsiveButton component
-    final cancelButton = ResponsiveButton.primary(
-      text: secondaryActionText,
-      onPressed: onSecondaryAction ?? () => Navigator.pop(context),
-      fontSize: 16.0, // Will be automatically scaled down on small screens
-    );
+    final cancelButton = hasSecondaryAction
+        ? ResponsiveButton.primary(
+            text: secondaryActionText,
+            onPressed: onSecondaryAction ?? () => Navigator.pop(context),
+            fontSize: 16.0, // Will be automatically scaled down on small screens
+          )
+        : null;
 
     final confirmButton = ResponsiveButton.accent(
       text: primaryActionText,
@@ -141,7 +146,15 @@ class DialogForm extends StatelessWidget {
       fontSize: 16.0, // Will be automatically scaled down on small screens
     );
 
-    // Return appropriate layout based on available width
+    // Return appropriate layout based on available width and button count
+    if (!hasSecondaryAction) {
+      // Single button - always center it
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [confirmButton],
+      );
+    }
+
     return useVerticalLayout
         ? Column(
             mainAxisSize: MainAxisSize.min,
@@ -149,14 +162,14 @@ class DialogForm extends StatelessWidget {
             children: [
               confirmButton,
               const SizedBox(height: 8),
-              cancelButton,
+              cancelButton!,
             ],
           )
         : Row(
             mainAxisAlignment: MainAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
-              cancelButton,
+              cancelButton!,
               const SizedBox(width: 8),
               confirmButton,
             ],

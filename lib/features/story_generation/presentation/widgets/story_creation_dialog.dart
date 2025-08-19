@@ -12,7 +12,7 @@ import 'package:storytales/features/story_generation/presentation/bloc/story_gen
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_workshop_bloc.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_workshop_event.dart';
-import 'package:storytales/features/story_generation/presentation/widgets/story_workshop_modal.dart';
+import 'package:storytales/features/story_generation/presentation/widgets/story_workshop_dialog.dart';
 import 'package:storytales/features/story_reader/presentation/pages/story_reader_page.dart';
 import 'package:storytales/features/subscription/presentation/pages/subscription_page.dart';
 
@@ -629,8 +629,8 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
       // Close the dialog
       Navigator.pop(context);
 
-      // Show the workshop modal
-      StoryWorkshopModal.show(context);
+      // Show the workshop dialog
+      StoryWorkshopDialog.show(context);
 
       // Show a snackbar to inform the user
       ScaffoldMessenger.of(context).showSnackBar(
@@ -648,7 +648,7 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
             label: 'View Workshop',
             textColor: Colors.white,
             onPressed: () {
-              StoryWorkshopModal.show(context);
+              StoryWorkshopDialog.show(context);
             },
           ),
         ),

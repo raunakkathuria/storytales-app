@@ -4,7 +4,7 @@ import 'package:storytales/core/theme/theme.dart';
 import 'package:storytales/core/widgets/responsive_text.dart';
 import '../bloc/story_workshop_bloc.dart';
 import '../bloc/story_workshop_state.dart';
-import 'story_workshop_modal.dart';
+import 'story_workshop_dialog.dart';
 
 /// Indicator widget that shows when there are active story generations
 /// Displays in the top bar and opens the workshop modal when tapped
@@ -23,7 +23,7 @@ class StoryWorkshopIndicator extends StatelessWidget {
         final failedCount = state.failedJobs.length;
 
         return GestureDetector(
-          onTap: () => StoryWorkshopModal.show(context),
+          onTap: () => StoryWorkshopDialog.show(context),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
