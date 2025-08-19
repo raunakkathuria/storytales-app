@@ -1,3 +1,4 @@
+import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:storytales/core/services/local_storage/database_service.dart';
@@ -153,8 +154,14 @@ class StoryRepositoryImpl implements StoryRepository {
     final storyModel = story as StoryModel;
 
     await _databaseService.transaction((txn) async {
-      // Save story
-      await txn.insert('stories', storyModel.toDbMap());
+      // Save story (upsert - insert or replace if exists)
+      await txn.insert('stories', storyModel.toDbMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+
+      // Delete existing related data to avoid duplicates
+      await txn.delete('story_pages', where: 'story_id = ?', whereArgs: [storyModel.id]);
+      await txn.delete('story_tags', where: 'story_id = ?', whereArgs: [storyModel.id]);
+      await txn.delete('story_questions', where: 'story_id = ?', whereArgs: [storyModel.id]);
 
       // Save pages
       for (var page in storyModel.pages) {

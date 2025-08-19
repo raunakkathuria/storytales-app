@@ -52,7 +52,8 @@ void main() {
 
       // Mock transaction
       final mockTransaction = MockTransaction();
-      when(mockTransaction.insert(any, any)).thenAnswer((_) async => 1);
+      when(mockTransaction.insert(any, any, conflictAlgorithm: anyNamed('conflictAlgorithm'))).thenAnswer((_) async => 1);
+      when(mockTransaction.delete(any, where: anyNamed('where'), whereArgs: anyNamed('whereArgs'))).thenAnswer((_) async => 1);
 
       when(mockDatabaseService.transaction(any))
           .thenAnswer((invocation) async {
