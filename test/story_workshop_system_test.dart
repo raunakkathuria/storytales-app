@@ -59,12 +59,11 @@ void main() {
         theme: anyNamed('theme'),
         genre: anyNamed('genre'),
       )).thenAnswer((_) async => _createMockStory());
-      when(mockLibraryRepository.saveStory(any)).thenAnswer((_) async {});
 
       // Start first story generation
       bloc.add(const StartStoryGeneration(
         prompt: 'A brave knight',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       ));
 
       // Wait for the first job to be added
@@ -82,7 +81,7 @@ void main() {
       // Start second story generation
       bloc.add(const StartStoryGeneration(
         prompt: 'A magical dragon',
-        ageRange: '3-5 years',
+        ageRange: '3-5',
       ));
 
       // Wait for the second job to be added
@@ -107,12 +106,11 @@ void main() {
         theme: anyNamed('theme'),
         genre: anyNamed('genre'),
       )).thenAnswer((_) async => _createMockStory());
-      when(mockLibraryRepository.saveStory(any)).thenAnswer((_) async {});
 
       // Start story generation
       bloc.add(const StartStoryGeneration(
         prompt: 'A brave knight',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       ));
 
       // Wait for active state
@@ -154,7 +152,7 @@ void main() {
       // Start story generation
       bloc.add(const StartStoryGeneration(
         prompt: 'A brave knight',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       ));
 
       // Wait for active state then failure
@@ -185,7 +183,6 @@ void main() {
         theme: anyNamed('theme'),
         genre: anyNamed('genre'),
       )).thenAnswer((_) async => _createMockStory());
-      when(mockLibraryRepository.saveStory(any)).thenAnswer((_) async {});
 
       bloc.add(RetryJob(jobId: jobId));
 
@@ -215,7 +212,7 @@ void main() {
       // Start story generation
       bloc.add(const StartStoryGeneration(
         prompt: 'A brave knight',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       ));
 
       // Wait for failure
@@ -255,7 +252,7 @@ void main() {
           jobId: 'job1',
           tempStoryId: 'temp1',
           prompt: 'A brave knight',
-          ageRange: '6-8 years',
+          ageRange: '6-8',
           startTime: DateTime.now(),
           status: StoryJobStatus.generating,
         ),
@@ -266,7 +263,7 @@ void main() {
           jobId: 'job2',
           tempStoryId: 'temp2',
           prompt: 'A magical dragon',
-          ageRange: '3-5 years',
+          ageRange: '3-5',
           startTime: DateTime.now(),
           status: StoryJobStatus.failed,
           error: 'Generation failed',
@@ -295,7 +292,7 @@ void main() {
       // Start story generation
       bloc.add(const StartStoryGeneration(
         prompt: 'A brave knight',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       ));
 
       // Should remain in initial state (no job created)
@@ -308,7 +305,7 @@ void main() {
         jobId: 'job1',
         tempStoryId: 'temp1',
         prompt: 'A very long prompt that should be truncated for display purposes',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
         startTime: DateTime.now(),
         status: StoryJobStatus.generating,
       );
@@ -360,7 +357,7 @@ Story _createMockStory() {
     coverImagePath: '/test/path',
     createdAt: DateTime.parse('2024-01-01T00:00:00Z'),
     author: 'Test Author',
-    ageRange: '6-8 years',
+    ageRange: '6-8',
     readingTime: '5 minutes',
     originalPrompt: 'Test prompt',
     genre: 'Adventure',

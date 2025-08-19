@@ -134,7 +134,7 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
   Timer? _messageTimer;
   String? _failedTempStoryId; // To store the tempStoryId of a failed generation
 
-  final List<String> _ageRanges = ['0-2 years', '3-5 years', '6-8 years', '9-12 years', '13+ years'];
+  final List<String> _ageRanges = ['0-2', '3-5', '6-8', '9-12', '13+'];
 
   // List of loading messages to cycle through
   final List<String> _loadingMessages = [

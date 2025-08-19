@@ -28,7 +28,7 @@ void main() {
       // Arrange
       const event = StartGenerationCountdown(
         prompt: 'A friendly dragon',
-        ageRange: '3-5 years',
+        ageRange: '3-5',
       );
 
       // Act
@@ -59,7 +59,7 @@ void main() {
         coverImagePath: 'test-image.jpg',
         createdAt: DateTime.now(),
         author: 'Test Author',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
         readingTime: '5 minutes',
         originalPrompt: 'A magical adventure',
         genre: 'Fantasy',
@@ -85,7 +85,7 @@ void main() {
 
       const event = StartGenerationCountdown(
         prompt: 'A magical adventure',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       );
 
       // Act

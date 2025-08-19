@@ -80,7 +80,7 @@ void main() {
         'id': 'story-123',
         'metadata': {
           'author': 'Storytales Maker',
-          'age_range': '6-8 years',
+          'age_range': '6-8',
           'reading_time': '5 minutes',
           'created_at': '2025-01-15T10:32:00Z',
           'original_prompt': 'A friendly dragon',
@@ -151,7 +151,7 @@ void main() {
       // Act
       final result = await storyApiClient.generateStory(
         prompt: 'A friendly dragon',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       );
 
       // Assert
@@ -224,7 +224,7 @@ void main() {
       expect(
         () async => await storyApiClient.generateStory(
           prompt: 'A friendly dragon',
-          ageRange: '6-8 years',
+          ageRange: '6-8',
         ),
         throwsA(isA<Exception>().having(
           (e) => e.toString(),
