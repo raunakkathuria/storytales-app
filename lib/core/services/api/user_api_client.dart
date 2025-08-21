@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:storytales/core/config/app_config.dart';
 import 'package:storytales/core/services/connectivity/connectivity_service.dart';
+import 'package:storytales/core/services/device/device_service.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
 import 'package:storytales/core/models/user_stories_response.dart';
 import 'package:storytales/core/di/injection_container.dart';
@@ -9,17 +10,25 @@ import 'package:storytales/core/di/injection_container.dart';
 class UserApiClient {
   final Dio _dio;
   final ConnectivityService _connectivityService;
+  final DeviceService _deviceService;
   final LoggingService _loggingService;
   final AppConfig _appConfig;
 
   UserApiClient({
     required Dio dio,
     required ConnectivityService connectivityService,
+    required DeviceService deviceService,
     required AppConfig appConfig,
   })  : _dio = dio,
         _connectivityService = connectivityService,
+        _deviceService = deviceService,
         _appConfig = appConfig,
         _loggingService = sl<LoggingService>();
+
+  /// Gets the device ID for use in API headers.
+  Future<String> _getDeviceIdHeader() async {
+    return await _deviceService.getDeviceId();
+  }
 
   /// Creates a new anonymous user with device tracking.
   ///
@@ -46,6 +55,7 @@ class UserApiClient {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
           },
           sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
           receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
@@ -115,6 +125,7 @@ class UserApiClient {
           headers: {
             'Accept': 'application/json',
             'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
           },
           sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
           receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
@@ -189,6 +200,7 @@ class UserApiClient {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
           },
           sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
           receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
@@ -267,6 +279,7 @@ class UserApiClient {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
           },
           sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
           receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
@@ -341,6 +354,7 @@ class UserApiClient {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
           },
           sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
           receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
@@ -420,6 +434,7 @@ class UserApiClient {
           headers: {
             'Accept': 'application/json',
             'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
           },
           sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
           receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
