@@ -63,15 +63,10 @@ class _StoryWorkshopIndicatorState extends State<StoryWorkshopIndicator>
   Widget build(BuildContext context) {
     return BlocBuilder<StoryWorkshopBloc, StoryWorkshopState>(
       builder: (context, state) {
-        if (state is! StoryWorkshopActive || !state.hasJobs) {
-          // Stop animations when no jobs
-          _pulseController.stop();
-          _rotationController.stop();
-          return const SizedBox.shrink();
-        }
-
-        final activeCount = state.activeJobs.length;
-        final failedCount = state.failedJobs.length;
+        // Always show the indicator, but change appearance based on state
+        final isActive = state is StoryWorkshopActive && state.hasJobs;
+        final activeCount = isActive ? (state as StoryWorkshopActive).activeJobs.length : 0;
+        final failedCount = isActive ? (state as StoryWorkshopActive).failedJobs.length : 0;
         final hasActiveJobs = activeCount > 0;
 
         // Start/stop animations based on job status
@@ -83,84 +78,94 @@ class _StoryWorkshopIndicatorState extends State<StoryWorkshopIndicator>
           _rotationController.stop();
         }
 
-        return GestureDetector(
-          onTap: () => StoryWorkshopDialog.show(context),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: _getIndicatorColor(state),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: _getBorderColor(state),
-                width: 2,
-              ),
-              boxShadow: hasActiveJobs ? [
-                BoxShadow(
-                  color: StoryTalesTheme.primaryColor.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  spreadRadius: 2,
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => StoryWorkshopDialog.show(context),
+            borderRadius: BorderRadius.circular(24), // Circular ink splash
+            child: Container(
+              width: 48, // Increased size for better touch target
+              height: 48,
+              padding: const EdgeInsets.all(4), // Inner padding
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isActive ? _getIndicatorColor(state as StoryWorkshopActive) :
+                         StoryTalesTheme.accentColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isActive ? _getBorderColor(state as StoryWorkshopActive) :
+                           StoryTalesTheme.accentColor.withValues(alpha: 0.3),
+                    width: 2,
+                  ),
+                  boxShadow: hasActiveJobs ? [
+                    BoxShadow(
+                      color: StoryTalesTheme.accentColor.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    ),
+                  ] : null,
                 ),
-              ] : null,
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Main icon with animations
-                AnimatedBuilder(
-                  animation: hasActiveJobs ? _pulseAnimation :
-                             const AlwaysStoppedAnimation(1.0),
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _pulseAnimation.value,
-                      child: AnimatedBuilder(
-                        animation: hasActiveJobs ? _rotationAnimation :
-                                   const AlwaysStoppedAnimation(0.0),
-                        builder: (context, child) {
-                          return Transform.rotate(
-                            angle: _rotationAnimation.value * 2 * 3.14159,
-                            child: Icon(
-                              _getMainIcon(state),
-                              size: 20,
-                              color: _getIconColor(state),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Main icon with animations
+                    AnimatedBuilder(
+                      animation: hasActiveJobs ? _pulseAnimation :
+                                 const AlwaysStoppedAnimation(1.0),
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _pulseAnimation.value,
+                          child: AnimatedBuilder(
+                            animation: hasActiveJobs ? _rotationAnimation :
+                                       const AlwaysStoppedAnimation(0.0),
+                            builder: (context, child) {
+                              return Transform.rotate(
+                                angle: _rotationAnimation.value * 2 * 3.14159,
+                                child: Icon(
+                                  isActive ? _getMainIcon(state as StoryWorkshopActive) : Icons.auto_fix_high,
+                                  size: 20,
+                                  color: isActive ? _getIconColor(state as StoryWorkshopActive) :
+                                         StoryTalesTheme.accentColor.withValues(alpha: 0.8),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
 
-                // Badge for job count (only show if more than 1 job)
-                if (activeCount + failedCount > 1)
-                  Positioned(
-                    top: 2,
-                    right: 2,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: _getBadgeColor(state),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 1,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${activeCount + failedCount}',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontFamily: StoryTalesTheme.fontFamilyBody,
+                    // Badge for job count (only show if more than 1 job)
+                    if (isActive && activeCount + failedCount > 1)
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: _getBadgeColor(state as StoryWorkshopActive),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 1,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${activeCount + failedCount}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontFamily: StoryTalesTheme.fontFamilyBody,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
         );
@@ -179,21 +184,21 @@ class _StoryWorkshopIndicatorState extends State<StoryWorkshopIndicator>
     if (state.hasOnlyFailedJobs) {
       return StoryTalesTheme.errorColor.withValues(alpha: 0.1);
     }
-    return StoryTalesTheme.primaryColor.withValues(alpha: 0.1);
+    return StoryTalesTheme.accentColor.withValues(alpha: 0.1);
   }
 
   Color _getBorderColor(StoryWorkshopActive state) {
     if (state.hasOnlyFailedJobs) {
       return StoryTalesTheme.errorColor;
     }
-    return StoryTalesTheme.primaryColor;
+    return StoryTalesTheme.accentColor;
   }
 
   Color _getIconColor(StoryWorkshopActive state) {
     if (state.hasOnlyFailedJobs) {
       return StoryTalesTheme.errorColor;
     }
-    return StoryTalesTheme.primaryColor;
+    return StoryTalesTheme.accentColor;
   }
 
   Color _getBadgeColor(StoryWorkshopActive state) {

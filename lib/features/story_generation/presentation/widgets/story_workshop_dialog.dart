@@ -26,20 +26,77 @@ class StoryWorkshopDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<StoryWorkshopBloc, StoryWorkshopState>(
       builder: (context, state) {
-        // Auto-close dialog if no jobs remain
-        if (state is StoryWorkshopInitial) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.of(context).pop();
-          });
-          return const SizedBox.shrink();
-        }
-
         if (state is StoryWorkshopActive) {
           return _buildDialog(context, state);
         }
 
-        return const SizedBox.shrink();
+        // Show empty state dialog when no jobs are active
+        return _buildEmptyStateDialog(context);
       },
+    );
+  }
+
+  Widget _buildEmptyStateDialog(BuildContext context) {
+    return DialogForm(
+      title: '', // Empty title since we show it in the header
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header with logo and title
+            _buildHeader(),
+            const SizedBox(height: 20),
+
+            // Empty state content
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: StoryTalesTheme.accentColor.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: StoryTalesTheme.accentColor.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.auto_fix_high,
+                    size: 48,
+                    color: StoryTalesTheme.accentColor.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(height: 16),
+                  const ResponsiveText(
+                    text: 'No Stories in Progress',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: StoryTalesTheme.fontFamilyHeading,
+                      color: StoryTalesTheme.textColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  const ResponsiveText(
+                    text: 'When you create a new story, you\'ll see its progress here. The workshop shows all your active story generations in one place.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: StoryTalesTheme.textLightColor,
+                      fontFamily: StoryTalesTheme.fontFamilyBody,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      primaryActionText: 'Close',
+      onPrimaryAction: () => Navigator.pop(context),
+      secondaryActionText: '', // No secondary action needed
     );
   }
 

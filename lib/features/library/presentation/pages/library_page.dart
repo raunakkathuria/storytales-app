@@ -70,9 +70,11 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
         toolbarHeight: 56, // Standard height for better visibility
         backgroundColor: StoryTalesTheme.surfaceColor, // White background
         elevation: 1, // Slight shadow for definition
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: const StoryWorkshopIndicator(),
+        ),
         actions: [
-          // Story Workshop indicator
-          const StoryWorkshopIndicator(),
           // Subscription button
           BlocBuilder<SubscriptionBloc, SubscriptionState>(
             builder: (context, state) {
