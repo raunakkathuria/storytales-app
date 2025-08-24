@@ -11,7 +11,20 @@ import 'package:storytales/features/library/domain/entities/story.dart';
 import 'story_generation_background_test.mocks.dart';
 
 // Create additional mocks
-class MockLibraryRepository extends Mock implements StoryRepository {}
+class MockLibraryRepository extends Mock implements StoryRepository {
+  @override
+  Future<void> saveStory(Story story) async {}
+
+  @override
+  Future<void> updateStory(Story story) async {}
+
+  @override
+  Future<void> toggleFavorite(String id) async {}
+
+  @override
+  Future<void> loadApiPreGeneratedStories() async {}
+}
+
 class MockLoggingService extends Mock implements LoggingService {}
 
 void main() {
@@ -31,6 +44,10 @@ void main() {
 
       mockStoryRepository = MockStoryGenerationRepository();
       mockLibraryRepository = MockLibraryRepository();
+
+      // Provide dummy return values for mock methods
+      provideDummy<Future<void>>(Future.value());
+
       bloc = StoryWorkshopBloc(
         storyRepository: mockStoryRepository,
         libraryRepository: mockLibraryRepository,
@@ -51,51 +68,55 @@ void main() {
     });
 
     test('should handle multiple story generations', () async {
-      // Mock successful story generation
+      // Mock successful story generation with delay to prevent immediate completion
       when(mockStoryRepository.canGenerateStory()).thenAnswer((_) async => true);
       when(mockStoryRepository.generateStory(
         prompt: anyNamed('prompt'),
         ageRange: anyNamed('ageRange'),
         theme: anyNamed('theme'),
         genre: anyNamed('genre'),
-      )).thenAnswer((_) async => _createMockStory());
-      when(mockLibraryRepository.saveStory(any)).thenAnswer((_) async {});
+      )).thenAnswer((_) async {
+        // Add delay to simulate story generation time
+        await Future.delayed(const Duration(milliseconds: 300));
+        return _createMockStory();
+      });
+
+      // Track states
+      final states = <StoryWorkshopState>[];
+      final subscription = bloc.stream.listen((state) {
+        states.add(state);
+      });
 
       // Start first story generation
       bloc.add(const StartStoryGeneration(
         prompt: 'A brave knight',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       ));
 
-      // Wait for the first job to be added
-      await expectLater(
-        bloc.stream,
-        emitsInOrder([
-          isA<StoryWorkshopActive>().having(
-            (state) => state.activeJobs.length,
-            'active jobs count',
-            1,
-          ),
-        ]),
-      );
+      // Wait for first job to be active
+      await Future.delayed(const Duration(milliseconds: 50));
 
       // Start second story generation
       bloc.add(const StartStoryGeneration(
         prompt: 'A magical dragon',
-        ageRange: '3-5 years',
+        ageRange: '3-5',
       ));
 
-      // Wait for the second job to be added
-      await expectLater(
-        bloc.stream,
-        emitsInOrder([
-          isA<StoryWorkshopActive>().having(
-            (state) => state.activeJobs.length,
-            'active jobs count',
-            2,
-          ),
-        ]),
-      );
+      // Wait for both jobs to be active
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Check that we have at least one state with 2 active jobs
+      final activeStates = states.whereType<StoryWorkshopActive>().toList();
+      expect(activeStates, isNotEmpty, reason: 'Should have active states');
+
+      // Find a state with 2 active jobs
+      final stateWith2Jobs = activeStates.where((state) => state.activeJobs.length == 2);
+      expect(stateWith2Jobs, isNotEmpty, reason: 'Should have a state with 2 active jobs');
+
+      // Wait for background operations to complete before closing
+      await Future.delayed(const Duration(milliseconds: 400));
+
+      await subscription.cancel();
     });
 
     test('should handle job completion and auto-removal', () async {
@@ -107,38 +128,40 @@ void main() {
         theme: anyNamed('theme'),
         genre: anyNamed('genre'),
       )).thenAnswer((_) async => _createMockStory());
-      when(mockLibraryRepository.saveStory(any)).thenAnswer((_) async {});
+
+
+      // Track states to find when we have an active job
+      StoryWorkshopActive? activeStateWithJob;
+      final subscription = bloc.stream.listen((state) {
+        if (state is StoryWorkshopActive && state.activeJobs.isNotEmpty && activeStateWithJob == null) {
+          activeStateWithJob = state;
+        }
+      });
 
       // Start story generation
       bloc.add(const StartStoryGeneration(
         prompt: 'A brave knight',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       ));
 
-      // Wait for active state
-      await expectLater(
-        bloc.stream,
-        emitsInOrder([
-          isA<StoryWorkshopActive>().having(
-            (state) => state.activeJobs.length,
-            'active jobs count',
-            1,
-          ),
-        ]),
-      );
+      // Wait for the job to be created
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      // Ensure we have an active job
+      expect(activeStateWithJob, isNotNull, reason: 'Should have an active state with jobs');
+      expect(activeStateWithJob!.activeJobs, isNotEmpty, reason: 'Should have active jobs');
 
       // Complete the job
-      final activeState = bloc.state as StoryWorkshopActive;
-      final jobId = activeState.activeJobs.keys.first;
+      final jobId = activeStateWithJob!.activeJobs.keys.first;
       bloc.add(CompleteJob(jobId: jobId));
 
+      // Wait for completion
+      await Future.delayed(const Duration(milliseconds: 100));
+
       // Should return to initial state (auto-removal)
-      await expectLater(
-        bloc.stream,
-        emitsInOrder([
-          isA<StoryWorkshopInitial>(),
-        ]),
-      );
+      expect(bloc.state, isA<StoryWorkshopInitial>());
+
+      await subscription.cancel();
     });
 
     test('should handle job failure and retry', () async {
@@ -154,7 +177,7 @@ void main() {
       // Start story generation
       bloc.add(const StartStoryGeneration(
         prompt: 'A brave knight',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       ));
 
       // Wait for active state then failure
@@ -185,7 +208,6 @@ void main() {
         theme: anyNamed('theme'),
         genre: anyNamed('genre'),
       )).thenAnswer((_) async => _createMockStory());
-      when(mockLibraryRepository.saveStory(any)).thenAnswer((_) async {});
 
       bloc.add(RetryJob(jobId: jobId));
 
@@ -215,7 +237,7 @@ void main() {
       // Start story generation
       bloc.add(const StartStoryGeneration(
         prompt: 'A brave knight',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       ));
 
       // Wait for failure
@@ -255,7 +277,7 @@ void main() {
           jobId: 'job1',
           tempStoryId: 'temp1',
           prompt: 'A brave knight',
-          ageRange: '6-8 years',
+          ageRange: '6-8',
           startTime: DateTime.now(),
           status: StoryJobStatus.generating,
         ),
@@ -266,7 +288,7 @@ void main() {
           jobId: 'job2',
           tempStoryId: 'temp2',
           prompt: 'A magical dragon',
-          ageRange: '3-5 years',
+          ageRange: '3-5',
           startTime: DateTime.now(),
           status: StoryJobStatus.failed,
           error: 'Generation failed',
@@ -295,7 +317,7 @@ void main() {
       // Start story generation
       bloc.add(const StartStoryGeneration(
         prompt: 'A brave knight',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       ));
 
       // Should remain in initial state (no job created)
@@ -308,7 +330,7 @@ void main() {
         jobId: 'job1',
         tempStoryId: 'temp1',
         prompt: 'A very long prompt that should be truncated for display purposes',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
         startTime: DateTime.now(),
         status: StoryJobStatus.generating,
       );
@@ -360,7 +382,7 @@ Story _createMockStory() {
     coverImagePath: '/test/path',
     createdAt: DateTime.parse('2024-01-01T00:00:00Z'),
     author: 'Test Author',
-    ageRange: '6-8 years',
+    ageRange: '6-8',
     readingTime: '5 minutes',
     originalPrompt: 'Test prompt',
     genre: 'Adventure',

@@ -52,9 +52,13 @@ void main() {
       when(mockAppConfig.apiKey).thenReturn('test-api-key');
       when(mockAppConfig.apiTimeoutSeconds).thenReturn(30);
 
+      // Setup mock device service
+      when(mockDeviceService.getDeviceId()).thenAnswer((_) async => 'test-device-id-12345');
+
       userApiClient = UserApiClient(
         dio: mockDio,
         connectivityService: mockConnectivityService,
+        deviceService: mockDeviceService,
         appConfig: mockAppConfig,
       );
 

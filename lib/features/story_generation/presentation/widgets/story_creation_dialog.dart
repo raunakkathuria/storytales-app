@@ -12,7 +12,7 @@ import 'package:storytales/features/story_generation/presentation/bloc/story_gen
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_workshop_bloc.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_workshop_event.dart';
-import 'package:storytales/features/story_generation/presentation/widgets/story_workshop_modal.dart';
+import 'package:storytales/features/story_generation/presentation/widgets/story_workshop_dialog.dart';
 import 'package:storytales/features/story_reader/presentation/pages/story_reader_page.dart';
 import 'package:storytales/features/subscription/presentation/pages/subscription_page.dart';
 
@@ -37,35 +37,8 @@ class StoryCreationDialog extends StatefulWidget {
         bloc.add(ClearFailedStoryGeneration(tempStoryId: currentState.tempStoryId));
         // Continue with the generation process - don't return early
       } else {
-        // Show a helpful message for active generations
-        String message;
-        if (currentState is StoryGenerationInBackground) {
-          message = '✨ Your story is being created! Please wait for it to finish.';
-        } else {
-          message = '🧙‍♂️ A magical story is already in progress! Please wait a moment.';
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              message,
-              style: const TextStyle(
-                fontFamily: StoryTalesTheme.fontFamilyBody,
-                fontSize: 18, // Increased font size
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            backgroundColor: StoryTalesTheme.primaryColor, // Use primary color for info messages
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'Got it',
-              textColor: Colors.white,
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              },
-            ),
-          ),
-        );
+        // Show the workshop dialog instead of snackbar
+        StoryWorkshopDialog.show(context);
         return;
       }
     }
@@ -134,7 +107,7 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
   Timer? _messageTimer;
   String? _failedTempStoryId; // To store the tempStoryId of a failed generation
 
-  final List<String> _ageRanges = ['0-2 years', '3-5 years', '6-8 years', '9-12 years', '13+ years'];
+  final List<String> _ageRanges = ['0-2', '3-5', '6-8', '9-12', '13+'];
 
   // List of loading messages to cycle through
   final List<String> _loadingMessages = [
@@ -165,50 +138,8 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
         } else if (state is StoryGenerationInBackground) {
           // Close the dialog when background generation starts
           Navigator.pop(context);
-
-          // Show a snackbar to inform the user
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const ResponsiveText(
-                  text: 'Your story is being created! It will appear in your library when ready.',
-                  style: TextStyle(
-                    fontFamily: StoryTalesTheme.fontFamilyBody,
-                    fontSize: 16,
-                  ),
-                ),
-                backgroundColor: StoryTalesTheme.primaryColor,
-                duration: const Duration(seconds: 4),
-              ),
-            );
-          }
         } else if (state is BackgroundGenerationComplete) {
-          // Show notification that story is ready
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const ResponsiveText(
-                  text: 'Your story is ready!',
-                  style: TextStyle(
-                    fontFamily: StoryTalesTheme.fontFamilyBody,
-                    fontSize: 16,
-                  ),
-                ),
-                backgroundColor: StoryTalesTheme.successColor,
-                action: SnackBarAction(
-                  label: 'Read Now',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => StoryReaderPage(storyId: state.story.id),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            );
-          }
+          // Story is ready - no snackbar needed as user will see it in library
         } else if (state is BackgroundGenerationFailure) {
           // Store the tempStoryId of the failed generation
           _failedTempStoryId = state.tempStoryId;
@@ -332,7 +263,7 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
             isExpanded: true,
-            value: _selectedAgeRange,
+            initialValue: _selectedAgeRange,
             icon: const Icon(Icons.arrow_drop_down),
             style: TextStyle(
               color: StoryTalesTheme.textColor,
@@ -629,30 +560,8 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
       // Close the dialog
       Navigator.pop(context);
 
-      // Show the workshop modal
-      StoryWorkshopModal.show(context);
-
-      // Show a snackbar to inform the user
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const ResponsiveText(
-            text: 'Your story is being created! Check the Story Workshop for progress.',
-            style: TextStyle(
-              fontFamily: StoryTalesTheme.fontFamilyBody,
-              fontSize: 16,
-            ),
-          ),
-          backgroundColor: StoryTalesTheme.primaryColor,
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: 'View Workshop',
-            textColor: Colors.white,
-            onPressed: () {
-              StoryWorkshopModal.show(context);
-            },
-          ),
-        ),
-      );
+      // Show the workshop dialog
+      StoryWorkshopDialog.show(context);
     }
   }
 

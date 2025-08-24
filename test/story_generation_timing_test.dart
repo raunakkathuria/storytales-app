@@ -48,7 +48,7 @@ void main() {
       // Act - Start the countdown which should immediately trigger background generation
       bloc.add(const StartGenerationCountdown(
         prompt: 'Test story',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
         theme: null,
         genre: null,
       ));
@@ -93,7 +93,7 @@ void main() {
       // Act
       bloc.add(const StartGenerationCountdown(
         prompt: 'Test story',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
         theme: null,
         genre: null,
       ));

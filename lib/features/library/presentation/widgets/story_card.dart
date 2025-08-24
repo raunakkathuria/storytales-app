@@ -49,7 +49,7 @@ class StoryCard extends StatelessWidget {
 
   Widget _buildBackgroundImage() {
     return ImageService().getImage(
-      imagePath: story.coverImagePath,
+      imageUrl: story.coverImagePath,
       fit: BoxFit.cover,
       placeholder: (context, url) => Container(
         color: StoryTalesTheme.primaryColor.withValues(alpha: 0.1),

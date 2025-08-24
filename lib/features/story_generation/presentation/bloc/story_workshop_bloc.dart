@@ -1,10 +1,12 @@
 import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storytales/core/di/injection_container.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
-import 'package:storytales/core/services/prompt/prompt_enhancement_service.dart';
 import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart';
 import 'package:storytales/features/library/domain/repositories/story_repository.dart';
+import 'package:storytales/features/library/presentation/bloc/library_bloc.dart';
+import 'package:storytales/features/library/presentation/bloc/library_event.dart';
 import 'story_workshop_event.dart';
 import 'story_workshop_state.dart';
 
@@ -117,25 +119,30 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
       // Start progress timer for visual feedback
       _startProgressTimer(job.jobId);
 
-      // Start the story generation API call
-      // Enhanced prompt for sharp, clear images
-      final enhancedPrompt = PromptEnhancementService.enhanceForImageGeneration(job.prompt);
-
+      // Use the API client's built-in job polling system
       final storyData = await _storyRepository.generateStory(
-        prompt: enhancedPrompt,
+        prompt: job.prompt,
         ageRange: job.ageRange,
         theme: job.theme,
         genre: job.genre,
       );
-
-      // Save the story to library
-      await _libraryRepository.saveStory(storyData);
 
       // Cancel progress timer
       _cancelProgressTimer(job.jobId);
 
       // Mark job as completed and auto-remove
       add(CompleteJob(jobId: job.jobId));
+
+      // Trigger library refresh directly
+      Timer.run(() {
+        try {
+          final libraryBloc = sl<LibraryBloc>();
+          libraryBloc.add(const LoadAllStories());
+          _loggingService.info('Library refresh triggered for job: ${job.jobId}');
+        } catch (e) {
+          _loggingService.warning('Failed to trigger library refresh: $e');
+        }
+      });
 
       _loggingService.info('Story generation completed for job: ${job.jobId}');
 
@@ -336,7 +343,7 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
     _cancelProgressTimer(jobId);
 
     double progress = 0.0;
-    const totalDuration = Duration(seconds: 30); // 30 seconds as requested
+    const totalDuration = Duration(seconds: 90); // 90 seconds to match API completion time
     const interval = Duration(milliseconds: 100);
     final steps = totalDuration.inMilliseconds ~/ interval.inMilliseconds;
     final increment = 1.0 / steps;

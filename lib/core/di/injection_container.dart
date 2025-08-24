@@ -172,6 +172,7 @@ Future<void> init() async {
     () => UserApiClient(
       dio: sl(),
       connectivityService: sl(),
+      deviceService: sl(),
       appConfig: sl(),
     ),
   );

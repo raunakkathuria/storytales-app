@@ -80,7 +80,7 @@ void main() {
         'id': 'story-123',
         'metadata': {
           'author': 'Storytales Maker',
-          'age_range': '6-8 years',
+          'age_range': '6-8',
           'reading_time': '5 minutes',
           'created_at': '2025-01-15T10:32:00Z',
           'original_prompt': 'A friendly dragon',
@@ -151,7 +151,7 @@ void main() {
       // Act
       final result = await storyApiClient.generateStory(
         prompt: 'A friendly dragon',
-        ageRange: '6-8 years',
+        ageRange: '6-8',
       );
 
       // Assert
@@ -184,54 +184,57 @@ void main() {
       // Arrange
       when(mockConnectivityService.isConnected()).thenAnswer((_) async => true);
 
-      final jobResponse = {
-        'job_id': 'test-job-456',
-        'status': 'started',
-        'message': 'Story generation started in background thread',
-        'check_status_url': '/story/status/test-job-456',
-        'get_result_url': '/story/result/test-job-456',
-        'estimated_time': '2-5 minutes',
-      };
+      // Mock a DioException to simulate API failure
+      when(mockDio.post(
+        '${appConfig.apiBaseUrl}/story',
+        data: anyNamed('data'),
+        options: anyNamed('options'),
+      )).thenThrow(DioException(
+        requestOptions: RequestOptions(path: '/story'),
+        response: Response(
+          statusCode: 500,
+          data: {'error': 'AI service temporarily unavailable'},
+          requestOptions: RequestOptions(path: '/story'),
+        ),
+        type: DioExceptionType.badResponse,
+      ));
 
-      final failedStatusResponse = {
+      // Act & Assert
+      await expectLater(
+        storyApiClient.generateStory(
+          prompt: 'A friendly dragon',
+          ageRange: '6-8',
+        ),
+        throwsA(isA<Exception>().having(
+          (e) => e.toString(),
+          'message',
+          contains('Story Wizard\'s castle is having some magical difficulties'),
+        )),
+      );
+
+      // Verify the API call was attempted
+      verify(mockDio.post(
+        '${appConfig.apiBaseUrl}/story',
+        data: anyNamed('data'),
+        options: anyNamed('options'),
+      )).called(1);
+    });
+
+    test('should detect failed job status correctly', () {
+      // Test the JobStatusResponse failure detection logic directly
+      final failedStatusJson = {
         'job_id': 'test-job-456',
         'status': 'failed',
         'started_at': '2025-01-15T10:30:00Z',
         'error': 'AI service temporarily unavailable',
       };
 
-      // Mock the API calls
-      when(mockDio.post(
-        '${appConfig.apiBaseUrl}/story',
-        data: anyNamed('data'),
-        options: anyNamed('options'),
-      )).thenAnswer((_) async => Response(
-        data: jobResponse,
-        statusCode: 200,
-        requestOptions: RequestOptions(path: '/story'),
-      ));
+      final statusResponse = JobStatusResponse.fromJson(failedStatusJson);
 
-      when(mockDio.get(
-        '${appConfig.apiBaseUrl}/story/status/test-job-456',
-        options: anyNamed('options'),
-      )).thenAnswer((_) async => Response(
-        data: failedStatusResponse,
-        statusCode: 200,
-        requestOptions: RequestOptions(path: '/story/status/test-job-456'),
-      ));
-
-      // Act & Assert
-      expect(
-        () async => await storyApiClient.generateStory(
-          prompt: 'A friendly dragon',
-          ageRange: '6-8 years',
-        ),
-        throwsA(isA<Exception>().having(
-          (e) => e.toString(),
-          'message',
-          contains('Our Story Wizard encountered a magical mishap: AI service temporarily unavailable'),
-        )),
-      );
+      expect(statusResponse.isFailed, isTrue);
+      expect(statusResponse.isCompleted, isFalse);
+      expect(statusResponse.isProcessing, isFalse);
+      expect(statusResponse.error, equals('AI service temporarily unavailable'));
     });
 
     test('should parse JobResponse correctly', () {

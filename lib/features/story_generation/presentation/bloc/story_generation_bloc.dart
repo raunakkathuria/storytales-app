@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:storytales/core/services/prompt/prompt_enhancement_service.dart';
 import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_event.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
@@ -64,11 +63,8 @@ class StoryGenerationBloc
     _startProgressTimer(emit);
 
     try {
-      // Enhanced prompt for sharp, clear images
-      final enhancedPrompt = PromptEnhancementService.enhanceForImageGeneration(event.prompt);
-
       final story = await _repository.generateStory(
-        prompt: enhancedPrompt,
+        prompt: event.prompt,
         ageRange: event.ageRange,
         theme: event.theme,
         genre: event.genre,
@@ -243,7 +239,7 @@ class StoryGenerationBloc
   ) {
     // Use a timer to run the background generation independently
     final timer = Timer(const Duration(milliseconds: 100), () {
-      _performBackgroundGeneration(tempStoryId, backgroundEvent);
+      _performBackgroundGeneration(tempStoryId, backgroundEvent, emit);
     });
 
     _backgroundGenerationTimers[tempStoryId] = timer;
@@ -253,45 +249,47 @@ class StoryGenerationBloc
   Future<void> _performBackgroundGeneration(
     String tempStoryId,
     StartBackgroundGeneration generationEvent,
+    Emitter<StoryGenerationState> emit,
   ) async {
     try {
-      final enhancedPrompt = PromptEnhancementService.enhanceForImageGeneration(generationEvent.prompt);
-
+      // Generate and save the story - this is a complete operation
+      // that includes both API call and database save
       final story = await _repository.generateStory(
-        prompt: enhancedPrompt,
+        prompt: generationEvent.prompt,
         ageRange: generationEvent.ageRange,
         theme: generationEvent.theme,
         genre: generationEvent.genre,
       );
 
-      // Use add() to trigger events through the normal flow
-      add(BackgroundGenerationCompleted(tempStoryId: tempStoryId));
+      // At this point, the story is fully saved to the database
+      // Now we can safely emit completion states directly for synchronous execution
 
-      // Schedule the completion state to be emitted
-      Timer.run(() {
-        if (!isClosed) {
-          add(BackgroundGenerationCompletedWithStory(
-            tempStoryId: tempStoryId,
-            story: story,
-          ));
-        }
-      });
-
-      // Clean up
+      // Clean up the background timer first
+      _backgroundGenerationTimers[tempStoryId]?.cancel();
       _backgroundGenerationTimers.remove(tempStoryId);
+
+      // Check if emitter is still active before emitting
+      if (!emit.isDone) {
+        // Remove the loading card first
+        emit(RemoveLoadingCard(tempStoryId: tempStoryId));
+
+        // Then emit the completion state with the story
+        // This will trigger the library refresh, and the story will be available
+        emit(BackgroundGenerationComplete(story: story));
+      }
     } catch (e) {
-      // Schedule the failure state to be emitted
-      Timer.run(() {
-        if (!isClosed) {
-          add(BackgroundGenerationFailed(
-            tempStoryId: tempStoryId,
-            error: e.toString(),
-          ));
-        }
-      });
-
-      // Clean up
+      // Handle failure case
+      // Clean up the background timer
+      _backgroundGenerationTimers[tempStoryId]?.cancel();
       _backgroundGenerationTimers.remove(tempStoryId);
+
+      // Check if emitter is still active before emitting
+      if (!emit.isDone) {
+        emit(BackgroundGenerationFailure(
+          tempStoryId: tempStoryId,
+          error: e.toString(),
+        ));
+      }
     }
   }
 
