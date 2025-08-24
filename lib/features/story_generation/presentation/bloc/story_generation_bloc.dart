@@ -239,7 +239,7 @@ class StoryGenerationBloc
   ) {
     // Use a timer to run the background generation independently
     final timer = Timer(const Duration(milliseconds: 100), () {
-      _performBackgroundGeneration(tempStoryId, backgroundEvent);
+      _performBackgroundGeneration(tempStoryId, backgroundEvent, emit);
     });
 
     _backgroundGenerationTimers[tempStoryId] = timer;
@@ -249,8 +249,11 @@ class StoryGenerationBloc
   Future<void> _performBackgroundGeneration(
     String tempStoryId,
     StartBackgroundGeneration generationEvent,
+    Emitter<StoryGenerationState> emit,
   ) async {
     try {
+      // Generate and save the story - this is a complete operation
+      // that includes both API call and database save
       final story = await _repository.generateStory(
         prompt: generationEvent.prompt,
         ageRange: generationEvent.ageRange,
@@ -258,34 +261,35 @@ class StoryGenerationBloc
         genre: generationEvent.genre,
       );
 
-      // Use add() to trigger events through the normal flow
-      add(BackgroundGenerationCompleted(tempStoryId: tempStoryId));
+      // At this point, the story is fully saved to the database
+      // Now we can safely emit completion states directly for synchronous execution
 
-      // Schedule the completion state to be emitted
-      Timer.run(() {
-        if (!isClosed) {
-          add(BackgroundGenerationCompletedWithStory(
-            tempStoryId: tempStoryId,
-            story: story,
-          ));
-        }
-      });
-
-      // Clean up
+      // Clean up the background timer first
+      _backgroundGenerationTimers[tempStoryId]?.cancel();
       _backgroundGenerationTimers.remove(tempStoryId);
+
+      // Check if emitter is still active before emitting
+      if (!emit.isDone) {
+        // Remove the loading card first
+        emit(RemoveLoadingCard(tempStoryId: tempStoryId));
+
+        // Then emit the completion state with the story
+        // This will trigger the library refresh, and the story will be available
+        emit(BackgroundGenerationComplete(story: story));
+      }
     } catch (e) {
-      // Schedule the failure state to be emitted
-      Timer.run(() {
-        if (!isClosed) {
-          add(BackgroundGenerationFailed(
-            tempStoryId: tempStoryId,
-            error: e.toString(),
-          ));
-        }
-      });
-
-      // Clean up
+      // Handle failure case
+      // Clean up the background timer
+      _backgroundGenerationTimers[tempStoryId]?.cancel();
       _backgroundGenerationTimers.remove(tempStoryId);
+
+      // Check if emitter is still active before emitting
+      if (!emit.isDone) {
+        emit(BackgroundGenerationFailure(
+          tempStoryId: tempStoryId,
+          error: e.toString(),
+        ));
+      }
     }
   }
 

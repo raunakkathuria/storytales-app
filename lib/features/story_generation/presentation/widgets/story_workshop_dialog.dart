@@ -51,16 +51,20 @@ class StoryWorkshopDialog extends StatelessWidget {
 
     return DialogForm(
       title: '', // Empty title since we show it in the header
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header with logo and title
-          _buildHeader(),
-          const SizedBox(height: 20),
+      content: SizedBox(
+        width: double.maxFinite, // Ensure dialog uses full available width
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch, // Stretch content to full width
+          children: [
+            // Header with logo and title
+            _buildHeader(),
+            const SizedBox(height: 20),
 
-          // Jobs list - compact and focused
-          ...allJobs.map((job) => _buildJobItem(context, job)),
-        ],
+            // Jobs list - compact and focused
+            ...allJobs.map((job) => _buildJobItem(context, job)),
+          ],
+        ),
       ),
       primaryActionText: 'Close',
       onPrimaryAction: () => Navigator.pop(context),
