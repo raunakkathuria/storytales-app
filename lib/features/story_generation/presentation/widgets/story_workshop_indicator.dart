@@ -65,8 +65,8 @@ class _StoryWorkshopIndicatorState extends State<StoryWorkshopIndicator>
       builder: (context, state) {
         // Always show the indicator, but change appearance based on state
         final isActive = state is StoryWorkshopActive && state.hasJobs;
-        final activeCount = isActive ? (state as StoryWorkshopActive).activeJobs.length : 0;
-        final failedCount = isActive ? (state as StoryWorkshopActive).failedJobs.length : 0;
+        final activeCount = isActive ? (state).activeJobs.length : 0;
+        final failedCount = isActive ? (state).failedJobs.length : 0;
         final hasActiveJobs = activeCount > 0;
 
         // Start/stop animations based on job status
@@ -89,11 +89,11 @@ class _StoryWorkshopIndicatorState extends State<StoryWorkshopIndicator>
               padding: const EdgeInsets.all(4), // Inner padding
               child: Container(
                 decoration: BoxDecoration(
-                  color: isActive ? _getIndicatorColor(state as StoryWorkshopActive) :
+                  color: isActive ? _getIndicatorColor(state) :
                          StoryTalesTheme.accentColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isActive ? _getBorderColor(state as StoryWorkshopActive) :
+                    color: isActive ? _getBorderColor(state) :
                            StoryTalesTheme.accentColor.withValues(alpha: 0.3),
                     width: 2,
                   ),
@@ -122,9 +122,9 @@ class _StoryWorkshopIndicatorState extends State<StoryWorkshopIndicator>
                               return Transform.rotate(
                                 angle: _rotationAnimation.value * 2 * 3.14159,
                                 child: Icon(
-                                  isActive ? _getMainIcon(state as StoryWorkshopActive) : Icons.auto_fix_high,
+                                  isActive ? _getMainIcon(state) : Icons.auto_fix_high,
                                   size: 20,
-                                  color: isActive ? _getIconColor(state as StoryWorkshopActive) :
+                                  color: isActive ? _getIconColor(state) :
                                          StoryTalesTheme.accentColor.withValues(alpha: 0.8),
                                 ),
                               );
@@ -143,7 +143,7 @@ class _StoryWorkshopIndicatorState extends State<StoryWorkshopIndicator>
                           width: 16,
                           height: 16,
                           decoration: BoxDecoration(
-                            color: _getBadgeColor(state as StoryWorkshopActive),
+                            color: _getBadgeColor(state),
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: Colors.white,

@@ -407,6 +407,78 @@ class UserApiClient {
     }
   }
 
+  /// Gets user profile by device ID.
+  ///
+  /// Essential for app reinstalls where the user needs to retrieve their existing account.
+  Future<Map<String, dynamic>> getUserByDevice({
+    required String deviceId,
+  }) async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t reach your profile right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    _loggingService.info('Fetching user profile for device ID: ${deviceId.substring(0, 8)}...');
+
+    try {
+      final response = await _dio.get(
+        '/users/device/$deviceId',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('Get user by device API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final userProfile = response.data as Map<String, dynamic>;
+        _loggingService.info('User profile retrieved by device ID successfully');
+        return userProfile;
+      } else {
+        _loggingService.error('Get user by device API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to fetch user profile by device ID: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error fetching user profile by device ID: $e');
+
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while finding your account. Please try again!';
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to find your account! The connection seems slow. Please check your internet and let\'s try again!';
+            break;
+          case DioExceptionType.connectionError:
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t reach your profile right now. Please check your internet connection and we\'ll try to reconnect!';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 404) {
+              errorMessage = '👤 No magical story account found for this device. We\'ll create a new one for you!';
+            } else if (statusCode == 500) {
+              errorMessage = '🏰 The Story Wizard\'s account lookup magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+            } else {
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while finding your account. Let\'s try again!';
+            }
+            break;
+          default:
+            errorMessage = '🌙 Something unexpected happened while finding your magical account. Our Story Wizard is investigating - please try again!';
+        }
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
+
   /// Gets paginated list of user stories.
   ///
   /// Returns UserStoriesResponse with stories, pagination info, subscription tier, and stories remaining.

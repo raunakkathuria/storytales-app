@@ -47,21 +47,59 @@ class AuthenticationService {
           return userProfile;
         } catch (e) {
           _loggingService.warning('Failed to retrieve existing user profile: $e');
-          // If fetching fails, create a new user
+          // If fetching fails, clear stored data and continue with device-based lookup
           await _clearStoredUserData();
+        }
+      }
+
+      // Try to get existing user by device ID first (for app reinstalls)
+      final deviceId = await _deviceService.getDeviceId();
+      
+      try {
+        _loggingService.info('Trying to retrieve existing user by device ID...');
+        final userProfile = await _userApiClient.getUserByDevice(deviceId: deviceId);
+        
+        // Store the retrieved user data
+        await _storeUserProfile(userProfile);
+        
+        _loggingService.info('Successfully retrieved existing user by device ID');
+        return userProfile;
+      } catch (e) {
+        // If user not found by device ID (404), create a new user
+        if (e.toString().contains('404') || e.toString().contains('No magical story account found')) {
+          _loggingService.info('No existing user found for device, creating new user...');
+        } else {
+          _loggingService.warning('Error retrieving user by device ID: $e');
         }
       }
 
       // Create a new anonymous user
       _loggingService.info('Creating new anonymous user...');
-      final deviceId = await _deviceService.getDeviceId();
-      final userProfile = await _userApiClient.createUser(deviceId: deviceId);
-
-      // Store the user data
-      await _storeUserProfile(userProfile);
-
-      _loggingService.info('Successfully created and stored new user profile');
-      return userProfile;
+      
+      try {
+        final userProfile = await _userApiClient.createUser(deviceId: deviceId);
+        
+        // Store the user data
+        await _storeUserProfile(userProfile);
+        
+        _loggingService.info('Successfully created and stored new user profile');
+        return userProfile;
+      } catch (e) {
+        // Handle 409 conflict - device ID already exists
+        if (e.toString().contains('409') || e.toString().contains('already has a magical story account')) {
+          _loggingService.info('Device ID already exists (409 conflict), retrieving existing user...');
+          
+          // Try to get the existing user by device ID
+          final userProfile = await _userApiClient.getUserByDevice(deviceId: deviceId);
+          await _storeUserProfile(userProfile);
+          
+          _loggingService.info('Successfully retrieved existing user after 409 conflict');
+          return userProfile;
+        }
+        
+        // For other errors, rethrow
+        rethrow;
+      }
     } catch (e) {
       _loggingService.error('Failed to initialize authentication: $e');
       rethrow;

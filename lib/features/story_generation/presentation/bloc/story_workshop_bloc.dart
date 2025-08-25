@@ -120,7 +120,7 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
       _startProgressTimer(job.jobId);
 
       // Use the API client's built-in job polling system
-      final storyData = await _storyRepository.generateStory(
+      await _storyRepository.generateStory(
         prompt: job.prompt,
         ageRange: job.ageRange,
         theme: job.theme,
