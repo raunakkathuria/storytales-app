@@ -3,13 +3,10 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
-
 /// Service for managing device identification and information.
 class DeviceService {
   static const String _deviceIdKey = 'device_id';
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
-  final Uuid _uuid = const Uuid();
 
   /// Gets or creates a unique device identifier.
   ///
@@ -49,17 +46,19 @@ class DeviceService {
         deviceInfo = 'unknown-platform-${DateTime.now().millisecondsSinceEpoch}';
       }
 
-      // Create a hash of the device info combined with a UUID for uniqueness
-      final uuid = _uuid.v4();
-      final combined = '$deviceInfo-$uuid';
-      final bytes = utf8.encode(combined);
+      // Create a hash of the device info for consistent device identification
+      final bytes = utf8.encode(deviceInfo);
       final digest = sha256.convert(bytes);
 
       // Return a shorter, more manageable device ID
       return 'device-${digest.toString().substring(0, 16)}';
     } catch (e) {
-      // Fallback to pure UUID if device info fails
-      return 'device-${_uuid.v4().replaceAll('-', '').substring(0, 16)}';
+      // Fallback to timestamp-based ID if device info fails
+      // This ensures some consistency within the same session
+      final fallbackInfo = 'fallback-${Platform.operatingSystem}';
+      final bytes = utf8.encode(fallbackInfo);
+      final digest = sha256.convert(bytes);
+      return 'device-${digest.toString().substring(0, 16)}';
     }
   }
 
