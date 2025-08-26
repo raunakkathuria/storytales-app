@@ -30,6 +30,9 @@ import 'package:storytales/features/subscription/data/datasources/subscription_l
 import 'package:storytales/features/subscription/data/repositories/subscription_repository_impl.dart';
 import 'package:storytales/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_bloc.dart';
+import 'package:storytales/features/profile/data/repositories/profile_repository_impl.dart';
+import 'package:storytales/features/profile/domain/repositories/profile_repository.dart';
+import 'package:storytales/features/profile/presentation/bloc/profile_bloc.dart';
 
 /// Service locator instance
 final sl = GetIt.instance;
@@ -230,6 +233,13 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(
+      userApiClient: sl(),
+      authenticationService: sl(),
+    ),
+  );
+
 
   //! BLoCs
   sl.registerFactory<LibraryBloc>(
@@ -263,6 +273,13 @@ Future<void> init() async {
     () => SubscriptionBloc(
       repository: sl<SubscriptionRepository>(),
       analyticsService: sl<AnalyticsService>(),
+    ),
+  );
+
+  sl.registerFactory<ProfileBloc>(
+    () => ProfileBloc(
+      profileRepository: sl<ProfileRepository>(),
+      loggingService: sl<LoggingService>(),
     ),
   );
 

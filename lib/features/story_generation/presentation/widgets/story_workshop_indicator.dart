@@ -90,16 +90,16 @@ class _StoryWorkshopIndicatorState extends State<StoryWorkshopIndicator>
               child: Container(
                 decoration: BoxDecoration(
                   color: isActive ? _getIndicatorColor(state) :
-                         StoryTalesTheme.accentColor.withValues(alpha: 0.1),
+                         StoryTalesTheme.primaryColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: isActive ? _getBorderColor(state) :
-                           StoryTalesTheme.accentColor.withValues(alpha: 0.3),
+                           StoryTalesTheme.primaryColor.withValues(alpha: 0.3),
                     width: 2,
                   ),
                   boxShadow: hasActiveJobs ? [
                     BoxShadow(
-                      color: StoryTalesTheme.accentColor.withValues(alpha: 0.3),
+                      color: StoryTalesTheme.primaryColor.withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 2,
                     ),
@@ -125,7 +125,7 @@ class _StoryWorkshopIndicatorState extends State<StoryWorkshopIndicator>
                                   isActive ? _getMainIcon(state) : Icons.auto_fix_high,
                                   size: 20,
                                   color: isActive ? _getIconColor(state) :
-                                         StoryTalesTheme.accentColor.withValues(alpha: 0.8),
+                                         StoryTalesTheme.primaryColor.withValues(alpha: 0.8),
                                 ),
                               );
                             },
@@ -184,27 +184,27 @@ class _StoryWorkshopIndicatorState extends State<StoryWorkshopIndicator>
     if (state.hasOnlyFailedJobs) {
       return StoryTalesTheme.errorColor.withValues(alpha: 0.1);
     }
-    return StoryTalesTheme.accentColor.withValues(alpha: 0.1);
+    return StoryTalesTheme.primaryColor.withValues(alpha: 0.1);
   }
 
   Color _getBorderColor(StoryWorkshopActive state) {
     if (state.hasOnlyFailedJobs) {
       return StoryTalesTheme.errorColor;
     }
-    return StoryTalesTheme.accentColor;
+    return StoryTalesTheme.primaryColor;
   }
 
   Color _getIconColor(StoryWorkshopActive state) {
     if (state.hasOnlyFailedJobs) {
       return StoryTalesTheme.errorColor;
     }
-    return StoryTalesTheme.accentColor;
+    return StoryTalesTheme.primaryColor;
   }
 
   Color _getBadgeColor(StoryWorkshopActive state) {
     if (state.hasOnlyFailedJobs) {
       return StoryTalesTheme.errorColor;
     }
-    return StoryTalesTheme.accentColor;
+    return StoryTalesTheme.primaryColor;
   }
 }

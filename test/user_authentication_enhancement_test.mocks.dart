@@ -1166,6 +1166,60 @@ class MockUserApiClient extends _i1.Mock implements _i18.UserApiClient {
             ),
           )
           as _i11.Future<_i10.UserStoriesResponse>);
+
+  @override
+  _i11.Future<Map<String, dynamic>> registerUser({
+    required int? userId,
+    required String? email,
+    required String? displayName,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#registerUser, [], {
+              #userId: userId,
+              #email: email,
+              #displayName: displayName,
+            }),
+            returnValue: _i11.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i11.Future<Map<String, dynamic>>);
+
+  @override
+  _i11.Future<Map<String, dynamic>> verifyRegistration({
+    required int? userId,
+    required String? otpCode,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#verifyRegistration, [], {
+              #userId: userId,
+              #otpCode: otpCode,
+            }),
+            returnValue: _i11.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i11.Future<Map<String, dynamic>>);
+
+  @override
+  _i11.Future<Map<String, dynamic>> loginUser({required String? email}) =>
+      (super.noSuchMethod(
+            Invocation.method(#loginUser, [], {#email: email}),
+            returnValue: _i11.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i11.Future<Map<String, dynamic>>);
+
+  @override
+  _i11.Future<Map<String, dynamic>> verifyLogin({required String? otpCode}) =>
+      (super.noSuchMethod(
+            Invocation.method(#verifyLogin, [], {#otpCode: otpCode}),
+            returnValue: _i11.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i11.Future<Map<String, dynamic>>);
 }
 
 /// A class which mocks [SharedPreferences].

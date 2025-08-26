@@ -558,4 +558,316 @@ class UserApiClient {
       throw Exception(errorMessage);
     }
   }
+
+  /// Registers a user with email and display name.
+  ///
+  /// Sends an OTP to the user's email for verification.
+  Future<Map<String, dynamic>> registerUser({
+    required int userId,
+    required String email,
+    required String displayName,
+  }) async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t register your account right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    _loggingService.info('Registering user with email: ${email.substring(0, 3)}***');
+
+    try {
+      final response = await _dio.post(
+        '/users/$userId/register',
+        data: {
+          'email': email,
+          'display_name': displayName,
+        },
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('Register user API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final registrationResponse = response.data as Map<String, dynamic>;
+        _loggingService.info('User registration initiated successfully');
+        return registrationResponse;
+      } else {
+        _loggingService.error('Register user API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to register user: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error registering user: $e');
+
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while registering your account. Please try again!';
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to register your account! The connection seems slow. Please check your internet and let\'s try again!';
+            break;
+          case DioExceptionType.connectionError:
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t register your account right now. Please check your internet connection and we\'ll try to reconnect!';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 400) {
+              errorMessage = '📧 Hmm, there seems to be an issue with that email address. Please check it\'s spelled correctly and try again!';
+            } else if (statusCode == 409) {
+              errorMessage = '👤 That email address is already part of our magical story kingdom! Try logging in instead.';
+            } else if (statusCode == 500) {
+              errorMessage = '🏰 The Story Wizard\'s registration magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+            } else {
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while registering your account. Let\'s try again!';
+            }
+            break;
+          default:
+            errorMessage = '🌙 Something unexpected happened while creating your magical account. Our Story Wizard is investigating - please try again!';
+        }
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Verifies user registration with OTP code.
+  ///
+  /// Completes the registration process by verifying the OTP.
+  Future<Map<String, dynamic>> verifyRegistration({
+    required int userId,
+    required String otpCode,
+  }) async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t verify your account right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    _loggingService.info('Verifying registration for user ID: $userId');
+
+    try {
+      final response = await _dio.post(
+        '/users/$userId/verify-registration',
+        data: {'otp_code': otpCode},
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('Verify registration API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final userProfile = response.data as Map<String, dynamic>;
+        _loggingService.info('User registration verified successfully');
+        return userProfile;
+      } else {
+        _loggingService.error('Verify registration API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to verify registration: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error verifying registration: $e');
+
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while verifying your account. Please try again!';
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to verify your account! The connection seems slow. Please check your internet and let\'s try again!';
+            break;
+          case DioExceptionType.connectionError:
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t verify your account right now. Please check your internet connection and we\'ll try to reconnect!';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 400) {
+              errorMessage = '🔢 That verification code doesn\'t look quite right. Please check the code in your email and try again!';
+            } else if (statusCode == 404) {
+              errorMessage = '⏰ That verification code has expired or isn\'t valid. Please request a new registration email!';
+            } else if (statusCode == 500) {
+              errorMessage = '🏰 The Story Wizard\'s verification magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+            } else {
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while verifying your account. Let\'s try again!';
+            }
+            break;
+          default:
+            errorMessage = '🌙 Something unexpected happened while verifying your magical account. Our Story Wizard is investigating - please try again!';
+        }
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Logs in an existing user with email.
+  ///
+  /// Sends an OTP to the user's email for verification.
+  Future<Map<String, dynamic>> loginUser({
+    required String email,
+  }) async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t log you in right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    _loggingService.info('Logging in user with email: ${email.substring(0, 3)}***');
+
+    try {
+      final response = await _dio.post(
+        '/auth/login',
+        data: {
+          'email': email,
+        },
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('Login user API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final loginResponse = response.data as Map<String, dynamic>;
+        _loggingService.info('User login initiated successfully');
+        return loginResponse;
+      } else {
+        _loggingService.error('Login user API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to login user: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error logging in user: $e');
+
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while logging you in. Please try again!';
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to log you in! The connection seems slow. Please check your internet and let\'s try again!';
+            break;
+          case DioExceptionType.connectionError:
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t log you in right now. Please check your internet connection and we\'ll try to reconnect!';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 404) {
+              errorMessage = '👤 No magical story account found with that email address. Please check your email or register a new account!';
+            } else if (statusCode == 400) {
+              errorMessage = '📧 That email address doesn\'t look quite right. Please check it\'s spelled correctly and try again!';
+            } else if (statusCode == 500) {
+              errorMessage = '🏰 The Story Wizard\'s login magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+            } else {
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while logging you in. Let\'s try again!';
+            }
+            break;
+          default:
+            errorMessage = '🌙 Something unexpected happened while logging into your magical account. Our Story Wizard is investigating - please try again!';
+        }
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Verifies user login with OTP code.
+  ///
+  /// Completes the login process by verifying the OTP.
+  Future<Map<String, dynamic>> verifyLogin({
+    required String otpCode,
+  }) async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t verify your login right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    _loggingService.info('Verifying login with OTP code');
+
+    try {
+      final response = await _dio.post(
+        '/auth/verify-login',
+        data: {'otp_code': otpCode},
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('Verify login API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final userProfile = response.data as Map<String, dynamic>;
+        _loggingService.info('User login verified successfully');
+        return userProfile;
+      } else {
+        _loggingService.error('Verify login API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to verify login: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error verifying login: $e');
+
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while verifying your login. Please try again!';
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to verify your login! The connection seems slow. Please check your internet and let\'s try again!';
+            break;
+          case DioExceptionType.connectionError:
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t verify your login right now. Please check your internet connection and we\'ll try to reconnect!';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 400) {
+              errorMessage = '🔢 That login code doesn\'t look quite right. Please check the code in your email and try again!';
+            } else if (statusCode == 404) {
+              errorMessage = '⏰ That login code has expired or isn\'t valid. Please request a new login email!';
+            } else if (statusCode == 500) {
+              errorMessage = '🏰 The Story Wizard\'s login verification magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+            } else {
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while verifying your login. Let\'s try again!';
+            }
+            break;
+          default:
+            errorMessage = '🌙 Something unexpected happened while verifying your magical login. Our Story Wizard is investigating - please try again!';
+        }
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
 }

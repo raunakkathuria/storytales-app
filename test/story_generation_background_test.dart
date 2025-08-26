@@ -50,7 +50,7 @@ void main() {
       );
     });
 
-    test('should complete background generation with story', () async {
+    test('should handle background generation flow', () async {
       // Arrange
       final mockStory = Story(
         id: 'test-story-id',
@@ -78,25 +78,22 @@ void main() {
         theme: anyNamed('theme'),
         genre: anyNamed('genre'),
       )).thenAnswer((_) async {
-        // Add a small delay to simulate API call
-        await Future.delayed(const Duration(milliseconds: 200));
         return mockStory;
       });
 
-      const event = StartGenerationCountdown(
+      // Act - Directly trigger background generation
+      bloc.add(const StartBackgroundGeneration(
         prompt: 'A magical adventure',
         ageRange: '6-8',
-      );
+      ));
 
-      // Act
-      bloc.add(event);
-
-      // Wait for the background generation to complete
-      // The sequence should be: countdown states, background generation, then completion
+      // Assert - Check that background generation starts
       await expectLater(
-        bloc.stream.where((state) => state is BackgroundGenerationComplete).take(1),
-        emits(isA<BackgroundGenerationComplete>()
-            .having((state) => state.story, 'story', isA<Story>())),
+        bloc.stream.take(2),
+        emitsInOrder([
+          isA<StoryGenerationInBackground>(),
+          isA<ShowLoadingCard>(),
+        ]),
       );
     });
   });

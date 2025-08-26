@@ -10,10 +10,13 @@ class AuthenticationService {
   static const String _userIdKey = 'user_id';
   static const String _userProfileKey = 'user_profile';
   static const String _isAuthenticatedKey = 'is_authenticated';
+  static const String _initializationCompleteKey = 'initialization_complete';
 
   final DeviceService _deviceService;
   final UserApiClient _userApiClient;
   final LoggingService _loggingService;
+  
+  bool _isInitializing = false;
 
   AuthenticationService({
     required DeviceService deviceService,
@@ -22,10 +25,24 @@ class AuthenticationService {
         _userApiClient = userApiClient,
         _loggingService = sl<LoggingService>();
 
+  /// Checks if authentication initialization is complete.
+  Future<bool> isInitializationComplete() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_initializationCompleteKey) ?? false;
+  }
+
+  /// Checks if authentication is currently being initialized.
+  bool get isInitializing => _isInitializing;
+
   /// Initializes the authentication system by creating or retrieving an anonymous user.
   ///
   /// This method should be called on app startup to ensure the user has a valid session.
   Future<Map<String, dynamic>> initializeAuthentication() async {
+    if (_isInitializing) {
+      throw Exception('Authentication initialization already in progress');
+    }
+
+    _isInitializing = true;
     _loggingService.info('Initializing authentication system...');
 
     try {
@@ -42,6 +59,9 @@ class AuthenticationService {
 
           // Store the updated profile
           await _storeUserProfile(userProfile);
+
+          // Mark initialization as complete
+          await _markInitializationComplete();
 
           _loggingService.info('Successfully retrieved existing user profile');
           return userProfile;
@@ -61,6 +81,9 @@ class AuthenticationService {
         
         // Store the retrieved user data
         await _storeUserProfile(userProfile);
+        
+        // Mark initialization as complete
+        await _markInitializationComplete();
         
         _loggingService.info('Successfully retrieved existing user by device ID');
         return userProfile;
@@ -82,6 +105,9 @@ class AuthenticationService {
         // Store the user data
         await _storeUserProfile(userProfile);
         
+        // Mark initialization as complete
+        await _markInitializationComplete();
+        
         _loggingService.info('Successfully created and stored new user profile');
         return userProfile;
       } catch (e) {
@@ -93,6 +119,9 @@ class AuthenticationService {
           final userProfile = await _userApiClient.getUserByDevice(deviceId: deviceId);
           await _storeUserProfile(userProfile);
           
+          // Mark initialization as complete
+          await _markInitializationComplete();
+          
           _loggingService.info('Successfully retrieved existing user after 409 conflict');
           return userProfile;
         }
@@ -103,6 +132,8 @@ class AuthenticationService {
     } catch (e) {
       _loggingService.error('Failed to initialize authentication: $e');
       rethrow;
+    } finally {
+      _isInitializing = false;
     }
   }
 
@@ -111,9 +142,21 @@ class AuthenticationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getInt(_userIdKey);
+      final isInitComplete = prefs.getBool(_initializationCompleteKey) ?? false;
 
       if (userId == null) {
-        _loggingService.warning('No user ID found, authentication not initialized');
+        if (!isInitComplete && !_isInitializing) {
+          _loggingService.info('User ID not found but initialization not complete, this may be expected during startup');
+        } else {
+          _loggingService.warning('No user ID found after initialization should be complete');
+          _loggingService.debug('DEBUG AuthService - userId: $userId');
+          _loggingService.debug('DEBUG AuthService - isInitComplete: $isInitComplete');
+          _loggingService.debug('DEBUG AuthService - _isInitializing: $_isInitializing');
+          _loggingService.debug('DEBUG AuthService - All keys in prefs: ${prefs.getKeys()}');
+          _loggingService.debug('DEBUG AuthService - _userIdKey value: ${prefs.get(_userIdKey)}');
+          _loggingService.debug('DEBUG AuthService - _userProfileKey value: ${prefs.get(_userProfileKey)}');
+          _loggingService.debug('DEBUG AuthService - _initializationCompleteKey value: ${prefs.get(_initializationCompleteKey)}');
+        }
         return null;
       }
 
@@ -270,10 +313,16 @@ class AuthenticationService {
   Future<void> _storeUserProfile(Map<String, dynamic> userProfile) async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Store user ID
-    final userId = userProfile['user_id'];
+    // Store user ID - API returns 'id'
+    final userId = userProfile['id'];
+    _loggingService.debug('DEBUG _storeUserProfile - Raw userProfile: $userProfile');
+    _loggingService.debug('DEBUG _storeUserProfile - Extracted userId: $userId (type: ${userId.runtimeType})');
+    
     if (userId is int) {
       await prefs.setInt(_userIdKey, userId);
+      _loggingService.debug('DEBUG _storeUserProfile - Stored userId as int: $userId');
+    } else {
+      _loggingService.error('DEBUG _storeUserProfile - ERROR: userId is not int, cannot store!');
     }
 
     // Store full profile as JSON string
@@ -281,11 +330,19 @@ class AuthenticationService {
         .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value.toString())}')
         .join('&');
     await prefs.setString(_userProfileKey, profileJson);
+    _loggingService.debug('DEBUG _storeUserProfile - Stored profile JSON: ${profileJson.substring(0, 100)}...');
 
     // Mark as authenticated
     await prefs.setBool(_isAuthenticatedKey, true);
 
     _loggingService.info('User profile stored successfully');
+  }
+
+  /// Marks authentication initialization as complete.
+  Future<void> _markInitializationComplete() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_initializationCompleteKey, true);
+    _loggingService.info('Marked authentication initialization as complete');
   }
 
   /// Clears all stored user authentication data.
@@ -294,6 +351,21 @@ class AuthenticationService {
     await prefs.remove(_userIdKey);
     await prefs.remove(_userProfileKey);
     await prefs.remove(_isAuthenticatedKey);
+    await prefs.remove(_initializationCompleteKey);
     _loggingService.info('Cleared all stored user data');
+  }
+
+  /// Updates the stored user profile data.
+  ///
+  /// This is a public method for updating user profile after API calls.
+  Future<void> updateStoredUserProfile(Map<String, dynamic> userProfile) async {
+    await _storeUserProfile(userProfile);
+  }
+
+  /// Clears all user authentication data.
+  ///
+  /// This is a public method for logging out users.
+  Future<void> clearUserData() async {
+    await _clearStoredUserData();
   }
 }
