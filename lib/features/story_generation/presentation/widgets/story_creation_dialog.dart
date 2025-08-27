@@ -65,6 +65,9 @@ class StoryCreationDialog extends StatefulWidget {
     // Wait for the result
     final canGenerate = await completer.future;
 
+    // Check if the widget is still mounted before using context
+    if (!context.mounted) return;
+
     if (canGenerate) {
       // User can generate a story, show the dialog
       return showDialog(

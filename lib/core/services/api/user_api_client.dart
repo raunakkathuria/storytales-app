@@ -799,6 +799,7 @@ class UserApiClient {
   ///
   /// Completes the login process by verifying the OTP.
   Future<Map<String, dynamic>> verifyLogin({
+    required String sessionId,
     required String otpCode,
   }) async {
     // Check connectivity
@@ -812,7 +813,10 @@ class UserApiClient {
     try {
       final response = await _dio.post(
         '/auth/verify-login',
-        data: {'otp_code': otpCode},
+        data: {
+          'session_id': sessionId,
+          'otp_code': otpCode,
+        },
         options: Options(
           headers: {
             'Accept': 'application/json',

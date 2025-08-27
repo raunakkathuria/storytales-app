@@ -128,13 +128,22 @@ class MockProfileRepository extends _i1.Mock implements _i5.ProfileRepository {
           as _i6.Future<_i3.RegistrationResponse>);
 
   @override
-  _i6.Future<_i2.UserProfile> verifyLogin({required String? otpCode}) =>
+  _i6.Future<_i2.UserProfile> verifyLogin({
+    required String? sessionId,
+    required String? otpCode,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#verifyLogin, [], {#otpCode: otpCode}),
+            Invocation.method(#verifyLogin, [], {
+              #sessionId: sessionId,
+              #otpCode: otpCode,
+            }),
             returnValue: _i6.Future<_i2.UserProfile>.value(
               _FakeUserProfile_0(
                 this,
-                Invocation.method(#verifyLogin, [], {#otpCode: otpCode}),
+                Invocation.method(#verifyLogin, [], {
+                  #sessionId: sessionId,
+                  #otpCode: otpCode,
+                }),
               ),
             ),
           )

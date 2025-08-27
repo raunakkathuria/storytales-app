@@ -92,7 +92,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 loginResponse: state.loginResponse,
                 onVerify: (otpCode) {
                   context.read<ProfileBloc>().add(
-                    VerifyLogin(otpCode: otpCode),
+                    VerifyLogin(
+                      sessionId: state.loginResponse.sessionId ?? '',
+                      otpCode: otpCode,
+                    ),
                   );
                 },
                 onCancel: () {

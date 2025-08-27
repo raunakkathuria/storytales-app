@@ -279,6 +279,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       _loggingService.info('Verifying login with OTP...');
 
       final loggedInProfile = await _profileRepository.verifyLogin(
+        sessionId: event.sessionId,
         otpCode: event.otpCode,
       );
 

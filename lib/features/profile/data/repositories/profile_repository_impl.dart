@@ -5,18 +5,22 @@ import '../models/user_profile_model.dart';
 import '../models/registration_models.dart';
 import '../../../../core/services/api/user_api_client.dart';
 import '../../../../core/services/auth/authentication_service.dart';
+import '../../../../core/services/logging/logging_service.dart';
+import '../../../../core/di/injection_container.dart';
 
 /// Implementation of ProfileRepository using API calls.
 class ProfileRepositoryImpl implements ProfileRepository {
   final UserApiClient _userApiClient;
   final AuthenticationService _authenticationService;
+  final LoggingService _loggingService;
 
   /// Creates a profile repository implementation.
   ProfileRepositoryImpl({
     required UserApiClient userApiClient,
     required AuthenticationService authenticationService,
   })  : _userApiClient = userApiClient,
-        _authenticationService = authenticationService;
+        _authenticationService = authenticationService,
+        _loggingService = sl<LoggingService>();
 
   @override
   Future<UserProfile> getCurrentUserProfile() async {
@@ -77,10 +81,10 @@ class ProfileRepositoryImpl implements ProfileRepository {
         }
       }
       
-      // Log the original error so we can debug what's actually failing
-      print('ProfileRepository DEBUG - Original error: $e');
-      print('ProfileRepository DEBUG - Error type: ${e.runtimeType}');
-      print('ProfileRepository DEBUG - Error string contains check: ${e.toString()}');
+      // Log the original error for debugging
+      _loggingService.info('ProfileRepository DEBUG - Original error: $e');
+      _loggingService.info('ProfileRepository DEBUG - Error type: ${e.runtimeType}');
+      _loggingService.info('ProfileRepository DEBUG - Error string contains check: ${e.toString()}');
       
       throw Exception('🧙‍♂️ Our Story Wizard encountered a mysterious spell error while loading your profile. Let\'s try again!');
     }
@@ -174,11 +178,13 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<UserProfile> verifyLogin({
+    required String sessionId,
     required String otpCode,
   }) async {
     try {
       // Verify login via API
       final loggedInProfileData = await _userApiClient.verifyLogin(
+        sessionId: sessionId,
         otpCode: otpCode,
       );
       

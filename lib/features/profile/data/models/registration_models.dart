@@ -7,6 +7,7 @@ class RegistrationResponseModel extends RegistrationResponse {
     required super.otpSent,
     required super.email,
     required super.verifyUrl,
+    super.sessionId,
   });
 
   /// Creates a registration response model from JSON.
@@ -14,17 +15,27 @@ class RegistrationResponseModel extends RegistrationResponse {
     return RegistrationResponseModel(
       otpSent: json['otp_sent'] as bool,
       email: json['email'] as String,
-      verifyUrl: json['verify_url'] as String,
+      verifyUrl: json['verify_url'] ?? '',
+      sessionId: json['session_id'] as String?,
     );
   }
 
   /// Converts the registration response model to JSON.
   Map<String, dynamic> toJson() {
-    return {
+    final result = {
       'otp_sent': otpSent,
       'email': email,
-      'verify_url': verifyUrl,
     };
+    
+    if (verifyUrl.isNotEmpty) {
+      result['verify_url'] = verifyUrl;
+    }
+    
+    if (sessionId != null) {
+      result['session_id'] = sessionId!;
+    }
+    
+    return result;
   }
 
   /// Creates a domain entity from this model.
@@ -33,6 +44,7 @@ class RegistrationResponseModel extends RegistrationResponse {
       otpSent: otpSent,
       email: email,
       verifyUrl: verifyUrl,
+      sessionId: sessionId,
     );
   }
 }

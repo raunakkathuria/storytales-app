@@ -43,13 +43,17 @@ class RegistrationResponse extends Equatable {
   /// URL for verification (informational).
   final String verifyUrl;
 
+  /// Session ID for login verification (only present for login responses).
+  final String? sessionId;
+
   /// Creates a registration response.
   const RegistrationResponse({
     required this.otpSent,
     required this.email,
     required this.verifyUrl,
+    this.sessionId,
   });
 
   @override
-  List<Object> get props => [otpSent, email, verifyUrl];
+  List<Object?> get props => [otpSent, email, verifyUrl, sessionId];
 }

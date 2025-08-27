@@ -27,6 +27,7 @@ abstract class ProfileRepository {
 
   /// Verifies user login with OTP code.
   Future<UserProfile> verifyLogin({
+    required String sessionId,
     required String otpCode,
   });
 

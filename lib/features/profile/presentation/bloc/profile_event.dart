@@ -76,15 +76,19 @@ class LoginUser extends ProfileEvent {
 
 /// Event to verify user login with OTP.
 class VerifyLogin extends ProfileEvent {
+  /// Session ID from login response.
+  final String sessionId;
+  
   /// OTP code received via email.
   final String otpCode;
 
   const VerifyLogin({
+    required this.sessionId,
     required this.otpCode,
   });
 
   @override
-  List<Object> get props => [otpCode];
+  List<Object> get props => [sessionId, otpCode];
 }
 
 /// Event to sign out user (return to anonymous state).

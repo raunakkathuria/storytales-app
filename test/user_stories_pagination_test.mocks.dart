@@ -1157,9 +1157,15 @@ class MockUserApiClient extends _i1.Mock implements _i17.UserApiClient {
           as _i11.Future<Map<String, dynamic>>);
 
   @override
-  _i11.Future<Map<String, dynamic>> verifyLogin({required String? otpCode}) =>
+  _i11.Future<Map<String, dynamic>> verifyLogin({
+    required String? sessionId,
+    required String? otpCode,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#verifyLogin, [], {#otpCode: otpCode}),
+            Invocation.method(#verifyLogin, [], {
+              #sessionId: sessionId,
+              #otpCode: otpCode,
+            }),
             returnValue: _i11.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),

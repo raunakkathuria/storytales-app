@@ -258,7 +258,6 @@ Future<void> init() async {
   sl.registerFactory<StoryWorkshopBloc>(
     () => StoryWorkshopBloc(
       storyRepository: sl<StoryGenerationRepository>(),
-      libraryRepository: sl<StoryRepository>(),
     ),
   );
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:storytales/core/theme/theme.dart';
-import 'package:storytales/core/widgets/responsive_text.dart';
 import 'package:storytales/core/widgets/responsive_icon.dart';
 import 'package:storytales/features/profile/domain/entities/user_profile.dart';
 import 'package:storytales/features/profile/presentation/widgets/profile_header.dart';
