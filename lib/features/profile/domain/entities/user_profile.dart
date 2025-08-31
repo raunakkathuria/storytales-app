@@ -61,14 +61,43 @@ class UserProfile extends Equatable {
     );
   }
 
-  /// Returns true if the user has a registered account.
-  bool get hasRegisteredAccount => !isAnonymous && email != null;
+  /// Returns true if the user has a registered account (handles both API patterns).
+  /// 
+  /// Current API: is_anonymous stays true until verification complete
+  /// Future API: is_anonymous becomes false after registration
+  bool get hasRegisteredAccount {
+    // User has registered if they have email and display name, regardless of anonymous status
+    final hasRegistrationData = email != null && displayName != null;
+    
+    // For future API compatibility: check if not anonymous AND has email
+    final isVerifiedInFutureAPI = !isAnonymous && email != null;
+    
+    return hasRegistrationData || isVerifiedInFutureAPI;
+  }
 
-  /// Returns true if the user can register (is anonymous).
-  bool get canRegister => isAnonymous;
+  /// Returns true if the user can register (truly anonymous with no registration started).
+  bool get canRegister {
+    // Can register if no email or display name has been set
+    return email == null && displayName == null;
+  }
 
-  /// Returns true if the user needs to login (anonymous but potentially has existing account).
-  bool get canLogin => isAnonymous;
+  /// Returns true if the user needs to login (has account but needs to authenticate).
+  bool get canLogin {
+    // Can login if they have registration data but aren't fully verified
+    return hasRegisteredAccount && !emailVerified;
+  }
+
+  /// Returns true if the user has registered but needs email verification.
+  /// This method abstracts the API pattern differences and provides consistent behavior.
+  bool get needsEmailVerification {
+    // User needs verification if they have registered but email is not verified
+    return hasRegisteredAccount && !emailVerified;
+  }
+
+  /// Returns true if the user is fully verified and authenticated.
+  bool get isFullyVerified {
+    return hasRegisteredAccount && emailVerified;
+  }
 
   @override
   List<Object?> get props => [

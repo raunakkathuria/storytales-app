@@ -139,30 +139,6 @@ class ProfileRegistrationCompleted extends ProfileState {
   List<Object> get props => [profile];
 }
 
-/// State when user has incomplete registration (email registered but not verified).
-class ProfileRegistrationIncomplete extends ProfileState {
-  /// The current user profile.
-  final UserProfile profile;
-
-  /// The email address that needs verification.
-  final String email;
-
-  /// The display name being registered.
-  final String displayName;
-
-  /// The stored registration response.
-  final RegistrationResponse registrationResponse;
-
-  const ProfileRegistrationIncomplete({
-    required this.profile,
-    required this.email,
-    required this.displayName,
-    required this.registrationResponse,
-  });
-
-  @override
-  List<Object> get props => [profile, email, displayName, registrationResponse];
-}
 
 /// State when user login is in progress.
 class ProfileLoggingIn extends ProfileState {

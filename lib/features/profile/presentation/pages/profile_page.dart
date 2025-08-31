@@ -11,7 +11,6 @@ import '../widgets/registration_form.dart';
 import '../widgets/otp_verification_form.dart';
 import '../widgets/login_form.dart';
 import '../widgets/login_otp_verification_form.dart';
-import '../widgets/incomplete_registration_section.dart';
 
 /// Page for managing user profile and registration.
 class ProfilePage extends StatefulWidget {
@@ -115,7 +114,6 @@ class _ProfilePageState extends State<ProfilePage> {
               : (state is ProfileUpdated) ? state.profile
               : (state is ProfileRegistering) ? state.profile
               : (state is ProfileRegistrationPending) ? state.profile
-              : (state is ProfileRegistrationIncomplete) ? state.profile
               : (state is ProfileVerifying) ? state.profile
               : (state is ProfileRegistrationCompleted) ? state.profile
               : (state is ProfileLoginCompleted) ? state.profile
@@ -160,17 +158,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         context.read<ProfileBloc>().add(const RequestNewRegistrationOTP());
                       },
                       isLoading: state is ProfileVerifying,
-                    )
-                  else if (state is ProfileRegistrationIncomplete)
-                    IncompleteRegistrationSection(
-                      email: state.email,
-                      displayName: state.displayName,
-                      onCompleteVerification: () {
-                        context.read<ProfileBloc>().add(const ResumeRegistrationVerification());
-                      },
-                      onStartOver: () {
-                        context.read<ProfileBloc>().add(const CancelRegistration());
-                      },
                     )
                   else if (_showLoginForm)
                     LoginForm(
