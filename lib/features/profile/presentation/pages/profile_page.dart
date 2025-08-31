@@ -6,11 +6,9 @@ import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
 import '../widgets/profile_header.dart';
-import '../widgets/registration_form.dart';
-import '../widgets/otp_verification_form.dart';
-import '../widgets/login_form.dart';
-import '../widgets/login_otp_verification_form.dart';
 import 'profile_edit_page.dart';
+import 'register_page.dart';
+import 'login_page.dart';
 
 /// Page for managing user profile and registration.
 class ProfilePage extends StatefulWidget {
@@ -21,9 +19,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  bool _showRegistrationForm = false;
-  bool _showLoginForm = false;
-
   @override
   void initState() {
     super.initState();
@@ -53,25 +48,15 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: StoryTalesTheme.backgroundColor,
       body: BlocConsumer<ProfileBloc, ProfileState>(
         listener: (context, state) {
-          // Handle success and error states
-          if (state is ProfileRegistrationCompleted) {
-            _showSuccessSnackBar('🎉 Registration completed successfully! Welcome to StoryTales!');
-            setState(() {
-              _showRegistrationForm = false;
-            });
-          } else if (state is ProfileLoginCompleted) {
-            _showSuccessSnackBar('🌟 Welcome back! You\'re now signed in to your account!');
-            setState(() {
-              _showLoginForm = false;
-            });
-          } else if (state is ProfileUpdated) {
+          // Handle essential state changes
+          if (state is ProfileUpdated) {
             _showSuccessSnackBar('✨ Profile updated successfully!');
           } else if (state is ProfileError) {
             _showErrorSnackBar(state.message);
           }
         },
         builder: (context, state) {
-          if (state is ProfileLoading && state is! ProfileUpdating && state is! ProfileRegistering && state is! ProfileVerifying && state is! ProfileLoggingIn && state is! ProfileLoginVerifying) {
+          if (state is ProfileLoading) {
             return const _LoadingView();
           }
 
@@ -83,40 +68,10 @@ class _ProfilePageState extends State<ProfilePage> {
             );
           }
 
-          // Handle login states that don't have profiles
-          if (state is ProfileLoginPending) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: LoginOtpVerificationForm(
-                email: state.email,
-                loginResponse: state.loginResponse,
-                onVerify: (otpCode) {
-                  context.read<ProfileBloc>().add(
-                    VerifyLogin(
-                      sessionId: state.loginResponse.sessionId ?? '',
-                      otpCode: otpCode,
-                    ),
-                  );
-                },
-                onCancel: () {
-                  setState(() {
-                    _showLoginForm = false;
-                  });
-                },
-                isLoading: state is ProfileLoginVerifying,
-              ),
-            );
-          }
-
-          // All other states should have a profile
+          // Get profile from state
           final profile = (state is ProfileLoaded) ? state.profile
               : (state is ProfileUpdating) ? state.profile
               : (state is ProfileUpdated) ? state.profile
-              : (state is ProfileRegistering) ? state.profile
-              : (state is ProfileRegistrationPending) ? state.profile
-              : (state is ProfileVerifying) ? state.profile
-              : (state is ProfileRegistrationCompleted) ? state.profile
-              : (state is ProfileLoginCompleted) ? state.profile
               : (state is ProfileError) ? state.profile
               : null;
 
@@ -160,143 +115,103 @@ class _ProfilePageState extends State<ProfilePage> {
                   
                   const SizedBox(height: 24),
                   
-                  // Main Content based on state
-                  if (state is ProfileRegistrationPending)
-                    OtpVerificationForm(
-                      registrationResponse: state.registrationResponse,
-                      displayName: state.displayName,
-                      onVerify: (otpCode) {
-                        context.read<ProfileBloc>().add(
-                          VerifyRegistration(otpCode: otpCode),
+                  // Content based on user type
+                  if (profile.canRegister) ...[
+                    // Anonymous User Actions - Navigate to dedicated screens
+                    _AnonymousUserSection(
+                      onRegisterTapped: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (newContext) => BlocProvider.value(
+                              value: context.read<ProfileBloc>(),
+                              child: RegisterPage(profile: profile),
+                            ),
+                          ),
                         );
                       },
-                      onCancel: () {
-                        context.read<ProfileBloc>().add(const CancelRegistration());
-                      },
-                      onRequestNewCode: () {
-                        context.read<ProfileBloc>().add(const RequestNewRegistrationOTP());
-                      },
-                      isLoading: state is ProfileVerifying,
-                    )
-                  else if (_showLoginForm)
-                    LoginForm(
-                      onLogin: (email) {
-                        context.read<ProfileBloc>().add(
-                          LoginUser(email: email),
+                      onLoginTapped: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (newContext) => BlocProvider.value(
+                              value: context.read<ProfileBloc>(),
+                              child: const LoginPage(),
+                            ),
+                          ),
                         );
                       },
-                      onCancel: () {
-                        setState(() {
-                          _showLoginForm = false;
-                        });
-                      },
-                      isLoading: state is ProfileLoggingIn,
-                    )
-                  else if (_showRegistrationForm)
-                    RegistrationForm(
-                      profile: profile,
-                      onRegister: (email, displayName) {
-                        context.read<ProfileBloc>().add(
-                          RegisterUser(email: email, displayName: displayName),
-                        );
-                      },
-                      onCancel: () {
-                        setState(() {
-                          _showRegistrationForm = false;
-                        });
-                      },
-                      isLoading: state is ProfileRegistering,
-                    )
-                  else ...[
-                    const SizedBox(height: 24),
-                    
-                    // Anonymous User Actions - Show prominent registration and login options
-                    if (profile.canRegister) ...[
-                      _AnonymousUserSection(
-                        onRegisterTapped: () {
-                          setState(() {
-                            _showRegistrationForm = true;
-                          });
-                        },
-                        onLoginTapped: () {
-                          setState(() {
-                            _showLoginForm = true;
-                          });
-                        },
+                    ),
+                  ] else ...[
+                    // Registered User Actions - Simple sign out button
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: StoryTalesTheme.surfaceColor,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: StoryTalesTheme.overlayDarkColor.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ] else ...[
-                      // Registered User Actions - Simple sign out button
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: StoryTalesTheme.surfaceColor,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: StoryTalesTheme.overlayDarkColor.withValues(alpha: 0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
+                      child: Column(
+                        children: [
+                          const ResponsiveText(
+                            text: '✨ Account Secure',
+                            style: TextStyle(
+                              fontFamily: StoryTalesTheme.fontFamilyHeading,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: StoryTalesTheme.textColor,
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            const ResponsiveText(
-                              text: '✨ Account Secure',
-                              style: TextStyle(
-                                fontFamily: StoryTalesTheme.fontFamilyHeading,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: StoryTalesTheme.textColor,
-                              ),
+                          ),
+                          const SizedBox(height: 8),
+                          const ResponsiveText(
+                            text: 'Your stories are safely stored in your account!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: StoryTalesTheme.fontFamilyBody,
+                              fontSize: 14,
+                              color: StoryTalesTheme.textLightColor,
                             ),
-                            const SizedBox(height: 8),
-                            const ResponsiveText(
-                              text: 'Your stories are safely stored in your account!',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: StoryTalesTheme.fontFamilyBody,
-                                fontSize: 14,
-                                color: StoryTalesTheme.textLightColor,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            
-                            // Sign Out Button
-                            SizedBox(
-                              width: double.infinity,
-                              child: OutlinedButton(
-                                onPressed: () => _showSignOutConfirmation(context),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: StoryTalesTheme.textLightColor,
-                                  side: const BorderSide(color: StoryTalesTheme.textLightColor),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
+                          ),
+                          const SizedBox(height: 16),
+                          
+                          // Sign Out Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: () => _showSignOutConfirmation(context),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: StoryTalesTheme.textLightColor,
+                                side: const BorderSide(color: StoryTalesTheme.textLightColor),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.logout_outlined, size: 18),
-                                    SizedBox(width: 8),
-                                    ResponsiveText(
-                                      text: 'Sign Out',
-                                      style: TextStyle(
-                                        fontFamily: StoryTalesTheme.fontFamilyBody,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.logout_outlined, size: 18),
+                                  SizedBox(width: 8),
+                                  ResponsiveText(
+                                    text: 'Sign Out',
+                                    style: TextStyle(
+                                      fontFamily: StoryTalesTheme.fontFamilyBody,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ],
                 ],
               ),
@@ -328,9 +243,12 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showSignOutConfirmation(BuildContext context) {
+    // Store the original context that has access to ProfileBloc
+    final originalContext = context;
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const ResponsiveText(
           text: '👋 Sign Out?',
           style: TextStyle(
@@ -346,7 +264,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const ResponsiveText(
               text: 'Cancel',
               style: TextStyle(fontFamily: StoryTalesTheme.fontFamilyBody),
@@ -354,8 +272,9 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.of(context).pop();
-              context.read<ProfileBloc>().add(const SignOut());
+              Navigator.of(dialogContext).pop();
+              // Use original context that has ProfileBloc provider
+              originalContext.read<ProfileBloc>().add(const SignOut());
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: StoryTalesTheme.primaryColor,
