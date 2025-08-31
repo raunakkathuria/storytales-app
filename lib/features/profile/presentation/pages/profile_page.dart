@@ -6,11 +6,11 @@ import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
 import '../widgets/profile_header.dart';
-import '../widgets/profile_form.dart';
 import '../widgets/registration_form.dart';
 import '../widgets/otp_verification_form.dart';
 import '../widgets/login_form.dart';
 import '../widgets/login_otp_verification_form.dart';
+import 'profile_edit_page.dart';
 
 /// Page for managing user profile and registration.
 class ProfilePage extends StatefulWidget {
@@ -144,6 +144,18 @@ class _ProfilePageState extends State<ProfilePage> {
                             context.read<ProfileBloc>().add(const StartEmailVerification());
                           }
                         : null,
+                    onEditProfile: profile.hasRegisteredAccount
+                        ? () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (newContext) => BlocProvider.value(
+                                  value: context.read<ProfileBloc>(),
+                                  child: ProfileEditPage(profile: profile),
+                                ),
+                              ),
+                            );
+                          }
+                        : null,
                   ),
                   
                   const SizedBox(height: 24),
@@ -196,20 +208,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       isLoading: state is ProfileRegistering,
                     )
                   else ...[
-                    // Profile Form - only show for registered users
-                    if (profile.hasRegisteredAccount)
-                      ProfileForm(
-                        profile: profile,
-                        onDisplayNameUpdate: (displayName) {
-                          context.read<ProfileBloc>().add(
-                            UpdateDisplayName(displayName: displayName),
-                          );
-                        },
-                        isLoading: state is ProfileUpdating,
-                      ),
-                    
-                    if (profile.hasRegisteredAccount)
-                      const SizedBox(height: 24),
+                    const SizedBox(height: 24),
                     
                     // Anonymous User Actions - Show prominent registration and login options
                     if (profile.canRegister) ...[
@@ -226,10 +225,76 @@ class _ProfilePageState extends State<ProfilePage> {
                         },
                       ),
                     ] else ...[
-                      // Registered User Actions - Show sign out option
-                      _RegisteredUserSection(
-                        profile: profile,
-                        onSignOutTapped: () => _showSignOutConfirmation(),
+                      // Registered User Actions - Simple sign out button
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: StoryTalesTheme.surfaceColor,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: StoryTalesTheme.overlayDarkColor.withValues(alpha: 0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            const ResponsiveText(
+                              text: '✨ Account Secure',
+                              style: TextStyle(
+                                fontFamily: StoryTalesTheme.fontFamilyHeading,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: StoryTalesTheme.textColor,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const ResponsiveText(
+                              text: 'Your stories are safely stored in your account!',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: StoryTalesTheme.fontFamilyBody,
+                                fontSize: 14,
+                                color: StoryTalesTheme.textLightColor,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            // Sign Out Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton(
+                                onPressed: () => _showSignOutConfirmation(context),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: StoryTalesTheme.textLightColor,
+                                  side: const BorderSide(color: StoryTalesTheme.textLightColor),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.logout_outlined, size: 18),
+                                    SizedBox(width: 8),
+                                    ResponsiveText(
+                                      text: 'Sign Out',
+                                      style: TextStyle(
+                                        fontFamily: StoryTalesTheme.fontFamilyBody,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ],
@@ -262,7 +327,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showSignOutConfirmation() {
+  void _showSignOutConfirmation(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -307,6 +372,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
 }
 
 /// Loading view widget.
@@ -540,87 +606,3 @@ class _AnonymousUserSection extends StatelessWidget {
   }
 }
 
-/// Registered user section widget - shows sign out option.
-class _RegisteredUserSection extends StatelessWidget {
-  final dynamic profile;
-  final VoidCallback? onSignOutTapped;
-
-  const _RegisteredUserSection({
-    required this.profile,
-    this.onSignOutTapped,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: StoryTalesTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: StoryTalesTheme.overlayDarkColor.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const ResponsiveText(
-            text: '✨ Account Secure',
-            style: TextStyle(
-              fontFamily: StoryTalesTheme.fontFamilyHeading,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: StoryTalesTheme.textColor,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const ResponsiveText(
-            text: 'Your stories are safely stored in your magical account!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: StoryTalesTheme.fontFamilyBody,
-              fontSize: 14,
-              color: StoryTalesTheme.textLightColor,
-            ),
-          ),
-          const SizedBox(height: 20),
-          
-          // Sign Out Button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: onSignOutTapped,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: StoryTalesTheme.textLightColor,
-                side: const BorderSide(color: StoryTalesTheme.textLightColor),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.logout_outlined, size: 18),
-                  SizedBox(width: 8),
-                  ResponsiveText(
-                    text: 'Sign Out',
-                    style: TextStyle(
-                      fontFamily: StoryTalesTheme.fontFamilyBody,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

@@ -12,11 +12,15 @@ class ProfileHeader extends StatelessWidget {
   /// Callback when user taps on "Verify Email" badge.
   final VoidCallback? onVerifyEmail;
 
+  /// Callback when user taps on edit icon.
+  final VoidCallback? onEditProfile;
+
   /// Creates a profile header widget.
   const ProfileHeader({
     super.key,
     required this.profile,
     this.onVerifyEmail,
+    this.onEditProfile,
   });
 
   @override
@@ -73,10 +77,13 @@ class ProfileHeader extends StatelessWidget {
               ),
               if (profile.hasRegisteredAccount) ...[
                 const SizedBox(width: 8),
-                ResponsiveIcon(
-                  icon: Icons.edit,
-                  sizeCategory: IconSizeCategory.small,
-                  color: StoryTalesTheme.surfaceColor,
+                GestureDetector(
+                  onTap: onEditProfile,
+                  child: ResponsiveIcon(
+                    icon: Icons.edit,
+                    sizeCategory: IconSizeCategory.small,
+                    color: StoryTalesTheme.surfaceColor,
+                  ),
                 ),
               ],
             ],
