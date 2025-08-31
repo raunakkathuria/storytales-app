@@ -66,6 +66,11 @@ class RequestNewRegistrationOTP extends ProfileEvent {
   const RequestNewRegistrationOTP();
 }
 
+/// Event to resume registration verification from incomplete state.
+class ResumeRegistrationVerification extends ProfileEvent {
+  const ResumeRegistrationVerification();
+}
+
 /// Event to login an existing user.
 class LoginUser extends ProfileEvent {
   /// User's email address.

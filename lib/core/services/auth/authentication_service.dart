@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storytales/core/services/device/device_service.dart';
 import 'package:storytales/core/services/api/user_api_client.dart';
@@ -11,6 +12,7 @@ class AuthenticationService {
   static const String _userProfileKey = 'user_profile';
   static const String _isAuthenticatedKey = 'is_authenticated';
   static const String _initializationCompleteKey = 'initialization_complete';
+  static const String _pendingRegistrationKey = 'pending_registration';
 
   final DeviceService _deviceService;
   final UserApiClient _userApiClient;
@@ -352,6 +354,7 @@ class AuthenticationService {
     await prefs.remove(_userProfileKey);
     await prefs.remove(_isAuthenticatedKey);
     await prefs.remove(_initializationCompleteKey);
+    await prefs.remove(_pendingRegistrationKey);
     _loggingService.info('Cleared all stored user data');
   }
 
@@ -367,5 +370,72 @@ class AuthenticationService {
   /// This is a public method for logging out users.
   Future<void> clearUserData() async {
     await _clearStoredUserData();
+  }
+
+  /// Stores pending registration details for later resumption.
+  Future<void> storePendingRegistration({
+    required String email,
+    required String displayName,
+    required Map<String, dynamic> registrationResponse,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    final pendingRegistration = {
+      'email': email,
+      'displayName': displayName,
+      'registrationResponse': registrationResponse,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    };
+    
+    await prefs.setString(_pendingRegistrationKey, jsonEncode(pendingRegistration));
+    _loggingService.info('Stored pending registration for email: ${email.substring(0, 3)}***');
+  }
+
+  /// Retrieves pending registration details if they exist and are not expired.
+  Future<Map<String, dynamic>?> getPendingRegistration() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pendingJson = prefs.getString(_pendingRegistrationKey);
+    
+    if (pendingJson == null) {
+      return null;
+    }
+    
+    try {
+      final pendingData = jsonDecode(pendingJson) as Map<String, dynamic>;
+      final timestamp = pendingData['timestamp'] as int?;
+      
+      // Check if pending registration is expired (24 hours)
+      if (timestamp != null) {
+        final pendingTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+        final now = DateTime.now();
+        final hoursSince = now.difference(pendingTime).inHours;
+        
+        if (hoursSince > 24) {
+          _loggingService.info('Pending registration expired (${hoursSince}h old), clearing');
+          await clearPendingRegistration();
+          return null;
+        }
+      }
+      
+      _loggingService.info('Found valid pending registration');
+      return pendingData;
+    } catch (e) {
+      _loggingService.error('Failed to parse pending registration: $e');
+      await clearPendingRegistration();
+      return null;
+    }
+  }
+
+  /// Clears any stored pending registration data.
+  Future<void> clearPendingRegistration() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_pendingRegistrationKey);
+    _loggingService.info('Cleared pending registration data');
+  }
+
+  /// Checks if there is a pending registration that needs to be completed.
+  Future<bool> hasPendingRegistration() async {
+    final pending = await getPendingRegistration();
+    return pending != null;
   }
 }

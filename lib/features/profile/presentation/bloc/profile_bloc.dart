@@ -1,9 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
+import 'package:storytales/core/services/auth/authentication_service.dart';
+import 'package:storytales/core/di/injection_container.dart';
 
 import '../../domain/entities/user_profile.dart';
 import '../../domain/entities/registration_request.dart';
 import '../../domain/repositories/profile_repository.dart';
+import '../../data/models/registration_models.dart';
 import 'profile_event.dart';
 import 'profile_state.dart';
 
@@ -11,6 +14,7 @@ import 'profile_state.dart';
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final ProfileRepository _profileRepository;
   final LoggingService _loggingService;
+  final AuthenticationService _authenticationService;
 
   /// Creates a profile BLoC.
   ProfileBloc({
@@ -18,6 +22,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     required LoggingService loggingService,
   })  : _profileRepository = profileRepository,
         _loggingService = loggingService,
+        _authenticationService = sl<AuthenticationService>(),
         super(const ProfileInitial()) {
     // Register event handlers
     on<LoadProfile>(_onLoadProfile);
@@ -26,6 +31,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<RegisterUser>(_onRegisterUser);
     on<VerifyRegistration>(_onVerifyRegistration);
     on<RequestNewRegistrationOTP>(_onRequestNewRegistrationOTP);
+    on<ResumeRegistrationVerification>(_onResumeRegistrationVerification);
     on<LoginUser>(_onLoginUser);
     on<VerifyLogin>(_onVerifyLogin);
     on<SignOut>(_onSignOut);
@@ -43,6 +49,23 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       _loggingService.info('Loading user profile...');
 
       final profile = await _profileRepository.getCurrentUserProfile();
+      
+      // Check for pending incomplete registration
+      final pendingRegistration = await _authenticationService.getPendingRegistration();
+      if (pendingRegistration != null && profile.isAnonymous) {
+        _loggingService.info('Found pending registration for anonymous user');
+        
+        final registrationResponseData = pendingRegistration['registrationResponse'] as Map<String, dynamic>;
+        final registrationResponse = RegistrationResponseModel.fromJson(registrationResponseData);
+        
+        emit(ProfileRegistrationIncomplete(
+          profile: profile,
+          email: pendingRegistration['email'] as String,
+          displayName: pendingRegistration['displayName'] as String,
+          registrationResponse: registrationResponse.toDomain(),
+        ));
+        return;
+      }
       
       emit(ProfileLoaded(profile: profile));
       _loggingService.info('User profile loaded successfully');
@@ -165,6 +188,18 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         displayName: event.displayName,
       );
 
+      // Store pending registration for recovery purposes
+      await _authenticationService.storePendingRegistration(
+        email: event.email,
+        displayName: event.displayName,
+        registrationResponse: {
+          'otpSent': registrationResponse.otpSent,
+          'email': registrationResponse.email,
+          'verifyUrl': registrationResponse.verifyUrl,
+          'sessionId': registrationResponse.sessionId,
+        },
+      );
+
       emit(ProfileRegistrationPending(
         profile: currentProfile,
         registrationResponse: registrationResponse,
@@ -206,6 +241,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       final verifiedProfile = await _profileRepository.verifyRegistration(
         otpCode: event.otpCode,
       );
+
+      // Clear pending registration since verification succeeded
+      await _authenticationService.clearPendingRegistration();
 
       emit(ProfileRegistrationCompleted(profile: verifiedProfile));
       _loggingService.info('User registration completed successfully');
@@ -296,6 +334,35 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       
       // Show error temporarily
       await Future.delayed(const Duration(milliseconds: 100));
+      emit(ProfileError(
+        message: e.toString(),
+        profile: _getCurrentProfile(),
+      ));
+    }
+  }
+
+  /// Handles resuming registration verification from incomplete state.
+  Future<void> _onResumeRegistrationVerification(
+    ResumeRegistrationVerification event,
+    Emitter<ProfileState> emit,
+  ) async {
+    try {
+      final currentState = state;
+      if (currentState is! ProfileRegistrationIncomplete) {
+        emit(const ProfileError(message: 'No incomplete registration to resume'));
+        return;
+      }
+
+      // Transition to pending state to show OTP form
+      emit(ProfileRegistrationPending(
+        profile: currentState.profile,
+        registrationResponse: currentState.registrationResponse,
+        displayName: currentState.displayName,
+      ));
+      
+      _loggingService.info('Resumed registration verification for: ${currentState.email.substring(0, 3)}***');
+    } catch (e) {
+      _loggingService.error('Failed to resume registration verification: $e');
       emit(ProfileError(
         message: e.toString(),
         profile: _getCurrentProfile(),
@@ -409,16 +476,30 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   }
 
   /// Handles canceling registration process.
-  void _onCancelRegistration(
+  Future<void> _onCancelRegistration(
     CancelRegistration event,
     Emitter<ProfileState> emit,
-  ) {
-    final currentProfile = _getCurrentProfile();
-    if (currentProfile != null) {
-      emit(ProfileLoaded(profile: currentProfile));
-      _loggingService.info('Registration process cancelled');
-    } else {
-      emit(const ProfileInitial());
+  ) async {
+    try {
+      // Clear any pending registration data
+      await _authenticationService.clearPendingRegistration();
+      
+      final currentProfile = _getCurrentProfile();
+      if (currentProfile != null) {
+        emit(ProfileLoaded(profile: currentProfile));
+        _loggingService.info('Registration process cancelled');
+      } else {
+        emit(const ProfileInitial());
+      }
+    } catch (e) {
+      _loggingService.error('Error canceling registration: $e');
+      // Still try to emit loaded state even if clearing fails
+      final currentProfile = _getCurrentProfile();
+      if (currentProfile != null) {
+        emit(ProfileLoaded(profile: currentProfile));
+      } else {
+        emit(const ProfileInitial());
+      }
     }
   }
 
