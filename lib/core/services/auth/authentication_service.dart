@@ -274,6 +274,9 @@ class AuthenticationService {
   Future<void> signOut() async {
     _loggingService.info('Signing out user and clearing authentication data');
     await _clearStoredUserData();
+    // Clear device ID to ensure user becomes truly anonymous
+    await _deviceService.clearDeviceId();
+    _loggingService.info('User signed out and device ID cleared - now truly anonymous');
   }
 
   /// Gets paginated user stories for the current user.

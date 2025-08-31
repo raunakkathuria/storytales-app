@@ -44,11 +44,14 @@ class RegisterPage extends StatelessWidget {
       body: BlocConsumer<ProfileBloc, ProfileState>(
         listener: (context, state) {
           if (state is ProfileRegistrationPending) {
+            // Capture the ProfileBloc reference before navigation
+            final profileBloc = context.read<ProfileBloc>();
+            
             // Navigate directly to verification page
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (newContext) => BlocProvider.value(
-                  value: context.read<ProfileBloc>(),
+                  value: profileBloc,
                   child: VerifyEmailPage(
                     registrationResponse: state.registrationResponse,
                     displayName: state.displayName,
@@ -167,10 +170,11 @@ class RegisterPage extends StatelessWidget {
                       
                       OutlinedButton(
                         onPressed: () {
+                          final profileBloc = context.read<ProfileBloc>();
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
                               builder: (newContext) => BlocProvider.value(
-                                value: context.read<ProfileBloc>(),
+                                value: profileBloc,
                                 child: const LoginPage(),
                               ),
                             ),

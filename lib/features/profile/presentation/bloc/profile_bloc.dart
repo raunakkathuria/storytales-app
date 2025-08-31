@@ -43,10 +43,53 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       emit(const ProfileLoading());
       _loggingService.info('Loading user profile...');
 
-      final profile = await _profileRepository.refreshUserProfile();
-      
-      emit(ProfileLoaded(profile: profile));
-      _loggingService.info('User profile loaded successfully');
+      // Try to get current user profile first
+      UserProfile profile;
+      try {
+        profile = await _profileRepository.getCurrentUserProfile();
+        _loggingService.info('Successfully loaded user profile');
+        
+        // Check if user is signed out (has account but no valid session)
+        if (profile.isSignedOut && profile.hasRegisteredAccount) {
+          _loggingService.info('User is signed out - showing signed out state');
+          // User has an account but is signed out - show register/login options
+          // Create a minimal anonymous profile for UI purposes without calling API
+          final anonymousProfile = UserProfile(
+            userId: 0, // Temporary ID
+            emailVerified: false,
+            isAnonymous: true,
+            subscriptionTier: 'free',
+            storiesRemaining: 2,
+            deviceId: '',
+          );
+          emit(ProfileLoaded(profile: anonymousProfile));
+          return;
+        }
+        
+        emit(ProfileLoaded(profile: profile));
+        _loggingService.info('User profile loaded successfully');
+      } catch (e) {
+        _loggingService.info('getCurrentUserProfile failed, this might be a signed out user: $e');
+        
+        // Check if this is a "no user data found" error, which could mean signed out user
+        if (e.toString().contains('no user data found')) {
+          _loggingService.info('No user data found - user may be signed out, showing anonymous state');
+          // Show anonymous state for signed out users without creating new user
+          final anonymousProfile = UserProfile(
+            userId: 0, // Temporary ID
+            emailVerified: false,
+            isAnonymous: true,
+            subscriptionTier: 'free',
+            storiesRemaining: 2,
+            deviceId: '',
+          );
+          emit(ProfileLoaded(profile: anonymousProfile));
+          return;
+        }
+        
+        // For other errors, rethrow to be handled below
+        rethrow;
+      }
     } catch (e) {
       _loggingService.error('Failed to load user profile: $e');
       

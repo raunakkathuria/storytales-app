@@ -38,11 +38,14 @@ class LoginPage extends StatelessWidget {
       body: BlocConsumer<ProfileBloc, ProfileState>(
         listener: (context, state) {
           if (state is ProfileLoginPending) {
+            // Capture the ProfileBloc reference before navigation
+            final profileBloc = context.read<ProfileBloc>();
+            
             // Navigate directly to login verification page
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (newContext) => BlocProvider.value(
-                  value: context.read<ProfileBloc>(),
+                  value: profileBloc,
                   child: LoginVerifyPage(
                     email: state.email,
                     loginResponse: state.loginResponse,
@@ -160,10 +163,11 @@ class LoginPage extends StatelessWidget {
                       
                       OutlinedButton(
                         onPressed: () {
+                          final profileBloc = context.read<ProfileBloc>();
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
                               builder: (newContext) => BlocProvider.value(
-                                value: context.read<ProfileBloc>(),
+                                value: profileBloc,
                                 child: RegisterPage(
                                   // We need to get the profile from somewhere - let's use a simple anonymous profile
                                   profile: const UserProfile(

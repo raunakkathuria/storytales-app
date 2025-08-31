@@ -26,6 +26,12 @@ class UserProfile extends Equatable {
   /// Device ID associated with this user.
   final String deviceId;
 
+  /// Current session ID for authenticated users (null if signed out).
+  final String? sessionId;
+
+  /// When current session was created (null if signed out).
+  final DateTime? sessionCreatedAt;
+
   /// Creates a user profile entity.
   const UserProfile({
     required this.userId,
@@ -36,6 +42,8 @@ class UserProfile extends Equatable {
     required this.subscriptionTier,
     required this.storiesRemaining,
     required this.deviceId,
+    this.sessionId,
+    this.sessionCreatedAt,
   });
 
   /// Creates a copy of this user profile with updated fields.
@@ -48,6 +56,8 @@ class UserProfile extends Equatable {
     String? subscriptionTier,
     int? storiesRemaining,
     String? deviceId,
+    String? sessionId,
+    DateTime? sessionCreatedAt,
   }) {
     return UserProfile(
       userId: userId ?? this.userId,
@@ -58,6 +68,8 @@ class UserProfile extends Equatable {
       subscriptionTier: subscriptionTier ?? this.subscriptionTier,
       storiesRemaining: storiesRemaining ?? this.storiesRemaining,
       deviceId: deviceId ?? this.deviceId,
+      sessionId: sessionId ?? this.sessionId,
+      sessionCreatedAt: sessionCreatedAt ?? this.sessionCreatedAt,
     );
   }
 
@@ -99,6 +111,11 @@ class UserProfile extends Equatable {
     return hasRegisteredAccount && emailVerified;
   }
 
+  /// Returns true if the user is signed out (has no valid session).
+  bool get isSignedOut {
+    return sessionId == null;
+  }
+
   @override
   List<Object?> get props => [
         userId,
@@ -109,5 +126,7 @@ class UserProfile extends Equatable {
         subscriptionTier,
         storiesRemaining,
         deviceId,
+        sessionId,
+        sessionCreatedAt,
       ];
 }

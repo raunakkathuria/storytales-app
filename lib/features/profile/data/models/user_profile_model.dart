@@ -12,6 +12,8 @@ class UserProfileModel extends UserProfile {
     required super.subscriptionTier,
     required super.storiesRemaining,
     required super.deviceId,
+    super.sessionId,
+    super.sessionCreatedAt,
   });
 
   /// Creates a user profile model from JSON.
@@ -25,6 +27,8 @@ class UserProfileModel extends UserProfile {
       subscriptionTier: _parseStringSafely(json['subscription_tier']) ?? 'free',
       storiesRemaining: _parseIntSafely(json['max_monthly_stories']) ?? 0,
       deviceId: _parseStringSafely(json['device_id']) ?? '',
+      sessionId: _parseStringSafely(json['session_id']),
+      sessionCreatedAt: _parseDateTimeSafely(json['session_created_at']),
     );
   }
 
@@ -81,6 +85,21 @@ class UserProfileModel extends UserProfile {
     return null;
   }
 
+  /// Safely parses a DateTime from various input types.
+  static DateTime? _parseDateTimeSafely(dynamic value) {
+    if (value == null || value == 'null') {
+      return null;
+    }
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
   /// Converts the user profile model to JSON.
   Map<String, dynamic> toJson() {
     return {
@@ -92,6 +111,8 @@ class UserProfileModel extends UserProfile {
       'subscription_tier': subscriptionTier,
       'stories_remaining': storiesRemaining,
       'device_id': deviceId,
+      'session_id': sessionId,
+      'session_created_at': sessionCreatedAt?.toIso8601String(),
     };
   }
 
@@ -106,6 +127,8 @@ class UserProfileModel extends UserProfile {
       subscriptionTier: subscriptionTier,
       storiesRemaining: storiesRemaining,
       deviceId: deviceId,
+      sessionId: sessionId,
+      sessionCreatedAt: sessionCreatedAt,
     );
   }
 
@@ -120,6 +143,8 @@ class UserProfileModel extends UserProfile {
       subscriptionTier: profile.subscriptionTier,
       storiesRemaining: profile.storiesRemaining,
       deviceId: profile.deviceId,
+      sessionId: profile.sessionId,
+      sessionCreatedAt: profile.sessionCreatedAt,
     );
   }
 }

@@ -201,10 +201,16 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<void> signOut() async {
     try {
-      // Clear local user data and return to anonymous state
-      await _authenticationService.clearUserData();
-      // Re-initialize as anonymous user
-      await _authenticationService.initializeAuthentication();
+      // Get current user profile to get user ID for API call
+      final currentProfile = await getCurrentUserProfile();
+      
+      // Call API to invalidate session on server
+      await _userApiClient.signOut(userId: currentProfile.userId);
+      
+      // Clear local user data and device ID
+      await _authenticationService.signOut();
+      
+      _loggingService.info('User signed out successfully with session invalidation');
     } catch (e) {
       throw Exception('🌟 Oh no! Our Story Wizard had trouble signing you out. Please try again!');
     }

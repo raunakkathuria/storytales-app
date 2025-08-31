@@ -234,8 +234,10 @@ class ProfileEditPage extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop(); // Close dialog
-              Navigator.of(context).pop(); // Close edit page
               context.read<ProfileBloc>().add(const SignOut());
+              
+              // Navigate back to home page after sign out
+              Navigator.of(context).popUntil((route) => route.isFirst);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: StoryTalesTheme.primaryColor,

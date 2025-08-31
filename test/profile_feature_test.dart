@@ -41,6 +41,8 @@ void main() {
             subscriptionTier: 'premium',
             storiesRemaining: 10,
             deviceId: 'device-123',
+            sessionId: 'session-123',
+            sessionCreatedAt: null,
           );
 
           // Assert
@@ -64,6 +66,8 @@ void main() {
             subscriptionTier: 'free',
             storiesRemaining: 2,
             deviceId: 'device-456',
+            sessionId: null,
+            sessionCreatedAt: null,
           );
 
           // Assert
@@ -82,6 +86,8 @@ void main() {
             subscriptionTier: 'free',
             storiesRemaining: 2,
             deviceId: 'device-123',
+            sessionId: null,
+            sessionCreatedAt: null,
           );
 
           // Act
@@ -179,6 +185,8 @@ void main() {
             subscriptionTier: 'premium',
             storiesRemaining: 10,
             deviceId: 'device-123',
+            sessionId: null,
+            sessionCreatedAt: null,
           );
 
           // Act
@@ -203,6 +211,8 @@ void main() {
             subscriptionTier: 'premium',
             storiesRemaining: 10,
             deviceId: 'device-123',
+            sessionId: null,
+            sessionCreatedAt: null,
           );
 
           // Act
@@ -281,6 +291,8 @@ void main() {
           subscriptionTier: 'free',
           storiesRemaining: 2,
           deviceId: 'device-123',
+            sessionId: 'valid-session-123',
+            sessionCreatedAt: null,
         );
 
         blocTest<ProfileBloc, ProfileState>(
@@ -325,6 +337,8 @@ void main() {
           subscriptionTier: 'free',
           storiesRemaining: 2,
           deviceId: 'device-123',
+            sessionId: null,
+            sessionCreatedAt: null,
         );
 
         const updatedProfile = UserProfile(
@@ -336,6 +350,8 @@ void main() {
           subscriptionTier: 'free',
           storiesRemaining: 2,
           deviceId: 'device-123',
+            sessionId: null,
+            sessionCreatedAt: null,
         );
 
         blocTest<ProfileBloc, ProfileState>(
@@ -367,6 +383,8 @@ void main() {
           subscriptionTier: 'free',
           storiesRemaining: 2,
           deviceId: 'device-123',
+            sessionId: null,
+            sessionCreatedAt: null,
         );
 
         const registrationResponse = RegistrationResponse(
@@ -420,6 +438,8 @@ void main() {
           subscriptionTier: 'free',
           storiesRemaining: 2,
           deviceId: 'device-123',
+            sessionId: null,
+            sessionCreatedAt: null,
         );
 
         const registrationResponse = RegistrationResponse(
@@ -437,6 +457,8 @@ void main() {
           subscriptionTier: 'free',
           storiesRemaining: 2,
           deviceId: 'device-123',
+            sessionId: null,
+            sessionCreatedAt: null,
         );
 
         blocTest<ProfileBloc, ProfileState>(
@@ -495,6 +517,8 @@ void main() {
           subscriptionTier: 'free',
           storiesRemaining: 2,
           deviceId: 'device-123',
+            sessionId: null,
+            sessionCreatedAt: null,
         );
 
         blocTest<ProfileBloc, ProfileState>(

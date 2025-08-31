@@ -892,4 +892,76 @@ class UserApiClient {
       throw Exception(errorMessage);
     }
   }
+
+  /// Signs out the user by invalidating their session on the server.
+  ///
+  /// This prevents automatic login on app reinstall or device recovery.
+  Future<Map<String, dynamic>> signOut({
+    required int userId,
+  }) async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t sign you out right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    _loggingService.info('Signing out user: $userId');
+
+    try {
+      final response = await _dio.post(
+        '/users/$userId/signout',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('Sign out API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final signOutResponse = response.data as Map<String, dynamic>;
+        _loggingService.info('User signed out successfully from server');
+        return signOutResponse;
+      } else {
+        _loggingService.error('Sign out API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to sign out user: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error signing out user: $e');
+
+      String errorMessage = '🌟 Oh no! Our Story Wizard had trouble signing you out. Please try again!';
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to sign you out! The connection seems slow. Please check your internet and let\'s try again!';
+            break;
+          case DioExceptionType.connectionError:
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t sign you out right now. Please check your internet connection and we\'ll try to reconnect!';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 404) {
+              errorMessage = '👤 Your account seems to already be signed out! You can continue safely.';
+            } else if (statusCode == 500) {
+              errorMessage = '🏰 The Story Wizard\'s sign out magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+            } else {
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while signing you out. Let\'s try again!';
+            }
+            break;
+          default:
+            errorMessage = '🌙 Something unexpected happened while signing out of your magical account. Our Story Wizard is investigating - please try again!';
+        }
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
 }

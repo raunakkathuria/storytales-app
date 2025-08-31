@@ -91,29 +91,28 @@ class _ProfilePageState extends State<ProfilePage> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Profile Header
-                  ProfileHeader(
-                    profile: profile,
-                    onVerifyEmail: profile.needsEmailVerification 
-                        ? () {
-                            context.read<ProfileBloc>().add(const StartEmailVerification());
-                          }
-                        : null,
-                    onEditProfile: profile.hasRegisteredAccount
-                        ? () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (newContext) => BlocProvider.value(
-                                  value: context.read<ProfileBloc>(),
-                                  child: ProfileEditPage(profile: profile),
-                                ),
+                  // Profile Header - only show for registered users
+                  if (profile.hasRegisteredAccount) ...[
+                    ProfileHeader(
+                      profile: profile,
+                      onVerifyEmail: profile.needsEmailVerification 
+                          ? () {
+                              context.read<ProfileBloc>().add(const StartEmailVerification());
+                            }
+                          : null,
+                      onEditProfile: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (newContext) => BlocProvider.value(
+                                value: context.read<ProfileBloc>(),
+                                child: ProfileEditPage(profile: profile),
                               ),
-                            );
-                          }
-                        : null,
-                  ),
-                  
-                  const SizedBox(height: 24),
+                            ),
+                          );
+                        },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                   
                   // Content based on user type
                   if (profile.canRegister) ...[
@@ -275,6 +274,9 @@ class _ProfilePageState extends State<ProfilePage> {
               Navigator.of(dialogContext).pop();
               // Use original context that has ProfileBloc provider
               originalContext.read<ProfileBloc>().add(const SignOut());
+              
+              // Navigate back to home page after sign out
+              Navigator.of(originalContext).popUntil((route) => route.isFirst);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: StoryTalesTheme.primaryColor,
