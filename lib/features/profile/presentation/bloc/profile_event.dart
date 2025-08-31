@@ -61,6 +61,11 @@ class VerifyRegistration extends ProfileEvent {
   List<Object> get props => [otpCode];
 }
 
+/// Event to request a new registration OTP when the previous one expires.
+class RequestNewRegistrationOTP extends ProfileEvent {
+  const RequestNewRegistrationOTP();
+}
+
 /// Event to login an existing user.
 class LoginUser extends ProfileEvent {
   /// User's email address.

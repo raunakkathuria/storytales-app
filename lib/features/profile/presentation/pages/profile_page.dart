@@ -154,6 +154,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       onCancel: () {
                         context.read<ProfileBloc>().add(const CancelRegistration());
                       },
+                      onRequestNewCode: () {
+                        context.read<ProfileBloc>().add(const RequestNewRegistrationOTP());
+                      },
                       isLoading: state is ProfileVerifying,
                     )
                   else if (_showLoginForm)

@@ -19,6 +19,5 @@ feat: [Brief feature description]
 
 Write the message to the text file for the commit. Don't commit the changes.
 
-Also, don't add
-Co-Authored-By: Claude <noreply@anthropic.com>"
+Also, don't add Co-Authored-By: Claude <noreply@anthropic.com>"
 Create commit with detailed message about age range standardization

@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
 
 import '../../domain/entities/user_profile.dart';
+import '../../domain/entities/registration_request.dart';
 import '../../domain/repositories/profile_repository.dart';
 import 'profile_event.dart';
 import 'profile_state.dart';
@@ -24,6 +25,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<UpdateDisplayName>(_onUpdateDisplayName);
     on<RegisterUser>(_onRegisterUser);
     on<VerifyRegistration>(_onVerifyRegistration);
+    on<RequestNewRegistrationOTP>(_onRequestNewRegistrationOTP);
     on<LoginUser>(_onLoginUser);
     on<VerifyLogin>(_onVerifyLogin);
     on<SignOut>(_onSignOut);
@@ -220,6 +222,74 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         emit(ProfileRegistrationPending(
           profile: currentState.profile,
           registrationResponse: currentState.registrationResponse,
+          displayName: currentState.displayName,
+        ));
+      }
+      
+      // Show error temporarily
+      await Future.delayed(const Duration(milliseconds: 100));
+      emit(ProfileError(
+        message: e.toString(),
+        profile: _getCurrentProfile(),
+      ));
+    }
+  }
+
+  /// Handles requesting a new registration OTP.
+  Future<void> _onRequestNewRegistrationOTP(
+    RequestNewRegistrationOTP event,
+    Emitter<ProfileState> emit,
+  ) async {
+    try {
+      final currentState = state;
+      if (currentState is! ProfileRegistrationPending) {
+        emit(const ProfileError(message: 'No pending registration to retry'));
+        return;
+      }
+
+      // Extract the original registration details
+      final email = currentState.registrationResponse.email;
+      final displayName = currentState.displayName;
+
+      if (email.isEmpty || displayName.isEmpty) {
+        emit(const ProfileError(message: 'Unable to retry registration - missing information'));
+        return;
+      }
+
+      emit(ProfileRegistering(
+        profile: currentState.profile,
+        email: email,
+        displayName: displayName,
+      ));
+      _loggingService.info('Requesting new registration OTP for: ${email.substring(0, 3)}***');
+
+      // Re-register to get a new OTP
+      final registrationResponse = await _profileRepository.registerUser(
+        email: email,
+        displayName: displayName,
+      );
+
+      emit(ProfileRegistrationPending(
+        profile: currentState.profile,
+        registrationResponse: registrationResponse,
+        displayName: displayName,
+      ));
+      
+      _loggingService.info('New registration OTP requested successfully');
+    } catch (e) {
+      _loggingService.error('Failed to request new registration OTP: $e');
+      
+      // Return to previous pending state if possible
+      final currentState = state;
+      if (currentState is ProfileRegistering) {
+        emit(ProfileRegistrationPending(
+          profile: currentState.profile,
+          registrationResponse: const RegistrationResponse(
+            otpSent: false,
+            email: '',
+            verifyUrl: '',
+            sessionId: '',
+          ),
           displayName: currentState.displayName,
         ));
       }

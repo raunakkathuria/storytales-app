@@ -703,7 +703,16 @@ class UserApiClient {
             } else if (statusCode == 404) {
               errorMessage = '⏰ That verification code has expired or isn\'t valid. Please request a new registration email!';
             } else if (statusCode == 500) {
-              errorMessage = '🏰 The Story Wizard\'s verification magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+              // Check if this is an OTP expiration issue based on error message
+              final responseData = e.response?.data;
+              if (responseData is Map && 
+                  (responseData.toString().contains('expired') || 
+                   responseData.toString().contains('invalid') ||
+                   responseData.toString().contains('Token has expired'))) {
+                errorMessage = '⏰ Your verification code has expired! Don\'t worry - tap "Request New Code" to get a fresh one sent to your email.';
+              } else {
+                errorMessage = '🏰 The Story Wizard\'s verification magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+              }
             } else {
               errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while verifying your account. Let\'s try again!';
             }
@@ -861,7 +870,16 @@ class UserApiClient {
             } else if (statusCode == 404) {
               errorMessage = '⏰ That login code has expired or isn\'t valid. Please request a new login email!';
             } else if (statusCode == 500) {
-              errorMessage = '🏰 The Story Wizard\'s login verification magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+              // Check if this is an OTP expiration issue based on error message
+              final responseData = e.response?.data;
+              if (responseData is Map && 
+                  (responseData.toString().contains('expired') || 
+                   responseData.toString().contains('invalid') ||
+                   responseData.toString().contains('Token has expired'))) {
+                errorMessage = '⏰ Your login code has expired! Please request a new login code to continue.';
+              } else {
+                errorMessage = '🏰 The Story Wizard\'s login verification magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+              }
             } else {
               errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while verifying your login. Let\'s try again!';
             }

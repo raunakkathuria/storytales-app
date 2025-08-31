@@ -17,6 +17,9 @@ class OtpVerificationForm extends StatefulWidget {
   /// Callback when verification is cancelled.
   final VoidCallback? onCancel;
 
+  /// Callback when user requests a new OTP code.
+  final VoidCallback? onRequestNewCode;
+
   /// Whether the form is in loading state.
   final bool isLoading;
 
@@ -27,6 +30,7 @@ class OtpVerificationForm extends StatefulWidget {
     required this.displayName,
     this.onVerify,
     this.onCancel,
+    this.onRequestNewCode,
     this.isLoading = false,
   });
 
@@ -196,7 +200,34 @@ class _OtpVerificationFormState extends State<OtpVerificationForm> {
               ),
             ),
             
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+            
+            // Request New Code Button
+            if (widget.onRequestNewCode != null)
+              Center(
+                child: TextButton.icon(
+                  onPressed: widget.isLoading ? null : widget.onRequestNewCode,
+                  icon: const Icon(
+                    Icons.refresh,
+                    size: 18,
+                    color: StoryTalesTheme.primaryColor,
+                  ),
+                  label: const ResponsiveText(
+                    text: 'Request New Code',
+                    style: TextStyle(
+                      fontFamily: StoryTalesTheme.fontFamilyBody,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: StoryTalesTheme.primaryColor,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                ),
+              ),
+            
+            const SizedBox(height: 16),
             
             // Action Buttons
             Row(
