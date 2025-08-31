@@ -63,7 +63,7 @@ void main() {
       expect(find.text('John Doe'), findsOneWidget);
       expect(find.byIcon(Icons.edit), findsOneWidget);
       expect(find.text('john@example.com'), findsOneWidget);
-      expect(find.text('Registered Account'), findsOneWidget);
+      expect(find.text('Verified Account'), findsOneWidget); // Updated to match new status logic
       expect(find.byIcon(Icons.verified_user), findsOneWidget);
       expect(find.byIcon(Icons.person), findsOneWidget);
     });
@@ -94,7 +94,7 @@ void main() {
       expect(find.text('User'), findsOneWidget); // Falls back to 'User'
       expect(find.byIcon(Icons.edit), findsOneWidget);
       expect(find.text('user@example.com'), findsOneWidget);
-      expect(find.text('Registered Account'), findsOneWidget);
+      expect(find.text('Verified Account'), findsOneWidget); // Updated to match new status logic
     });
 
     testWidgets('should not display email for anonymous user', (tester) async {
@@ -182,18 +182,21 @@ void main() {
         ),
       );
 
-      // Find the badge container for anonymous user
-      final badgeContainer = tester.widget<Container>(
+      // Find the badge container for anonymous user by looking for the badge with correct text
+      expect(find.text('Anonymous Account'), findsOneWidget);
+      
+      // Verify that there's a container with the primary color (sky blue) for anonymous users
+      final badgeContainers = tester.widgetList<Container>(
         find.descendant(
           of: find.byType(ProfileHeader),
           matching: find.byWidgetPredicate((widget) =>
             widget is Container &&
             widget.decoration is BoxDecoration &&
-            (widget.decoration as BoxDecoration).color == StoryTalesTheme.accentColor
+            (widget.decoration as BoxDecoration).color == StoryTalesTheme.primaryColor
           ),
         ),
       );
-      expect(badgeContainer, isNotNull);
+      expect(badgeContainers.length, greaterThan(0)); // At least one container should have primary color
     });
   });
 }

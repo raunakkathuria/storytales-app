@@ -176,6 +176,8 @@ class AuthenticationService {
               Map<String, dynamic>.from(Uri.splitQueryString(json))
             )
           );
+          _loggingService.debug('DEBUG getCurrentUserProfile - Cached profile: $profile');
+          _loggingService.debug('DEBUG getCurrentUserProfile - Cached email_verified: ${profile['email_verified']}');
           return profile;
         } catch (e) {
           _loggingService.warning('Failed to parse cached profile, fetching from API: $e');
@@ -313,16 +315,17 @@ class AuthenticationService {
   Future<void> _storeUserProfile(Map<String, dynamic> userProfile) async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Store user ID - API returns 'id'
-    final userId = userProfile['id'];
+    // Store user ID - API can return either 'id' or 'user_id'
+    final userId = userProfile['id'] ?? userProfile['user_id'];
     _loggingService.debug('DEBUG _storeUserProfile - Raw userProfile: $userProfile');
+    _loggingService.debug('DEBUG _storeUserProfile - email_verified field: ${userProfile['email_verified']}');
     _loggingService.debug('DEBUG _storeUserProfile - Extracted userId: $userId (type: ${userId.runtimeType})');
     
     if (userId is int) {
       await prefs.setInt(_userIdKey, userId);
       _loggingService.debug('DEBUG _storeUserProfile - Stored userId as int: $userId');
     } else {
-      _loggingService.error('DEBUG _storeUserProfile - ERROR: userId is not int, cannot store!');
+      _loggingService.error('DEBUG _storeUserProfile - ERROR: userId is not int, cannot store! Raw data: $userProfile');
     }
 
     // Store full profile as JSON string
@@ -330,7 +333,12 @@ class AuthenticationService {
         .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value.toString())}')
         .join('&');
     await prefs.setString(_userProfileKey, profileJson);
-    _loggingService.debug('DEBUG _storeUserProfile - Stored profile JSON: ${profileJson.substring(0, 100)}...');
+    
+    // Fix substring logging to handle short strings
+    final jsonPreview = profileJson.length > 100 
+        ? '${profileJson.substring(0, 100)}...' 
+        : profileJson;
+    _loggingService.debug('DEBUG _storeUserProfile - Stored profile JSON: $jsonPreview');
 
     // Mark as authenticated
     await prefs.setBool(_isAuthenticatedKey, true);

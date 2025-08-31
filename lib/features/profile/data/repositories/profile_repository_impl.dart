@@ -213,8 +213,11 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<UserProfile> refreshUserProfile() async {
     try {
-      // Refresh user profile from server through authentication service
-      final refreshedProfileData = await _authenticationService.initializeAuthentication();
+      // Force refresh user profile from server (not cached)
+      final refreshedProfileData = await _authenticationService.getCurrentUserProfile(forceRefresh: true);
+      if (refreshedProfileData == null) {
+        throw Exception('Unable to refresh profile - no user data found');
+      }
       final refreshedProfile = UserProfileModel.fromJson(refreshedProfileData);
       return refreshedProfile.toDomain();
     } catch (e) {

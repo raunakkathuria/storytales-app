@@ -66,6 +66,11 @@ class RequestNewRegistrationOTP extends ProfileEvent {
   const RequestNewRegistrationOTP();
 }
 
+/// Event to start email verification for a registered but unverified user.
+class StartEmailVerification extends ProfileEvent {
+  const StartEmailVerification();
+}
+
 
 /// Event to login an existing user.
 class LoginUser extends ProfileEvent {

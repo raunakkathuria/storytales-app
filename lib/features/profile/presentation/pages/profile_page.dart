@@ -137,7 +137,14 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 children: [
                   // Profile Header
-                  ProfileHeader(profile: profile),
+                  ProfileHeader(
+                    profile: profile,
+                    onVerifyEmail: profile.needsEmailVerification 
+                        ? () {
+                            context.read<ProfileBloc>().add(const StartEmailVerification());
+                          }
+                        : null,
+                  ),
                   
                   const SizedBox(height: 24),
                   

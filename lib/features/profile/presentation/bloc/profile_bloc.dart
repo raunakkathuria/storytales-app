@@ -26,6 +26,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<RegisterUser>(_onRegisterUser);
     on<VerifyRegistration>(_onVerifyRegistration);
     on<RequestNewRegistrationOTP>(_onRequestNewRegistrationOTP);
+    on<StartEmailVerification>(_onStartEmailVerification);
     on<LoginUser>(_onLoginUser);
     on<VerifyLogin>(_onVerifyLogin);
     on<SignOut>(_onSignOut);
@@ -42,27 +43,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       emit(const ProfileLoading());
       _loggingService.info('Loading user profile...');
 
-      final profile = await _profileRepository.getCurrentUserProfile();
-      
-      // Check if user needs email verification (works with both current and future API patterns)
-      if (profile.needsEmailVerification) {
-        _loggingService.info('User has registered but needs email verification, showing OTP verification screen');
-        _loggingService.info('User state: hasRegisteredAccount=${profile.hasRegisteredAccount}, emailVerified=${profile.emailVerified}, isFullyVerified=${profile.isFullyVerified}');
-        
-        // Create a registration response for OTP verification using actual email
-        final registrationResponse = RegistrationResponse(
-          otpSent: true,
-          email: profile.email ?? '', // Use the actual email from profile
-          verifyUrl: '', // Will be constructed by API client
-        );
-        
-        emit(ProfileRegistrationPending(
-          profile: profile,
-          registrationResponse: registrationResponse,
-          displayName: profile.displayName ?? '',
-        ));
-        return;
-      }
+      final profile = await _profileRepository.refreshUserProfile();
       
       emit(ProfileLoaded(profile: profile));
       _loggingService.info('User profile loaded successfully');
@@ -229,14 +210,35 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         otpCode: event.otpCode,
       );
 
-      // No need to clear local storage - server state is now updated
+      // Debug: Log the verified profile data from API response
+      _loggingService.info('DEBUG: Verified profile from API - userId: ${verifiedProfile.userId}');
+      _loggingService.info('DEBUG: Verified profile from API - email: ${verifiedProfile.email}');
+      _loggingService.info('DEBUG: Verified profile from API - emailVerified: ${verifiedProfile.emailVerified}');
+      _loggingService.info('DEBUG: Verified profile from API - isAnonymous: ${verifiedProfile.isAnonymous}');
+      _loggingService.info('DEBUG: Verified profile from API - hasRegisteredAccount: ${verifiedProfile.hasRegisteredAccount}');
+      _loggingService.info('DEBUG: Verified profile from API - needsEmailVerification: ${verifiedProfile.needsEmailVerification}');
+      _loggingService.info('DEBUG: Verified profile from API - isFullyVerified: ${verifiedProfile.isFullyVerified}');
 
       emit(ProfileRegistrationCompleted(profile: verifiedProfile));
       _loggingService.info('User registration completed successfully');
 
-      // Auto-transition to loaded state
+      // Auto-transition to loaded state with fresh data from server
       await Future.delayed(const Duration(seconds: 2));
-      emit(ProfileLoaded(profile: verifiedProfile));
+      
+      // Refresh profile from server to ensure we have the latest state
+      _loggingService.info('Refreshing profile from server after verification...');
+      final refreshedProfile = await _profileRepository.refreshUserProfile();
+      
+      // Debug: Log the refreshed profile data
+      _loggingService.info('DEBUG: Refreshed profile - userId: ${refreshedProfile.userId}');
+      _loggingService.info('DEBUG: Refreshed profile - email: ${refreshedProfile.email}');
+      _loggingService.info('DEBUG: Refreshed profile - emailVerified: ${refreshedProfile.emailVerified}');
+      _loggingService.info('DEBUG: Refreshed profile - isAnonymous: ${refreshedProfile.isAnonymous}');
+      _loggingService.info('DEBUG: Refreshed profile - hasRegisteredAccount: ${refreshedProfile.hasRegisteredAccount}');
+      _loggingService.info('DEBUG: Refreshed profile - needsEmailVerification: ${refreshedProfile.needsEmailVerification}');
+      _loggingService.info('DEBUG: Refreshed profile - isFullyVerified: ${refreshedProfile.isFullyVerified}');
+      
+      emit(ProfileLoaded(profile: refreshedProfile));
     } catch (e) {
       _loggingService.error('Failed to verify registration: $e');
       
@@ -323,6 +325,60 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       emit(ProfileError(
         message: e.toString(),
         profile: _getCurrentProfile(),
+      ));
+    }
+  }
+
+  /// Handles starting email verification for registered but unverified users.
+  Future<void> _onStartEmailVerification(
+    StartEmailVerification event,
+    Emitter<ProfileState> emit,
+  ) async {
+    try {
+      final currentProfile = _getCurrentProfile();
+      if (currentProfile == null) {
+        emit(const ProfileError(message: 'No profile loaded'));
+        return;
+      }
+
+      // Check if user actually needs email verification
+      if (!currentProfile.needsEmailVerification) {
+        _loggingService.warning('StartEmailVerification called but user does not need verification');
+        emit(ProfileError(
+          message: 'Email verification not needed',
+          profile: currentProfile,
+        ));
+        return;
+      }
+
+      _loggingService.info('Starting email verification for registered user');
+      _loggingService.info('User email: ${currentProfile.email?.substring(0, 3)}***');
+
+      // Re-register to send a new OTP (this is the same as requesting new registration OTP)
+      emit(ProfileRegistering(
+        profile: currentProfile,
+        email: currentProfile.email ?? '',
+        displayName: currentProfile.displayName ?? '',
+      ));
+
+      final registrationResponse = await _profileRepository.registerUser(
+        email: currentProfile.email ?? '',
+        displayName: currentProfile.displayName ?? '',
+      );
+
+      emit(ProfileRegistrationPending(
+        profile: currentProfile,
+        registrationResponse: registrationResponse,
+        displayName: currentProfile.displayName ?? '',
+      ));
+      
+      _loggingService.info('Email verification OTP sent successfully');
+    } catch (e) {
+      _loggingService.error('Failed to start email verification: $e');
+      final currentProfile = _getCurrentProfile();
+      emit(ProfileError(
+        message: e.toString(),
+        profile: currentProfile,
       ));
     }
   }
