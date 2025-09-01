@@ -79,6 +79,7 @@ The project follows Clean Architecture principles with three main layers:
 - `features/story_generation/` - AI story creation workflow
 - `features/story_reader/` - Story reading experience
 - `features/subscription/` - Subscription management
+- `features/profile/` - User authentication and profile management
 - `core/` - Shared services, utilities, and configuration
 
 ### State Management
@@ -88,6 +89,7 @@ Uses the BLoC pattern with flutter_bloc package. Each feature has its own BLoCs:
 - `StoryWorkshopBloc` - Manages story creation dialog
 - `StoryReaderBloc` - Controls story reading experience
 - `SubscriptionBloc` - Manages subscription state
+- `ProfileBloc` - Manages user authentication and profile state
 
 ### Dependency Injection
 Uses GetIt service locator pattern. All dependencies are registered in `core/di/injection_container.dart`.
@@ -128,11 +130,12 @@ Environment is controlled by `lib/core/config/environment.dart`.
 ### Firebase Integration
 - **Analytics**: Firebase Analytics for usage tracking
 - **Crashlytics**: Crash reporting and stability monitoring
-- **No Authentication**: Firebase Auth has been removed in preparation for Supabase
+- **Custom Authentication**: Device-based authentication with custom API integration
 
 ### API Integration
 - Story generation via external AI API
 - Pre-generated stories API for curated content
+- User authentication and profile management via custom API
 - All API calls use Dio with comprehensive error handling
 
 ## Testing Strategy
@@ -147,6 +150,8 @@ Environment is controlled by `lib/core/config/environment.dart`.
 - `story_generation_*_test.dart` - Story creation workflow tests
 - `user_stories_pagination_test.dart` - API pagination tests
 - `pregenerated_stories_api_test.dart` - Curated stories tests
+- `user_authentication_*_test.dart` - Authentication system tests
+- `profile_*_test.dart` - User profile and state management tests
 
 ## Current Development Status (Phase 2)
 
@@ -157,10 +162,14 @@ Environment is controlled by `lib/core/config/environment.dart`.
 - Enhanced workshop dialog UX
 - Production Firebase configuration
 
-### Removed Features ❌
-- Firebase Authentication (preparing for Supabase)
-- User profiles and cross-device sync
-- Firestore integration
+### Completed Features ✅
+- User authentication with custom API integration
+- Device-based account recovery system
+- OTP-based email verification
+- Session management with proper sign-out
+- Single-purpose screen architecture for authentication flows
+- Persistent verification state recovery
+- Comprehensive error handling and retry mechanisms
 
 ### Current Branch
 Working on branch: `phase2/user_authentication_stories`
@@ -206,4 +215,4 @@ Recent fixes addressed positioning and dialog functionality issues. The workshop
 Fixed UNIQUE constraint errors in story saving through improved database handling in recent commits.
 
 ### Authentication System
-The authentication system has been completely removed to prepare for future Supabase JWT implementation. This affects user profiles and cross-device synchronization features.
+The authentication system has been reimplemented using a custom API with device-based authentication, OTP verification, and comprehensive session management. The system provides user profiles, account recovery, and seamless authentication flows through dedicated single-purpose screens.
