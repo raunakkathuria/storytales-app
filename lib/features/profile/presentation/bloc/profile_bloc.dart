@@ -61,6 +61,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
             subscriptionTier: 'free',
             storiesRemaining: 2,
             deviceId: '',
+            isAuthenticated: false,
           );
           emit(ProfileLoaded(profile: anonymousProfile));
           return;
@@ -71,9 +72,11 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       } catch (e) {
         _loggingService.info('getCurrentUserProfile failed, this might be a signed out user: $e');
         
-        // Check if this is a "no user data found" error, which could mean signed out user
-        if (e.toString().contains('no user data found')) {
-          _loggingService.info('No user data found - user may be signed out, showing anonymous state');
+        // Check if this is a "no user data found" error or signed-out user scenario
+        if (e.toString().contains('no user data found') || 
+            e.toString().contains('signed-out user scenario') ||
+            e.toString().contains('409→404 pattern')) {
+          _loggingService.info('Detected signed-out user scenario - showing anonymous state for UI');
           // Show anonymous state for signed out users without creating new user
           final anonymousProfile = UserProfile(
             userId: 0, // Temporary ID
@@ -82,6 +85,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
             subscriptionTier: 'free',
             storiesRemaining: 2,
             deviceId: '',
+            isAuthenticated: false,
           );
           emit(ProfileLoaded(profile: anonymousProfile));
           return;

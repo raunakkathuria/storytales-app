@@ -32,6 +32,9 @@ class UserProfile extends Equatable {
   /// When current session was created (null if signed out).
   final DateTime? sessionCreatedAt;
 
+  /// Whether user has valid session data and is currently authenticated.
+  final bool? isAuthenticated;
+
   /// Creates a user profile entity.
   const UserProfile({
     required this.userId,
@@ -44,6 +47,7 @@ class UserProfile extends Equatable {
     required this.deviceId,
     this.sessionId,
     this.sessionCreatedAt,
+    this.isAuthenticated,
   });
 
   /// Creates a copy of this user profile with updated fields.
@@ -58,6 +62,7 @@ class UserProfile extends Equatable {
     String? deviceId,
     String? sessionId,
     DateTime? sessionCreatedAt,
+    bool? isAuthenticated,
   }) {
     return UserProfile(
       userId: userId ?? this.userId,
@@ -70,6 +75,7 @@ class UserProfile extends Equatable {
       deviceId: deviceId ?? this.deviceId,
       sessionId: sessionId ?? this.sessionId,
       sessionCreatedAt: sessionCreatedAt ?? this.sessionCreatedAt,
+      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
     );
   }
 
@@ -113,6 +119,11 @@ class UserProfile extends Equatable {
 
   /// Returns true if the user is signed out (has no valid session).
   bool get isSignedOut {
+    // Use new isAuthenticated field from API if available, fallback to sessionId check
+    if (isAuthenticated != null) {
+      return !isAuthenticated!;
+    }
+    // Fallback for compatibility until API is fully updated
     return sessionId == null;
   }
 
@@ -128,5 +139,6 @@ class UserProfile extends Equatable {
         deviceId,
         sessionId,
         sessionCreatedAt,
+        isAuthenticated,
       ];
 }

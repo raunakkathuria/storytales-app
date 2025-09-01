@@ -14,6 +14,7 @@ class UserProfileModel extends UserProfile {
     required super.deviceId,
     super.sessionId,
     super.sessionCreatedAt,
+    super.isAuthenticated,
   });
 
   /// Creates a user profile model from JSON.
@@ -29,6 +30,7 @@ class UserProfileModel extends UserProfile {
       deviceId: _parseStringSafely(json['device_id']) ?? '',
       sessionId: _parseStringSafely(json['session_id']),
       sessionCreatedAt: _parseDateTimeSafely(json['session_created_at']),
+      isAuthenticated: _parseBoolSafely(json['is_authenticated']),
     );
   }
 
@@ -113,6 +115,7 @@ class UserProfileModel extends UserProfile {
       'device_id': deviceId,
       'session_id': sessionId,
       'session_created_at': sessionCreatedAt?.toIso8601String(),
+      'is_authenticated': isAuthenticated,
     };
   }
 
@@ -129,6 +132,7 @@ class UserProfileModel extends UserProfile {
       deviceId: deviceId,
       sessionId: sessionId,
       sessionCreatedAt: sessionCreatedAt,
+      isAuthenticated: isAuthenticated,
     );
   }
 
@@ -145,6 +149,7 @@ class UserProfileModel extends UserProfile {
       deviceId: profile.deviceId,
       sessionId: profile.sessionId,
       sessionCreatedAt: profile.sessionCreatedAt,
+      isAuthenticated: profile.isAuthenticated,
     );
   }
 }

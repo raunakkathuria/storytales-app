@@ -191,7 +191,15 @@ class ProfileRepositoryImpl implements ProfileRepository {
       // Update local storage through authentication service
       await _authenticationService.updateStoredUserProfile(loggedInProfileData);
       
-      final loggedInProfile = UserProfileModel.fromJson(loggedInProfileData);
+      // Extract the user_profile field from the API response according to spec
+      // API returns: {user_id: 1016, user_profile: {...}}
+      // We need just the user_profile part for parsing
+      if (!loggedInProfileData.containsKey('user_profile')) {
+        throw Exception('Invalid API response structure: missing user_profile field');
+      }
+      
+      final profileData = loggedInProfileData['user_profile'] as Map<String, dynamic>;
+      final loggedInProfile = UserProfileModel.fromJson(profileData);
       return loggedInProfile.toDomain();
     } catch (e) {
       throw Exception('🧙‍♂️ The Story Wizard couldn\'t verify your login code. Please check the code and try again!');

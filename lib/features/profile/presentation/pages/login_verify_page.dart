@@ -72,59 +72,6 @@ class LoginVerifyPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Section
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: StoryTalesTheme.primaryColor,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: const BoxDecoration(
-                          color: StoryTalesTheme.surfaceColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.verified_user_outlined,
-                          color: StoryTalesTheme.primaryColor,
-                          size: 32,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      const ResponsiveText(
-                        text: '🔐 Verify Your Identity',
-                        style: TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyHeading,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: StoryTalesTheme.surfaceColor,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 8),
-                      
-                      ResponsiveText(
-                        text: 'Enter the verification code sent to $email',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyBody,
-                          fontSize: 14,
-                          color: StoryTalesTheme.overlayLightColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 24),
-                
                 // Login OTP Verification Form
                 LoginOtpVerificationForm(
                   email: email,

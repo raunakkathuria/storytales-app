@@ -113,17 +113,49 @@ class AuthenticationService {
       } catch (e) {
         // Handle 409 conflict - device ID already exists
         if (e.toString().contains('409') || e.toString().contains('already has a magical story account')) {
-          _loggingService.info('Device ID already exists (409 conflict), retrieving existing user...');
+          _loggingService.info('Device ID already exists (409 conflict), attempting to retrieve existing user...');
           
-          // Try to get the existing user by device ID
-          final userProfile = await _userApiClient.getUserByDevice(deviceId: deviceId);
-          await _storeUserProfile(userProfile);
-          
-          // Mark initialization as complete
-          await _markInitializationComplete();
-          
-          _loggingService.info('Successfully retrieved existing user after 409 conflict');
-          return userProfile;
+          try {
+            // Try to get the existing user by device ID
+            final userProfile = await _userApiClient.getUserByDevice(deviceId: deviceId);
+            await _storeUserProfile(userProfile);
+            
+            // Mark initialization as complete
+            await _markInitializationComplete();
+            
+            _loggingService.info('Successfully retrieved existing user after 409 conflict');
+            return userProfile;
+          } catch (getUserError) {
+            // This is the 409→404 loop - device exists but user not found (signed out user)
+            if (getUserError.toString().contains('404') || getUserError.toString().contains('No magical story account found')) {
+              _loggingService.info('Detected signed-out user scenario (409→404 pattern) - user exists but is signed out');
+              
+              // Instead of creating API calls, return a local anonymous profile for UI
+              // This breaks the infinite loop and provides proper UX for signed-out users
+              final fallbackProfile = {
+                'id': 0, // Temporary ID for UI
+                'user_id': 0,
+                'email_verified': false,
+                'is_anonymous': true,
+                'subscription_tier': 'free',
+                'stories_remaining': 2,
+                'device_id': deviceId,
+                'session_id': null,
+                'session_created_at': null,
+                'is_authenticated': false, // Clear indication that user is not authenticated
+              };
+              
+              // Mark initialization as complete without storing profile
+              // (since this is a temporary fallback for signed-out users)
+              await _markInitializationComplete();
+              
+              _loggingService.info('Created fallback anonymous profile for signed-out user');
+              return fallbackProfile;
+            }
+            
+            // For other getUserByDevice errors, rethrow
+            rethrow;
+          }
         }
         
         // For other errors, rethrow
