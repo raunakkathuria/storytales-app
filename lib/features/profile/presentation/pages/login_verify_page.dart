@@ -111,7 +111,7 @@ class LoginVerifyPage extends StatelessWidget {
                       const SizedBox(height: 8),
                       
                       ResponsiveText(
-                        text: 'We\'ve sent a verification code to\n$email',
+                        text: 'Enter the verification code sent to $email',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontFamily: StoryTalesTheme.fontFamilyBody,
@@ -144,46 +144,6 @@ class LoginVerifyPage extends StatelessWidget {
                   isLoading: state is ProfileLoginVerifying,
                 ),
                 
-                const SizedBox(height: 24),
-                
-                // Help Section
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: StoryTalesTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: StoryTalesTheme.primaryColor.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const ResponsiveText(
-                        text: '💡 Verification Tips',
-                        style: TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyHeading,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: StoryTalesTheme.textColor,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      const ResponsiveText(
-                        text: '• Check your spam/junk folder if you don\'t see the email\n• The verification code expires in 10 minutes\n• Make sure you\'re using the email address from your account',
-                        style: TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyBody,
-                          fontSize: 14,
-                          color: StoryTalesTheme.textLightColor,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           );

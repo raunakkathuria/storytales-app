@@ -197,7 +197,7 @@ class _LoginFormState extends State<LoginForm> {
                 ),
               ),
               child: const ResponsiveText(
-                text: '✉️ We\'ll send a magic code to your email address. Check your inbox and enter the code to access your story kingdom!',
+                text: '✉️ We\'ll send a verification code to your email address. Check your inbox and enter the code to access your story kingdom!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: StoryTalesTheme.fontFamilyBody,

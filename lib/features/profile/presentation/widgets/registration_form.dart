@@ -94,7 +94,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
             const SizedBox(height: 8),
             
             const ResponsiveText(
-              text: 'Secure your stories by creating an account. We\'ll send you a verification code!',
+              text: 'Create your account to save stories forever and access them from any device! We\'ll send you a verification code.',
               style: TextStyle(
                 fontFamily: StoryTalesTheme.fontFamilyBody,
                 fontSize: 14,

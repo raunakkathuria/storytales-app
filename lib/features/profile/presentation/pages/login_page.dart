@@ -69,59 +69,6 @@ class LoginPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Section
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: StoryTalesTheme.primaryColor,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: const BoxDecoration(
-                          color: StoryTalesTheme.surfaceColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.login_outlined,
-                          color: StoryTalesTheme.primaryColor,
-                          size: 32,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      const ResponsiveText(
-                        text: '🌟 Welcome Back',
-                        style: TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyHeading,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: StoryTalesTheme.surfaceColor,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 8),
-                      
-                      const ResponsiveText(
-                        text: 'Sign in to access your saved stories and continue your magical journey!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyBody,
-                          fontSize: 14,
-                          color: StoryTalesTheme.overlayLightColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 24),
-                
                 // Login Form
                 LoginForm(
                   onLogin: (email) {
@@ -204,46 +151,6 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
                 
-                const SizedBox(height: 24),
-                
-                // Help Section
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: StoryTalesTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: StoryTalesTheme.primaryColor.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const ResponsiveText(
-                        text: '🔐 Sign In Help',
-                        style: TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyHeading,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: StoryTalesTheme.textColor,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      const ResponsiveText(
-                        text: '• Enter the email address you used to create your account\n• We\'ll send you a verification code to sign in\n• No password needed - just your email!',
-                        style: TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyBody,
-                          fontSize: 14,
-                          color: StoryTalesTheme.textLightColor,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           );

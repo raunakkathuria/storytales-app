@@ -389,7 +389,7 @@ class UserApiClient {
           case DioExceptionType.badResponse:
             final statusCode = e.response?.statusCode;
             if (statusCode == 400) {
-              errorMessage = '🔢 The magic code you entered doesn\'t seem to be correct. Please check your email and try again!';
+              errorMessage = '🔢 The verification code you entered doesn\'t seem to be correct. Please check your email and try again!';
             } else if (statusCode == 404) {
               errorMessage = '👤 Your magical story account seems to have wandered off! Please restart the app to create a new account.';
             } else if (statusCode == 500) {

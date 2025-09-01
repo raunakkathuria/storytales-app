@@ -64,22 +64,9 @@ class _LoginOtpVerificationFormState extends State<LoginOtpVerificationForm> {
         key: _formKey,
         child: Column(
           children: [
-            // Title
-            const ResponsiveText(
-              text: '✉️ Check Your Email',
-              style: TextStyle(
-                fontFamily: StoryTalesTheme.fontFamilyHeading,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: StoryTalesTheme.textColor,
-              ),
-            ),
-            
-            const SizedBox(height: 12),
-            
             // Email Display
             ResponsiveText(
-              text: 'We sent a magic code to:\n${widget.email}',
+              text: 'Please check your email for the verification code',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: StoryTalesTheme.fontFamilyBody,
@@ -201,42 +188,16 @@ class _LoginOtpVerificationFormState extends State<LoginOtpVerificationForm> {
               ),
             ),
             
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
             
-            // Help Text
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: StoryTalesTheme.backgroundColor,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: StoryTalesTheme.primaryColor.withValues(alpha: 0.2),
-                ),
-              ),
-              child: Column(
-                children: [
-                  const ResponsiveText(
-                    text: '📱 Didn\'t receive the code?',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: StoryTalesTheme.fontFamilyBody,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: StoryTalesTheme.textColor,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const ResponsiveText(
-                    text: 'Check your spam folder or try logging in again to get a new code.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: StoryTalesTheme.fontFamilyBody,
-                      fontSize: 13,
-                      color: StoryTalesTheme.textLightColor,
-                    ),
-                  ),
-                ],
+            // Concise help text
+            const ResponsiveText(
+              text: 'Code expires in 10 minutes • Check your spam folder',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: StoryTalesTheme.fontFamilyBody,
+                fontSize: 13,
+                color: StoryTalesTheme.textLightColor,
               ),
             ),
           ],

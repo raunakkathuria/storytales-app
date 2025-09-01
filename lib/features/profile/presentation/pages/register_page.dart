@@ -75,59 +75,6 @@ class RegisterPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Section
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: StoryTalesTheme.accentColor,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: const BoxDecoration(
-                          color: StoryTalesTheme.surfaceColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.person_add_outlined,
-                          color: StoryTalesTheme.accentColor,
-                          size: 32,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      const ResponsiveText(
-                        text: '🎭 Join the Story Kingdom',
-                        style: TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyHeading,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: StoryTalesTheme.surfaceColor,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 8),
-                      
-                      const ResponsiveText(
-                        text: 'Create your account to save stories forever and access them from any device!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyBody,
-                          fontSize: 14,
-                          color: StoryTalesTheme.overlayLightColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 24),
-                
                 // Registration Form
                 RegistrationForm(
                   profile: profile,
@@ -189,7 +136,7 @@ class RegisterPage extends StatelessWidget {
                           ),
                         ),
                         child: const ResponsiveText(
-                          text: 'Sign In Instead',
+                          text: 'Sign In',
                           style: TextStyle(
                             fontFamily: StoryTalesTheme.fontFamilyBody,
                             fontSize: 14,
