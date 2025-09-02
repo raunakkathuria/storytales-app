@@ -139,6 +139,19 @@ class UserProfile extends Equatable {
     return sessionId == null;
   }
 
+  /// Returns the actual number of stories remaining based on subscription tier.
+  /// This applies business logic while preserving raw API data in storiesRemaining.
+  int get actualStoriesRemaining {
+    // For non-free tiers, return high number to indicate unlimited
+    if (subscriptionTier != 'free') {
+      return 999999;
+    }
+    
+    // For free tier, calculate remaining from monthly usage data
+    final remaining = maxMonthlyStories - monthlyStoryCount;
+    return remaining > 0 ? remaining : 0;
+  }
+
   @override
   List<Object?> get props => [
         userId,

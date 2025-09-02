@@ -1226,6 +1226,38 @@ class MockUserApiClient extends _i1.Mock implements _i18.UserApiClient {
             ),
           )
           as _i11.Future<Map<String, dynamic>>);
+
+  @override
+  _i11.Future<Map<String, dynamic>> signOut({required int? userId}) =>
+      (super.noSuchMethod(
+            Invocation.method(#signOut, [], {#userId: userId}),
+            returnValue: _i11.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i11.Future<Map<String, dynamic>>);
+
+  @override
+  _i11.Future<Map<String, dynamic>> generateUserStory({
+    required int? userId,
+    required String? prompt,
+    String? ageRange,
+    String? theme,
+    String? genre,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#generateUserStory, [], {
+              #userId: userId,
+              #prompt: prompt,
+              #ageRange: ageRange,
+              #theme: theme,
+              #genre: genre,
+            }),
+            returnValue: _i11.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i11.Future<Map<String, dynamic>>);
 }
 
 /// A class which mocks [SharedPreferences].

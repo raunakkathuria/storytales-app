@@ -28,7 +28,7 @@ class UserProfileModel extends UserProfile {
       emailVerified: _parseBoolSafely(json['email_verified']) ?? false,
       isAnonymous: _parseBoolSafely(json['is_anonymous']) ?? true,
       subscriptionTier: _parseStringSafely(json['subscription_tier']) ?? 'free',
-      storiesRemaining: _calculateStoriesRemaining(json),
+      storiesRemaining: _parseIntSafely(json['max_monthly_stories']) ?? 0,
       monthlyStoryCount: _parseIntSafely(json['monthly_story_count']) ?? 0,
       maxMonthlyStories: _parseIntSafely(json['max_monthly_stories']) ?? 0,
       deviceId: _parseStringSafely(json['device_id']) ?? '',
@@ -106,22 +106,6 @@ class UserProfileModel extends UserProfile {
     return null;
   }
 
-  /// Calculates stories remaining based on API data.
-  static int _calculateStoriesRemaining(Map<String, dynamic> json) {
-    final subscriptionTier = _parseStringSafely(json['subscription_tier']) ?? 'free';
-    
-    // For non-free tiers, return high number to indicate unlimited
-    if (subscriptionTier != 'free') {
-      return 999999;
-    }
-    
-    // For free tier, calculate remaining from monthly data
-    final monthlyCount = _parseIntSafely(json['monthly_story_count']) ?? 0;
-    final maxMonthly = _parseIntSafely(json['max_monthly_stories']) ?? 0;
-    final remaining = maxMonthly - monthlyCount;
-    
-    return remaining > 0 ? remaining : 0;
-  }
 
   /// Converts the user profile model to JSON.
   Map<String, dynamic> toJson() {
