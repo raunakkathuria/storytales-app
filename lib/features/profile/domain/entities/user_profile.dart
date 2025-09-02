@@ -23,6 +23,12 @@ class UserProfile extends Equatable {
   /// Number of free stories remaining.
   final int storiesRemaining;
 
+  /// Number of stories used in current month.
+  final int monthlyStoryCount;
+
+  /// Maximum stories allowed per month for current tier.
+  final int maxMonthlyStories;
+
   /// Device ID associated with this user.
   final String deviceId;
 
@@ -44,6 +50,8 @@ class UserProfile extends Equatable {
     required this.isAnonymous,
     required this.subscriptionTier,
     required this.storiesRemaining,
+    this.monthlyStoryCount = 0,
+    this.maxMonthlyStories = 0,
     required this.deviceId,
     this.sessionId,
     this.sessionCreatedAt,
@@ -59,6 +67,8 @@ class UserProfile extends Equatable {
     bool? isAnonymous,
     String? subscriptionTier,
     int? storiesRemaining,
+    int? monthlyStoryCount,
+    int? maxMonthlyStories,
     String? deviceId,
     String? sessionId,
     DateTime? sessionCreatedAt,
@@ -72,6 +82,8 @@ class UserProfile extends Equatable {
       isAnonymous: isAnonymous ?? this.isAnonymous,
       subscriptionTier: subscriptionTier ?? this.subscriptionTier,
       storiesRemaining: storiesRemaining ?? this.storiesRemaining,
+      monthlyStoryCount: monthlyStoryCount ?? this.monthlyStoryCount,
+      maxMonthlyStories: maxMonthlyStories ?? this.maxMonthlyStories,
       deviceId: deviceId ?? this.deviceId,
       sessionId: sessionId ?? this.sessionId,
       sessionCreatedAt: sessionCreatedAt ?? this.sessionCreatedAt,
@@ -136,6 +148,8 @@ class UserProfile extends Equatable {
         isAnonymous,
         subscriptionTier,
         storiesRemaining,
+        monthlyStoryCount,
+        maxMonthlyStories,
         deviceId,
         sessionId,
         sessionCreatedAt,

@@ -11,6 +11,8 @@ class UserProfileModel extends UserProfile {
     required super.isAnonymous,
     required super.subscriptionTier,
     required super.storiesRemaining,
+    super.monthlyStoryCount = 0,
+    super.maxMonthlyStories = 0,
     required super.deviceId,
     super.sessionId,
     super.sessionCreatedAt,
@@ -26,7 +28,9 @@ class UserProfileModel extends UserProfile {
       emailVerified: _parseBoolSafely(json['email_verified']) ?? false,
       isAnonymous: _parseBoolSafely(json['is_anonymous']) ?? true,
       subscriptionTier: _parseStringSafely(json['subscription_tier']) ?? 'free',
-      storiesRemaining: _parseIntSafely(json['max_monthly_stories']) ?? 0,
+      storiesRemaining: _calculateStoriesRemaining(json),
+      monthlyStoryCount: _parseIntSafely(json['monthly_story_count']) ?? 0,
+      maxMonthlyStories: _parseIntSafely(json['max_monthly_stories']) ?? 0,
       deviceId: _parseStringSafely(json['device_id']) ?? '',
       sessionId: _parseStringSafely(json['session_id']),
       sessionCreatedAt: _parseDateTimeSafely(json['session_created_at']),
@@ -102,6 +106,23 @@ class UserProfileModel extends UserProfile {
     return null;
   }
 
+  /// Calculates stories remaining based on API data.
+  static int _calculateStoriesRemaining(Map<String, dynamic> json) {
+    final subscriptionTier = _parseStringSafely(json['subscription_tier']) ?? 'free';
+    
+    // For non-free tiers, return high number to indicate unlimited
+    if (subscriptionTier != 'free') {
+      return 999999;
+    }
+    
+    // For free tier, calculate remaining from monthly data
+    final monthlyCount = _parseIntSafely(json['monthly_story_count']) ?? 0;
+    final maxMonthly = _parseIntSafely(json['max_monthly_stories']) ?? 0;
+    final remaining = maxMonthly - monthlyCount;
+    
+    return remaining > 0 ? remaining : 0;
+  }
+
   /// Converts the user profile model to JSON.
   Map<String, dynamic> toJson() {
     return {
@@ -112,6 +133,8 @@ class UserProfileModel extends UserProfile {
       'is_anonymous': isAnonymous,
       'subscription_tier': subscriptionTier,
       'stories_remaining': storiesRemaining,
+      'monthly_story_count': monthlyStoryCount,
+      'max_monthly_stories': maxMonthlyStories,
       'device_id': deviceId,
       'session_id': sessionId,
       'session_created_at': sessionCreatedAt?.toIso8601String(),
@@ -129,6 +152,8 @@ class UserProfileModel extends UserProfile {
       isAnonymous: isAnonymous,
       subscriptionTier: subscriptionTier,
       storiesRemaining: storiesRemaining,
+      monthlyStoryCount: monthlyStoryCount,
+      maxMonthlyStories: maxMonthlyStories,
       deviceId: deviceId,
       sessionId: sessionId,
       sessionCreatedAt: sessionCreatedAt,
@@ -146,6 +171,8 @@ class UserProfileModel extends UserProfile {
       isAnonymous: profile.isAnonymous,
       subscriptionTier: profile.subscriptionTier,
       storiesRemaining: profile.storiesRemaining,
+      monthlyStoryCount: profile.monthlyStoryCount,
+      maxMonthlyStories: profile.maxMonthlyStories,
       deviceId: profile.deviceId,
       sessionId: profile.sessionId,
       sessionCreatedAt: profile.sessionCreatedAt,

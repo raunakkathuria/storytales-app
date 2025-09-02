@@ -2,21 +2,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart';
+import 'package:storytales/features/profile/domain/repositories/profile_repository.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_bloc.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_event.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
 
 import 'story_generation_timing_test.mocks.dart';
 
-@GenerateMocks([StoryGenerationRepository])
+@GenerateMocks([StoryGenerationRepository, ProfileRepository])
 void main() {
   group('Story Generation Timing Optimization', () {
     late StoryGenerationBloc bloc;
     late MockStoryGenerationRepository mockRepository;
+    late MockProfileRepository mockProfileRepository;
 
     setUp(() {
       mockRepository = MockStoryGenerationRepository();
-      bloc = StoryGenerationBloc(repository: mockRepository);
+      mockProfileRepository = MockProfileRepository();
+      bloc = StoryGenerationBloc(
+        repository: mockRepository,
+        profileRepository: mockProfileRepository,
+      );
     });
 
     tearDown(() {

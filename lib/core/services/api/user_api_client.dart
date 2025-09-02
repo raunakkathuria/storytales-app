@@ -964,4 +964,214 @@ class UserApiClient {
       throw Exception(errorMessage);
     }
   }
+
+  /// Generate a user story using the background job API.
+  ///
+  /// This endpoint properly tracks the story generation against the user's monthly limit
+  /// and associates the story with the user's account.
+  Future<Map<String, dynamic>> generateUserStory({
+    required int userId,
+    required String prompt,
+    String? ageRange,
+    String? theme,
+    String? genre,
+  }) async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t reach the magical story realm right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    _loggingService.info('Generating user story for user ID: $userId');
+    _loggingService.info('Story prompt: $prompt');
+    _loggingService.info('Age range: $ageRange');
+
+    try {
+      // Start the background job for user story generation
+      final jobResponse = await _startUserStoryGenerationJob(
+        userId: userId,
+        prompt: prompt,
+        ageRange: ageRange,
+        theme: theme,
+        genre: genre,
+      );
+
+      // Poll for completion and return the final story data
+      return await _pollForJobCompletion(jobResponse['job_id'] as String);
+    } catch (e) {
+      _loggingService.error('Error in user story generation flow: $e');
+      rethrow;
+    }
+  }
+
+  /// Start a background user story generation job
+  Future<Map<String, dynamic>> _startUserStoryGenerationJob({
+    required int userId,
+    required String prompt,
+    String? ageRange,
+    String? theme,
+    String? genre,
+  }) async {
+    try {
+      // Prepare request data following the API spec
+      final requestData = {
+        'description': prompt, // Note: API spec uses 'description' not 'prompt'
+        'age_range': ageRange,
+      };
+
+      _loggingService.info('Making API request to: ${_appConfig.apiBaseUrl}/users/$userId/stories');
+      _loggingService.info('Request data: $requestData');
+
+      final response = await _dio.post(
+        '/users/$userId/stories',
+        data: requestData,
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('User story generation API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final jobResponse = response.data as Map<String, dynamic>;
+        _loggingService.info('User story generation job started successfully');
+        return jobResponse;
+      } else {
+        _loggingService.error('User story generation API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to start user story generation: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error starting user story generation job: $e');
+
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while creating your story. Please try again!';
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to weave your tale! The magical connection seems slow. Please check your internet and let\'s try again!';
+            break;
+          case DioExceptionType.connectionError:
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t reach the magical story realm right now. Please check your internet connection and we\'ll try to reconnect!';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 402) {
+              errorMessage = '📖 You\'ve reached your monthly story limit! Subscribe to create unlimited magical tales and continue your storytelling adventure!';
+            } else if (statusCode == 404) {
+              errorMessage = '👤 Your account seems to have wandered off! Please try refreshing the app and logging in again.';
+            } else if (statusCode == 500) {
+              errorMessage = '🏰 The Story Wizard\'s castle is having some magical difficulties right now. We\'re working to fix it - please try again in a little while!';
+            } else {
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode). Let\'s try casting the story spell again!';
+            }
+            break;
+          case DioExceptionType.cancel:
+            errorMessage = '📖 The story creation was cancelled. No worries - the Story Wizard is ready whenever you are!';
+            break;
+          default:
+            errorMessage = '🌙 Something unexpected happened in the magical story realm. Our Story Wizard is investigating - please try again!';
+        }
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Poll for job completion and return the final story data
+  Future<Map<String, dynamic>> _pollForJobCompletion(String jobId) async {
+    const maxAttempts = 60; // 5 minutes with 5-second intervals
+    const pollInterval = Duration(seconds: 5);
+
+    for (int attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        _loggingService.info('Checking job status (attempt ${attempt + 1}/$maxAttempts)');
+
+        final statusResponse = await _checkJobStatus(jobId);
+
+        if (statusResponse['status'] == 'completed') {
+          _loggingService.info('Job completed successfully');
+          return await _getJobResult(jobId);
+        } else if (statusResponse['status'] == 'failed') {
+          final errorMsg = statusResponse['error'] ?? 'Unknown error occurred during story generation';
+          _loggingService.error('Job failed: $errorMsg');
+          throw Exception('🧙‍♂️ Our Story Wizard encountered a magical mishap: $errorMsg');
+        } else if (statusResponse['status'] == 'processing' || statusResponse['status'] == 'started') {
+          _loggingService.info('Job still processing: ${statusResponse['progress'] ?? "Working on your story..."}');
+          if (attempt < maxAttempts - 1) {
+            await Future.delayed(pollInterval);
+          }
+        }
+      } catch (e) {
+        if (attempt == maxAttempts - 1) {
+          _loggingService.error('Final polling attempt failed: $e');
+          rethrow;
+        }
+        _loggingService.warning('Polling attempt ${attempt + 1} failed, retrying: $e');
+        await Future.delayed(pollInterval);
+      }
+    }
+
+    throw Exception('🧙‍♂️ Our Story Wizard is taking longer than expected to craft your magical tale. Please try again!');
+  }
+
+  /// Check the status of a background job
+  Future<Map<String, dynamic>> _checkJobStatus(String jobId) async {
+    try {
+      final response = await _dio.get(
+        '/stories/status/$jobId',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to check job status: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error checking job status: $e');
+      rethrow;
+    }
+  }
+
+  /// Get the result of a completed background job
+  Future<Map<String, dynamic>> _getJobResult(String jobId) async {
+    try {
+      final response = await _dio.get(
+        '/stories/result/$jobId',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get job result: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error getting job result: $e');
+      rethrow;
+    }
+  }
 }

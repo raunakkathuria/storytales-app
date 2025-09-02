@@ -56,6 +56,9 @@ class StoryCreationDialog extends StatefulWidget {
       } else if (state is CannotGenerateStory) {
         completer.complete(false);
         subscription.cancel();
+      } else if (state is StoryGenerationSubscriptionRequired) {
+        completer.complete(false);
+        subscription.cancel();
       }
     });
 
@@ -93,7 +96,8 @@ class StoryCreationDialog extends StatefulWidget {
     return state is StoryGenerationLoading ||
            state is StoryGenerationCountdown ||
            state is StoryGenerationInBackground ||
-           state is BackgroundGenerationFailure;
+           state is BackgroundGenerationFailure ||
+           state is StoryGenerationSubscriptionRequired;
   }
 
   @override
@@ -186,6 +190,39 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
           navigator.push(
             MaterialPageRoute(
               builder: (context) => const SubscriptionPage(),
+            ),
+          );
+        } else if (state is StoryGenerationSubscriptionRequired) {
+          // Store navigator reference before async operations
+          final navigator = Navigator.of(context);
+
+          // Close the dialog
+          navigator.pop();
+
+          // Navigate to the subscription page with specific context
+          navigator.push(
+            MaterialPageRoute(
+              builder: (context) => const SubscriptionPage(),
+            ),
+          );
+
+          // Show snackbar with subscription context
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${state.storiesUsed}/${state.monthlyLimit} free stories used. Subscribe for unlimited stories!'),
+              backgroundColor: StoryTalesTheme.primaryColor,
+              action: SnackBarAction(
+                label: 'Subscribe',
+                textColor: Colors.white,
+                onPressed: () {
+                  // Navigate to subscription page if not already there
+                  navigator.push(
+                    MaterialPageRoute(
+                      builder: (context) => const SubscriptionPage(),
+                    ),
+                  );
+                },
+              ),
             ),
           );
         } else if (state is StoryGenerationFailure) {
@@ -303,6 +340,8 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
       builder: (context, state) {
         if (state is StoryGenerationCountdown) {
           return _buildCountdownIndicator(state.secondsRemaining);
+        } else if (state is StoryGenerationSubscriptionRequired) {
+          return _buildSubscriptionRequiredDisplay(state);
         } else if (state is StoryGenerationFailure) {
           return _buildErrorDisplay(state.error);
         } else {
@@ -610,6 +649,118 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
         });
       }
     });
+  }
+
+  Widget _buildSubscriptionRequiredDisplay(StoryGenerationSubscriptionRequired state) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Close button in top right
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: const Icon(
+                Icons.close,
+                color: StoryTalesTheme.textLightColor,
+                size: 24,
+              ),
+            ),
+          ],
+        ),
+
+        // Subscription icon
+        const Icon(
+          Icons.star,
+          color: StoryTalesTheme.accentColor,
+          size: 60,
+        ),
+
+        const SizedBox(height: 24),
+
+        // Title
+        ResponsiveText(
+          text: 'Unlock unlimited stories!',
+          style: const TextStyle(
+            color: StoryTalesTheme.primaryColor,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: StoryTalesTheme.fontFamilyHeading,
+          ),
+          textAlign: TextAlign.center,
+        ),
+
+        const SizedBox(height: 16),
+
+        // Story usage information
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: ResponsiveText(
+            text: 'You\'ve used ${state.storiesUsed} of ${state.monthlyLimit} free stories this month.',
+            style: const TextStyle(
+              color: StoryTalesTheme.textColor,
+              fontSize: 16,
+              fontFamily: StoryTalesTheme.fontFamilyBody,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Subscription message
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: ResponsiveText(
+            text: state.message,
+            style: const TextStyle(
+              color: StoryTalesTheme.textLightColor,
+              fontSize: 14,
+              fontFamily: StoryTalesTheme.fontFamilyBody,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 3,
+          ),
+        ),
+
+        const SizedBox(height: 32),
+
+        // Subscribe button
+        ResponsiveButton.primary(
+          text: 'Get Unlimited Stories',
+          onPressed: () {
+            final navigator = Navigator.of(context);
+            navigator.pop(); // Close dialog
+            navigator.push(
+              MaterialPageRoute(
+                builder: (context) => const SubscriptionPage(),
+              ),
+            );
+          },
+          icon: Icons.star,
+          fontSize: 16,
+        ),
+
+        const SizedBox(height: 12),
+
+        // Close button
+        ResponsiveButton.outlined(
+          text: 'Maybe Later',
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          borderColor: StoryTalesTheme.primaryColor,
+          textColor: StoryTalesTheme.primaryColor,
+          fontSize: 14,
+        ),
+
+        const SizedBox(height: 24),
+      ],
+    );
   }
 
   Widget _buildErrorDisplay(String errorMessage) {

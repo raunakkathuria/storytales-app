@@ -220,7 +220,8 @@ Future<void> init() async {
 
   sl.registerLazySingleton<StoryGenerationRepository>(
     () => StoryGenerationRepositoryImpl(
-      apiClient: sl(),
+      userApiClient: sl(),
+      authService: sl(),
       storyRepository: sl(),
       subscriptionRepository: sl(),
       analyticsService: sl(),
@@ -230,6 +231,7 @@ Future<void> init() async {
   sl.registerLazySingleton<SubscriptionRepository>(
     () => SubscriptionRepositoryImpl(
       localDataSource: sl(),
+      profileRepository: sl(),
     ),
   );
 
@@ -252,6 +254,7 @@ Future<void> init() async {
   sl.registerFactory<StoryGenerationBloc>(
     () => StoryGenerationBloc(
       repository: sl<StoryGenerationRepository>(),
+      profileRepository: sl<ProfileRepository>(),
     ),
   );
 
