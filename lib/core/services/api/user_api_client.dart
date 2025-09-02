@@ -1088,8 +1088,8 @@ class UserApiClient {
 
   /// Poll for job completion and return the final story data
   Future<Map<String, dynamic>> _pollForJobCompletion(String jobId) async {
-    const maxAttempts = 60; // 5 minutes with 5-second intervals
-    const pollInterval = Duration(seconds: 5);
+    const maxAttempts = 60; // 10 minutes with 10-second intervals
+    const pollInterval = Duration(seconds: 10);
 
     for (int attempt = 0; attempt < maxAttempts; attempt++) {
       try {
