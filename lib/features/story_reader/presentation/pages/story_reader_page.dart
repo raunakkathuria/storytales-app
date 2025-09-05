@@ -57,6 +57,9 @@ class _StoryReaderPageState extends State<StoryReaderPage> {
   void _preloadNextPageImage(Story story, int currentIndex) {
     // Use microtask to avoid blocking the UI thread
     Future.microtask(() {
+      // Check if the widget is still mounted before using context
+      if (!mounted) return;
+
       final imageService = ImageService();
 
       // If we're on a regular story page (not the last one)

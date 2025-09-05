@@ -5,17 +5,29 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_event.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
+import 'package:storytales/features/profile/domain/repositories/profile_repository.dart';
+import 'package:storytales/features/library/presentation/bloc/library_bloc.dart';
+import 'package:storytales/features/library/presentation/bloc/library_event.dart';
+import 'package:storytales/core/services/logging/logging_service.dart';
+import 'package:storytales/core/di/injection_container.dart' as sl;
 
 /// BLoC for managing story generation.
 class StoryGenerationBloc
     extends Bloc<StoryGenerationEvent, StoryGenerationState> {
   final StoryGenerationRepository _repository;
+  final ProfileRepository _profileRepository;
+  final LoggingService _loggingService;
   Timer? _progressTimer;
   Timer? _countdownTimer;
   final Map<String, Timer> _backgroundGenerationTimers = {};
 
-  StoryGenerationBloc({required StoryGenerationRepository repository})
-      : _repository = repository,
+  StoryGenerationBloc({
+    required StoryGenerationRepository repository,
+    required ProfileRepository profileRepository,
+    required LoggingService loggingService,
+  })  : _repository = repository,
+        _profileRepository = profileRepository,
+        _loggingService = loggingService,
         super(const StoryGenerationInitial()) {
     on<CheckCanGenerateStory>(_onCheckCanGenerateStory);
     on<GenerateStory>(_onGenerateStory);
@@ -77,10 +89,14 @@ class StoryGenerationBloc
       final errorMessage = e.toString();
       final isSubscriptionError = errorMessage.contains('free story limit');
 
-      emit(StoryGenerationFailure(
-        error: errorMessage,
-        isRetryable: !isSubscriptionError,
-      ));
+      if (isSubscriptionError) {
+        await _handleSubscriptionError(emit, errorMessage);
+      } else {
+        emit(StoryGenerationFailure(
+          error: errorMessage,
+          isRetryable: true,
+        ));
+      }
     }
   }
 
@@ -111,7 +127,7 @@ class StoryGenerationBloc
     _cancelProgressTimer();
 
     double progress = 0.0;
-    const totalDuration = Duration(seconds: 10);
+    const totalDuration = Duration(seconds: 120);
     const interval = Duration(milliseconds: 100);
     final steps = totalDuration.inMilliseconds ~/ interval.inMilliseconds;
     final increment = 1.0 / steps;
@@ -276,6 +292,17 @@ class StoryGenerationBloc
         // Then emit the completion state with the story
         // This will trigger the library refresh, and the story will be available
         emit(BackgroundGenerationComplete(story: story));
+
+        // Trigger library refresh directly (same pattern as StoryWorkshopBloc)
+        Timer.run(() {
+          try {
+            final libraryBloc = sl.sl<LibraryBloc>();
+            libraryBloc.add(const LoadAllStories());
+            _loggingService.info('Library refresh triggered after background story generation completion');
+          } catch (e) {
+            _loggingService.warning('Failed to trigger library refresh after story generation: $e');
+          }
+        });
       }
     } catch (e) {
       // Handle failure case
@@ -285,10 +312,19 @@ class StoryGenerationBloc
 
       // Check if emitter is still active before emitting
       if (!emit.isDone) {
-        emit(BackgroundGenerationFailure(
-          tempStoryId: tempStoryId,
-          error: e.toString(),
-        ));
+        final errorMessage = e.toString();
+        final isSubscriptionError = errorMessage.contains('free story limit');
+        
+        if (isSubscriptionError) {
+          // For background generation subscription errors, we still emit the background failure
+          // but the UI should handle this appropriately
+          await _handleBackgroundSubscriptionError(emit, tempStoryId, errorMessage);
+        } else {
+          emit(BackgroundGenerationFailure(
+            tempStoryId: tempStoryId,
+            error: errorMessage,
+          ));
+        }
       }
     }
   }
@@ -311,6 +347,68 @@ class StoryGenerationBloc
       timer.cancel();
     }
     _backgroundGenerationTimers.clear();
+  }
+
+  /// Handle subscription errors by checking user tier and emitting appropriate state.
+  Future<void> _handleSubscriptionError(Emitter<StoryGenerationState> emit, String errorMessage) async {
+    try {
+      // Get current user profile to check subscription tier
+      final profile = await _profileRepository.getCurrentUserProfile();
+      
+      if (profile.subscriptionTier == 'free') {
+        // Free tier user hitting limit - show subscription prompt
+        emit(StoryGenerationSubscriptionRequired(
+          subscriptionTier: profile.subscriptionTier,
+          storiesUsed: profile.monthlyStoryCount,
+          monthlyLimit: profile.maxMonthlyStories,
+          message: 'You\'ve reached your free story limit! Subscribe for unlimited stories.',
+        ));
+      } else {
+        // Subscribed user getting subscription error - this is a technical issue
+        emit(StoryGenerationFailure(
+          error: 'Subscription verification failed. Please try again.',
+          isRetryable: true,
+        ));
+      }
+    } catch (e) {
+      // If we can't get profile data, fallback to generic subscription error
+      emit(StoryGenerationFailure(
+        error: errorMessage,
+        isRetryable: false,
+      ));
+    }
+  }
+
+  /// Handle subscription errors in background generation.
+  Future<void> _handleBackgroundSubscriptionError(
+    Emitter<StoryGenerationState> emit,
+    String tempStoryId,
+    String errorMessage,
+  ) async {
+    try {
+      // Get current user profile to check subscription tier
+      final profile = await _profileRepository.getCurrentUserProfile();
+      
+      if (profile.subscriptionTier == 'free') {
+        // Free tier user hitting limit - emit background failure but with subscription context
+        emit(BackgroundGenerationFailure(
+          tempStoryId: tempStoryId,
+          error: 'Subscription required: ${profile.monthlyStoryCount}/${profile.maxMonthlyStories} stories used',
+        ));
+      } else {
+        // Subscribed user getting subscription error - technical issue
+        emit(BackgroundGenerationFailure(
+          tempStoryId: tempStoryId,
+          error: 'Subscription verification failed',
+        ));
+      }
+    } catch (e) {
+      // Fallback to generic error
+      emit(BackgroundGenerationFailure(
+        tempStoryId: tempStoryId,
+        error: errorMessage,
+      ));
+    }
   }
 
   @override

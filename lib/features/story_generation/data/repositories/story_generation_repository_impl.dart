@@ -1,23 +1,27 @@
 import 'package:storytales/core/services/analytics/analytics_service.dart';
+import 'package:storytales/core/services/api/user_api_client.dart';
+import 'package:storytales/core/services/auth/authentication_service.dart';
 import 'package:storytales/features/library/domain/entities/story.dart';
 import 'package:storytales/features/library/domain/repositories/story_repository.dart';
-import 'package:storytales/features/story_generation/data/datasources/story_api_client.dart';
 import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart';
 import 'package:storytales/features/subscription/domain/repositories/subscription_repository.dart';
 
 /// Implementation of the [StoryGenerationRepository] interface.
 class StoryGenerationRepositoryImpl implements StoryGenerationRepository {
-  final StoryApiClient _apiClient;
+  final UserApiClient _userApiClient;
+  final AuthenticationService _authService;
   final StoryRepository _storyRepository;
   final SubscriptionRepository _subscriptionRepository;
   final AnalyticsService _analyticsService;
 
   StoryGenerationRepositoryImpl({
-    required StoryApiClient apiClient,
+    required UserApiClient userApiClient,
+    required AuthenticationService authService,
     required StoryRepository storyRepository,
     required SubscriptionRepository subscriptionRepository,
     required AnalyticsService analyticsService,
-  })  : _apiClient = apiClient,
+  })  : _userApiClient = userApiClient,
+        _authService = authService,
         _storyRepository = storyRepository,
         _subscriptionRepository = subscriptionRepository,
         _analyticsService = analyticsService;
@@ -43,8 +47,15 @@ class StoryGenerationRepositoryImpl implements StoryGenerationRepository {
     }
 
     try {
-      // Generate story using the API client
-      final response = await _apiClient.generateStory(
+      // Get the current user ID - required for the user-specific endpoint
+      final userId = await _authService.getCurrentUserId();
+      if (userId == null) {
+        throw Exception('User authentication required to generate stories. Please restart the app.');
+      }
+
+      // Generate story using the user-specific API endpoint
+      final response = await _userApiClient.generateUserStory(
+        userId: userId,
         prompt: prompt,
         ageRange: ageRange,
         theme: theme,

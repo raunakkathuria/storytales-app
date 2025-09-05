@@ -1,27 +1,45 @@
 import 'package:storytales/features/subscription/data/datasources/subscription_local_data_source.dart';
 import 'package:storytales/features/subscription/domain/repositories/subscription_repository.dart';
+import 'package:storytales/features/profile/domain/repositories/profile_repository.dart';
 
 /// Implementation of the [SubscriptionRepository] interface.
 class SubscriptionRepositoryImpl implements SubscriptionRepository {
   final SubscriptionLocalDataSource _localDataSource;
+  final ProfileRepository _profileRepository;
 
-  /// The number of free stories allowed in Phase 1.
+  /// The number of free stories allowed in Phase 1 (fallback value).
   static const int _freeStoryLimit = 2;
 
-  SubscriptionRepositoryImpl({required SubscriptionLocalDataSource localDataSource})
-      : _localDataSource = localDataSource;
+  SubscriptionRepositoryImpl({
+    required SubscriptionLocalDataSource localDataSource,
+    required ProfileRepository profileRepository,
+  })  : _localDataSource = localDataSource,
+        _profileRepository = profileRepository;
 
   @override
   Future<bool> canCreateStory() async {
-    // Check if the user has an active subscription
-    final hasSubscription = await _localDataSource.hasActiveSubscription();
-    if (hasSubscription) {
-      return true;
-    }
+    try {
+      // Get current user profile from API
+      final profile = await _profileRepository.getCurrentUserProfile();
+      
+      // For subscribed users (non-free tier), they can always create stories
+      if (profile.subscriptionTier != 'free') {
+        return true;
+      }
+      
+      // For free tier users, check stories remaining using computed property
+      return profile.actualStoriesRemaining > 0;
+    } catch (e) {
+      // Fallback to local data if API fails
+      final hasSubscription = await _localDataSource.hasActiveSubscription();
+      if (hasSubscription) {
+        return true;
+      }
 
-    // Check if the user has not reached the free story limit
-    final generatedStoryCount = await _localDataSource.getGeneratedStoryCount();
-    return generatedStoryCount < _freeStoryLimit;
+      // Check if the user has not reached the free story limit
+      final generatedStoryCount = await _localDataSource.getGeneratedStoryCount();
+      return generatedStoryCount < _freeStoryLimit;
+    }
   }
 
   @override
@@ -31,7 +49,16 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
 
   @override
   Future<bool> hasActiveSubscription() async {
-    return await _localDataSource.hasActiveSubscription();
+    try {
+      // Get current user profile from API
+      final profile = await _profileRepository.getCurrentUserProfile();
+      
+      // Consider non-free tiers as active subscriptions
+      return profile.subscriptionTier != 'free';
+    } catch (e) {
+      // Fallback to local data if API fails
+      return await _localDataSource.hasActiveSubscription();
+    }
   }
 
   @override
@@ -51,14 +78,30 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
 
   @override
   Future<int> getFreeStoriesRemaining() async {
-    final generatedStoryCount = await _localDataSource.getGeneratedStoryCount();
-    final remaining = _freeStoryLimit - generatedStoryCount;
-    return remaining > 0 ? remaining : 0;
+    try {
+      // Get current user profile from API
+      final profile = await _profileRepository.getCurrentUserProfile();
+      
+      // Use the computed property for accurate business logic
+      return profile.actualStoriesRemaining;
+    } catch (e) {
+      // Fallback to local calculation if API fails
+      final generatedStoryCount = await _localDataSource.getGeneratedStoryCount();
+      final remaining = _freeStoryLimit - generatedStoryCount;
+      return remaining > 0 ? remaining : 0;
+    }
   }
 
   @override
   Future<String?> getSubscriptionType() async {
-    return await _localDataSource.getSubscriptionType();
+    try {
+      // Get current user profile from API
+      final profile = await _profileRepository.getCurrentUserProfile();
+      return profile.subscriptionTier;
+    } catch (e) {
+      // Fallback to local data if API fails
+      return await _localDataSource.getSubscriptionType();
+    }
   }
 
   @override

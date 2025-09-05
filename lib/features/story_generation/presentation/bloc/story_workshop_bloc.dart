@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storytales/core/di/injection_container.dart';
 import 'package:storytales/core/services/logging/logging_service.dart';
 import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart';
-import 'package:storytales/features/library/domain/repositories/story_repository.dart';
 import 'package:storytales/features/library/presentation/bloc/library_bloc.dart';
 import 'package:storytales/features/library/presentation/bloc/library_event.dart';
 import 'story_workshop_event.dart';
@@ -13,7 +12,6 @@ import 'story_workshop_state.dart';
 /// BLoC for managing multiple story generations in the Story Workshop modal
 class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
   final StoryGenerationRepository _storyRepository;
-  final StoryRepository _libraryRepository;
   final LoggingService _loggingService;
 
   // Track active timers for polling jobs
@@ -24,9 +22,7 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
 
   StoryWorkshopBloc({
     required StoryGenerationRepository storyRepository,
-    required StoryRepository libraryRepository,
   })  : _storyRepository = storyRepository,
-        _libraryRepository = libraryRepository,
         _loggingService = sl<LoggingService>(),
         super(const StoryWorkshopInitial()) {
     on<StartStoryGeneration>(_onStartStoryGeneration);
@@ -120,7 +116,7 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
       _startProgressTimer(job.jobId);
 
       // Use the API client's built-in job polling system
-      final storyData = await _storyRepository.generateStory(
+      await _storyRepository.generateStory(
         prompt: job.prompt,
         ageRange: job.ageRange,
         theme: job.theme,
@@ -343,7 +339,7 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
     _cancelProgressTimer(jobId);
 
     double progress = 0.0;
-    const totalDuration = Duration(seconds: 90); // 90 seconds to match API completion time
+    const totalDuration = Duration(seconds: 120); // 120 seconds to match API completion time
     const interval = Duration(milliseconds: 100);
     final steps = totalDuration.inMilliseconds ~/ interval.inMilliseconds;
     final increment = 1.0 / steps;

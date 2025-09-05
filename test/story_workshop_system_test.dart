@@ -31,7 +31,6 @@ void main() {
   group('Story Workshop System Tests', () {
     late StoryWorkshopBloc bloc;
     late MockStoryGenerationRepository mockStoryRepository;
-    late MockLibraryRepository mockLibraryRepository;
     late MockLoggingService mockLoggingService;
 
     setUp(() {
@@ -43,14 +42,12 @@ void main() {
       }
 
       mockStoryRepository = MockStoryGenerationRepository();
-      mockLibraryRepository = MockLibraryRepository();
 
       // Provide dummy return values for mock methods
       provideDummy<Future<void>>(Future.value());
 
       bloc = StoryWorkshopBloc(
         storyRepository: mockStoryRepository,
-        libraryRepository: mockLibraryRepository,
       );
     });
 

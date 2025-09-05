@@ -19,6 +19,9 @@ import 'package:storytales/features/subscription/presentation/bloc/subscription_
 import 'package:storytales/features/subscription/presentation/bloc/subscription_state.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_bloc.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
+import 'package:storytales/features/profile/presentation/pages/profile_page.dart';
+import 'package:storytales/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:storytales/core/di/injection_container.dart' as di;
 
 /// The main library page that displays the user's stories.
 class LibraryPage extends StatefulWidget {
@@ -75,6 +78,24 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
           child: const StoryWorkshopIndicator(),
         ),
         actions: [
+          // Profile button
+          IconButton(
+            icon: ResponsiveIcon(
+              icon: Icons.account_circle_outlined,
+              color: StoryTalesTheme.primaryColor,
+              sizeCategory: IconSizeCategory.medium,
+            ),
+            tooltip: 'Profile',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BlocProvider(
+                  create: (context) => di.sl<ProfileBloc>(),
+                  child: const ProfilePage(),
+                ),
+              ),
+            ),
+          ),
           // Subscription button
           BlocBuilder<SubscriptionBloc, SubscriptionState>(
             builder: (context, state) {
@@ -83,7 +104,7 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
                 return IconButton(
                   icon: ResponsiveIcon(
                     icon: Icons.verified, // Use verified icon for active subscription
-                    color: StoryTalesTheme.accentColor, // Use accent color (Sunset Orange) for brand consistency
+                    color: StoryTalesTheme.primaryColor, // Use primary color (blue) for consistency
                     sizeCategory: IconSizeCategory.medium,
                   ),
                   tooltip: 'Subscription Active', // For accessibility
@@ -98,7 +119,7 @@ class _LibraryPageState extends State<LibraryPage> with SingleTickerProviderStat
               return IconButton(
                 icon: ResponsiveIcon(
                   icon: Icons.card_membership,
-                  color: StoryTalesTheme.accentColor, // Keep the accent color for the icon
+                  color: StoryTalesTheme.primaryColor, // Use primary color (blue) for consistency
                   sizeCategory: IconSizeCategory.medium,
                 ),
                 tooltip: 'Subscribe', // For accessibility

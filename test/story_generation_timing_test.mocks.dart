@@ -3,12 +3,20 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i4;
+import 'dart:async' as _i7;
 
+import 'package:logging/logging.dart' as _i5;
 import 'package:mockito/mockito.dart' as _i1;
+import 'package:storytales/core/services/logging/logging_service.dart' as _i9;
 import 'package:storytales/features/library/domain/entities/story.dart' as _i2;
-import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart'
+import 'package:storytales/features/profile/domain/entities/registration_request.dart'
+    as _i4;
+import 'package:storytales/features/profile/domain/entities/user_profile.dart'
     as _i3;
+import 'package:storytales/features/profile/domain/repositories/profile_repository.dart'
+    as _i8;
+import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart'
+    as _i6;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -29,25 +37,41 @@ class _FakeStory_0 extends _i1.SmartFake implements _i2.Story {
     : super(parent, parentInvocation);
 }
 
+class _FakeUserProfile_1 extends _i1.SmartFake implements _i3.UserProfile {
+  _FakeUserProfile_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeRegistrationResponse_2 extends _i1.SmartFake
+    implements _i4.RegistrationResponse {
+  _FakeRegistrationResponse_2(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeLogger_3 extends _i1.SmartFake implements _i5.Logger {
+  _FakeLogger_3(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [StoryGenerationRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockStoryGenerationRepository extends _i1.Mock
-    implements _i3.StoryGenerationRepository {
+    implements _i6.StoryGenerationRepository {
   MockStoryGenerationRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i4.Future<bool> canGenerateStory() =>
+  _i7.Future<bool> canGenerateStory() =>
       (super.noSuchMethod(
             Invocation.method(#canGenerateStory, []),
-            returnValue: _i4.Future<bool>.value(false),
+            returnValue: _i7.Future<bool>.value(false),
           )
-          as _i4.Future<bool>);
+          as _i7.Future<bool>);
 
   @override
-  _i4.Future<_i2.Story> generateStory({
+  _i7.Future<_i2.Story> generateStory({
     required String? prompt,
     String? ageRange,
     String? theme,
@@ -60,7 +84,7 @@ class MockStoryGenerationRepository extends _i1.Mock
               #theme: theme,
               #genre: genre,
             }),
-            returnValue: _i4.Future<_i2.Story>.value(
+            returnValue: _i7.Future<_i2.Story>.value(
               _FakeStory_0(
                 this,
                 Invocation.method(#generateStory, [], {
@@ -72,13 +96,194 @@ class MockStoryGenerationRepository extends _i1.Mock
               ),
             ),
           )
-          as _i4.Future<_i2.Story>);
+          as _i7.Future<_i2.Story>);
 
   @override
-  _i4.Future<int> getFreeStoriesRemaining() =>
+  _i7.Future<int> getFreeStoriesRemaining() =>
       (super.noSuchMethod(
             Invocation.method(#getFreeStoriesRemaining, []),
-            returnValue: _i4.Future<int>.value(0),
+            returnValue: _i7.Future<int>.value(0),
           )
-          as _i4.Future<int>);
+          as _i7.Future<int>);
+}
+
+/// A class which mocks [ProfileRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockProfileRepository extends _i1.Mock implements _i8.ProfileRepository {
+  MockProfileRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i7.Future<_i3.UserProfile> getCurrentUserProfile() =>
+      (super.noSuchMethod(
+            Invocation.method(#getCurrentUserProfile, []),
+            returnValue: _i7.Future<_i3.UserProfile>.value(
+              _FakeUserProfile_1(
+                this,
+                Invocation.method(#getCurrentUserProfile, []),
+              ),
+            ),
+          )
+          as _i7.Future<_i3.UserProfile>);
+
+  @override
+  _i7.Future<_i3.UserProfile> updateDisplayName(String? displayName) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateDisplayName, [displayName]),
+            returnValue: _i7.Future<_i3.UserProfile>.value(
+              _FakeUserProfile_1(
+                this,
+                Invocation.method(#updateDisplayName, [displayName]),
+              ),
+            ),
+          )
+          as _i7.Future<_i3.UserProfile>);
+
+  @override
+  _i7.Future<_i4.RegistrationResponse> registerUser({
+    required String? email,
+    required String? displayName,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#registerUser, [], {
+              #email: email,
+              #displayName: displayName,
+            }),
+            returnValue: _i7.Future<_i4.RegistrationResponse>.value(
+              _FakeRegistrationResponse_2(
+                this,
+                Invocation.method(#registerUser, [], {
+                  #email: email,
+                  #displayName: displayName,
+                }),
+              ),
+            ),
+          )
+          as _i7.Future<_i4.RegistrationResponse>);
+
+  @override
+  _i7.Future<_i3.UserProfile> verifyRegistration({required String? otpCode}) =>
+      (super.noSuchMethod(
+            Invocation.method(#verifyRegistration, [], {#otpCode: otpCode}),
+            returnValue: _i7.Future<_i3.UserProfile>.value(
+              _FakeUserProfile_1(
+                this,
+                Invocation.method(#verifyRegistration, [], {#otpCode: otpCode}),
+              ),
+            ),
+          )
+          as _i7.Future<_i3.UserProfile>);
+
+  @override
+  _i7.Future<_i4.RegistrationResponse> loginUser({required String? email}) =>
+      (super.noSuchMethod(
+            Invocation.method(#loginUser, [], {#email: email}),
+            returnValue: _i7.Future<_i4.RegistrationResponse>.value(
+              _FakeRegistrationResponse_2(
+                this,
+                Invocation.method(#loginUser, [], {#email: email}),
+              ),
+            ),
+          )
+          as _i7.Future<_i4.RegistrationResponse>);
+
+  @override
+  _i7.Future<_i3.UserProfile> verifyLogin({
+    required String? sessionId,
+    required String? otpCode,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#verifyLogin, [], {
+              #sessionId: sessionId,
+              #otpCode: otpCode,
+            }),
+            returnValue: _i7.Future<_i3.UserProfile>.value(
+              _FakeUserProfile_1(
+                this,
+                Invocation.method(#verifyLogin, [], {
+                  #sessionId: sessionId,
+                  #otpCode: otpCode,
+                }),
+              ),
+            ),
+          )
+          as _i7.Future<_i3.UserProfile>);
+
+  @override
+  _i7.Future<void> signOut() =>
+      (super.noSuchMethod(
+            Invocation.method(#signOut, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<_i3.UserProfile> refreshUserProfile() =>
+      (super.noSuchMethod(
+            Invocation.method(#refreshUserProfile, []),
+            returnValue: _i7.Future<_i3.UserProfile>.value(
+              _FakeUserProfile_1(
+                this,
+                Invocation.method(#refreshUserProfile, []),
+              ),
+            ),
+          )
+          as _i7.Future<_i3.UserProfile>);
+}
+
+/// A class which mocks [LoggingService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockLoggingService extends _i1.Mock implements _i9.LoggingService {
+  MockLoggingService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  void init() => super.noSuchMethod(
+    Invocation.method(#init, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  _i5.Logger getLogger(String? name) =>
+      (super.noSuchMethod(
+            Invocation.method(#getLogger, [name]),
+            returnValue: _FakeLogger_3(
+              this,
+              Invocation.method(#getLogger, [name]),
+            ),
+          )
+          as _i5.Logger);
+
+  @override
+  void debug(String? message, [Object? error, StackTrace? stackTrace]) =>
+      super.noSuchMethod(
+        Invocation.method(#debug, [message, error, stackTrace]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void info(String? message, [Object? error, StackTrace? stackTrace]) =>
+      super.noSuchMethod(
+        Invocation.method(#info, [message, error, stackTrace]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void warning(String? message, [Object? error, StackTrace? stackTrace]) =>
+      super.noSuchMethod(
+        Invocation.method(#warning, [message, error, stackTrace]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void error(String? message, [Object? error, StackTrace? stackTrace]) =>
+      super.noSuchMethod(
+        Invocation.method(#error, [message, error, stackTrace]),
+        returnValueForMissingStub: null,
+      );
 }

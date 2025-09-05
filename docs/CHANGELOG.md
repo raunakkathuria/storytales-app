@@ -201,41 +201,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Improved Scalability**: Dynamic content loading enables rapid content updates without app store releases
 - **Enhanced Reliability**: Comprehensive error handling and fallback mechanisms for network issues
 
+## [2.0.0] - 2025-09-01
+
+### Added
+- **Complete Authentication System Implementation** ✅
+  - Device-based user authentication with automatic account recovery
+  - OTP-based email verification system replacing Firebase Authentication
+  - Session management with proper sign-out functionality
+  - Single-purpose screen architecture with dedicated authentication flows:
+    - `RegisterPage` - Standalone user registration
+    - `LoginPage` - Standalone user login  
+    - `VerifyEmailPage` - Standalone OTP verification for registration
+    - `LoginVerifyPage` - Standalone OTP verification for login
+    - `ProfileEditPage` - Dedicated profile editing screen
+  - Persistent OTP verification state recovery system
+  - Comprehensive error handling and retry mechanisms for expired/invalid OTPs
+  - Intelligent API loop detection for signed-out users (409→404 pattern)
+  - Support for new `is_authenticated` API field with backward compatibility
+  - Enhanced UserProfile entity with session tracking (`sessionId`, `sessionCreatedAt`)
+  - Robust API pattern abstraction for authentication states
+  - Comprehensive test coverage with 6+ test files covering all authentication scenarios
+
+### Changed
+- **Architecture Migration**: Completely replaced Firebase Authentication with custom API integration
+- **UI/UX Improvements**: 
+  - Simplified profile screen with single-purpose design
+  - Removed duplicate headers and verbose content across authentication screens
+  - Standardized terminology from "OTP" to "verification code" throughout app
+  - Enhanced ProfileHeader with tappable edit icon for seamless navigation
+  - Improved error messages with magical-themed, user-friendly language
+- **API Integration**: Enhanced UserApiClient with comprehensive authentication endpoints
+- **State Management**: Significantly improved ProfileBloc with robust state handling for all authentication scenarios
+- **Code Quality**: Standardized debug logging, removed unused imports, fixed async safety issues
+
+### Fixed
+- **Authentication Flow Issues**: Resolved sign-out users being automatically re-authenticated
+- **API Response Parsing**: Fixed login verification failure despite API success due to nested response structure  
+- **BLoC Context Management**: Resolved BlocProvider context errors during screen navigation
+- **State Recovery**: Fixed users getting stuck in anonymous state after incomplete registration
+- **Infinite API Loops**: Eliminated 409→404 API call loops for signed-out users
+- **Session Management**: Proper server-side session invalidation preventing database pollution
+
+### Technical Improvements
+- **Clean Architecture**: Maintained clean architecture principles with enhanced repository pattern
+- **Dependency Injection**: Updated GetIt container with new authentication services
+- **Error Handling**: Comprehensive error recovery with retry mechanisms and user guidance
+- **Performance**: Optimized API calls with intelligent caching and loop detection
+- **Testing**: Extensive test coverage including unit, widget, and integration tests
+- **Documentation**: Enhanced inline documentation and code comments throughout authentication system
+
+### Benefits
+- ✅ **Zero Firebase Dependency**: Complete independence from Firebase Authentication
+- ✅ **Device-Based Recovery**: Seamless account recovery across device reinstalls
+- ✅ **Robust Error Handling**: Users never get permanently stuck in error states
+- ✅ **Clean User Experience**: Focused, single-purpose screens with clear navigation
+- ✅ **Scalable Architecture**: Easy to extend with additional authentication methods
+- ✅ **Production Ready**: Comprehensive testing and error handling for all edge cases
+
 ## [Unreleased] - Phase 2 (In Progress)
 
 ### Completed
 - **Authentication & User Management** ✅ (docs/specification/phase-two/authentication-user-management.md)
-  - Firebase Authentication with OTP (one-time password) authentication [Implemented]
-  - Persistent authentication across app restarts [Implemented]
-  - User profiles stored in Firestore [Implemented]
-  - Account management and settings screen [Implemented]
-  - Added Firebase Authentication and Firestore dependencies
-  - Implemented AuthService with Firebase Authentication
-  - Created UserProfile model for storing user data
-  - Added authentication BLoC for state management
-  - Implemented email link authentication flow
-  - Added profile settings screen for account management
-  - Updated to latest Firebase packages (firebase_core, firebase_auth, cloud_firestore)
-  - Replaced discontinued firebase_dynamic_links with app_links package
-  - Updated app_links to the latest version (^6.4.0)
-  - Updated flutter_launcher_icons to the latest version (^0.14.3)
-  - Added Firebase emulator support for local development and testing
-  - Made authentication optional (not mandatory for app usage)
-  - Moved sign-in functionality to profile section
-  - Created unified ProfilePage for both authenticated and unauthenticated states
-  - Improved UI with more visible profile button in app bar
-  - Enhanced app bar with title and better spacing
-  - Updated profile icon to use accent color for brand consistency
-  - Switched from email link authentication to OTP-based authentication for improved testing
-  - Added OTP verification screen for entering verification codes
-  - Implemented secure OTP generation and verification
-  - Enhanced user experience with clearer authentication flow
-  - Improved error handling with branded error messages
-  - Added logging service integration for OTP codes in development mode
-  - Fixed profile update functionality to show success message
-  - Made display name field optional in profile settings
-  - Standardized age ranges to match API format: "0-2 years", "3-5 years", "6-8 years", "9-12 years", "13+ years"
-  - Updated story generation to properly handle age range format with "years" suffix
+  - **MAJOR UPDATE**: Completely reimplemented with custom API replacing Firebase Authentication [v2.0.0]
+  - Device-based user authentication with automatic account recovery [Implemented]
+  - OTP-based email verification system [Implemented]
+  - Session management with proper sign-out functionality [Implemented]
+  - Single-purpose screen architecture for authentication flows [Implemented]
+  - Persistent OTP verification state recovery [Implemented]
+  - Comprehensive error handling and retry mechanisms [Implemented]
+  - Enhanced UserProfile entity with session tracking [Implemented]
+  - Intelligent API loop detection for signed-out users [Implemented]
+  - Support for new `is_authenticated` API field [Implemented]
+  - Robust API pattern abstraction for authentication states [Implemented]
+  - Comprehensive test coverage with multiple test files [Implemented]
 
 - **Background Story Generation** ✅
   - Implemented timer-based countdown mechanism during story generation
