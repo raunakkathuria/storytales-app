@@ -6,12 +6,17 @@ import 'package:storytales/features/story_generation/domain/repositories/story_g
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_event.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
 import 'package:storytales/features/profile/domain/repositories/profile_repository.dart';
+import 'package:storytales/features/library/presentation/bloc/library_bloc.dart';
+import 'package:storytales/features/library/presentation/bloc/library_event.dart';
+import 'package:storytales/core/services/logging/logging_service.dart';
+import 'package:storytales/core/di/injection_container.dart' as sl;
 
 /// BLoC for managing story generation.
 class StoryGenerationBloc
     extends Bloc<StoryGenerationEvent, StoryGenerationState> {
   final StoryGenerationRepository _repository;
   final ProfileRepository _profileRepository;
+  final LoggingService _loggingService;
   Timer? _progressTimer;
   Timer? _countdownTimer;
   final Map<String, Timer> _backgroundGenerationTimers = {};
@@ -19,8 +24,10 @@ class StoryGenerationBloc
   StoryGenerationBloc({
     required StoryGenerationRepository repository,
     required ProfileRepository profileRepository,
+    required LoggingService loggingService,
   })  : _repository = repository,
         _profileRepository = profileRepository,
+        _loggingService = loggingService,
         super(const StoryGenerationInitial()) {
     on<CheckCanGenerateStory>(_onCheckCanGenerateStory);
     on<GenerateStory>(_onGenerateStory);
@@ -120,7 +127,7 @@ class StoryGenerationBloc
     _cancelProgressTimer();
 
     double progress = 0.0;
-    const totalDuration = Duration(seconds: 10);
+    const totalDuration = Duration(seconds: 120);
     const interval = Duration(milliseconds: 100);
     final steps = totalDuration.inMilliseconds ~/ interval.inMilliseconds;
     final increment = 1.0 / steps;
@@ -285,6 +292,17 @@ class StoryGenerationBloc
         // Then emit the completion state with the story
         // This will trigger the library refresh, and the story will be available
         emit(BackgroundGenerationComplete(story: story));
+
+        // Trigger library refresh directly (same pattern as StoryWorkshopBloc)
+        Timer.run(() {
+          try {
+            final libraryBloc = sl.sl<LibraryBloc>();
+            libraryBloc.add(const LoadAllStories());
+            _loggingService.info('Library refresh triggered after background story generation completion');
+          } catch (e) {
+            _loggingService.warning('Failed to trigger library refresh after story generation: $e');
+          }
+        });
       }
     } catch (e) {
       // Handle failure case

@@ -339,7 +339,7 @@ class StoryWorkshopBloc extends Bloc<StoryWorkshopEvent, StoryWorkshopState> {
     _cancelProgressTimer(jobId);
 
     double progress = 0.0;
-    const totalDuration = Duration(seconds: 90); // 90 seconds to match API completion time
+    const totalDuration = Duration(seconds: 120); // 120 seconds to match API completion time
     const interval = Duration(milliseconds: 100);
     final steps = totalDuration.inMilliseconds ~/ interval.inMilliseconds;
     final increment = 1.0 / steps;

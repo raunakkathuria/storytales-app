@@ -1103,6 +1103,14 @@ class UserApiClient {
         } else if (statusResponse['status'] == 'failed') {
           final errorMsg = statusResponse['error'] ?? 'Unknown error occurred during story generation';
           _loggingService.error('Job failed: $errorMsg');
+          
+          // Check if the job failed due to permanent API issues
+          if (_isPermanentJobFailure(statusResponse)) {
+            _loggingService.error('Job failed with permanent error, stopping polling: $errorMsg');
+            throw Exception('🧙‍♂️ Our Story Wizard encountered a configuration issue. Please check your API setup and try again later.');
+          }
+          
+          // Handle as temporary job failure (existing behavior)
           throw Exception('🧙‍♂️ Our Story Wizard encountered a magical mishap: $errorMsg');
         } else if (statusResponse['status'] == 'processing' || statusResponse['status'] == 'started') {
           _loggingService.info('Job still processing: ${statusResponse['progress'] ?? "Working on your story..."}');
@@ -1111,6 +1119,12 @@ class UserApiClient {
           }
         }
       } catch (e) {
+        // Check if it's a permanent failure that we shouldn't retry
+        if (_isPermanentApiError(e)) {
+          _loggingService.error('Permanent API error detected, stopping polling: $e');
+          throw Exception('🧙‍♂️ Our Story Wizard encountered a configuration issue. Please check your internet connection and try again later.');
+        }
+        
         if (attempt == maxAttempts - 1) {
           _loggingService.error('Final polling attempt failed: $e');
           rethrow;
@@ -1121,6 +1135,42 @@ class UserApiClient {
     }
 
     throw Exception('🧙‍♂️ Our Story Wizard is taking longer than expected to craft your magical tale. Please try again!');
+  }
+
+  /// Check if an error is a permanent API failure that shouldn't be retried
+  bool _isPermanentApiError(dynamic error) {
+    if (error is DioException) {
+      final statusCode = error.response?.statusCode;
+      // Permanent failures: Permission denied, Unauthorized, Bad Request
+      return statusCode == 403 || statusCode == 401 || statusCode == 400;
+    }
+    return false;
+  }
+
+  /// Check if a job failed due to permanent API issues that shouldn't be retried
+  bool _isPermanentJobFailure(Map<String, dynamic> statusResponse) {
+    try {
+      final error = statusResponse['error'];
+      if (error is Map<String, dynamic>) {
+        final errorCode = error['code'];
+        // Check for permanent error codes in job failure details
+        if (errorCode is int) {
+          return errorCode == 403 || errorCode == 401 || errorCode == 400;
+        }
+        
+        // Also check status string for permission-related errors
+        final status = error['status'];
+        if (status is String) {
+          return status.contains('PERMISSION_DENIED') || 
+                 status.contains('UNAUTHENTICATED') ||
+                 status.contains('INVALID_ARGUMENT');
+        }
+      }
+    } catch (e) {
+      // If we can't parse the error details, assume it's not permanent
+      _loggingService.warning('Could not parse job error details: $e');
+    }
+    return false;
   }
 
   /// Check the status of a background job

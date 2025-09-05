@@ -3,25 +3,29 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:storytales/features/story_generation/domain/repositories/story_generation_repository.dart';
 import 'package:storytales/features/profile/domain/repositories/profile_repository.dart';
+import 'package:storytales/core/services/logging/logging_service.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_bloc.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_event.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
 
 import 'story_generation_timing_test.mocks.dart';
 
-@GenerateMocks([StoryGenerationRepository, ProfileRepository])
+@GenerateMocks([StoryGenerationRepository, ProfileRepository, LoggingService])
 void main() {
   group('Story Generation Timing Optimization', () {
     late StoryGenerationBloc bloc;
     late MockStoryGenerationRepository mockRepository;
     late MockProfileRepository mockProfileRepository;
+    late MockLoggingService mockLoggingService;
 
     setUp(() {
       mockRepository = MockStoryGenerationRepository();
       mockProfileRepository = MockProfileRepository();
+      mockLoggingService = MockLoggingService();
       bloc = StoryGenerationBloc(
         repository: mockRepository,
         profileRepository: mockProfileRepository,
+        loggingService: mockLoggingService,
       );
     });
 

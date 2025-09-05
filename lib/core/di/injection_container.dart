@@ -255,6 +255,7 @@ Future<void> init() async {
     () => StoryGenerationBloc(
       repository: sl<StoryGenerationRepository>(),
       profileRepository: sl<ProfileRepository>(),
+      loggingService: sl<LoggingService>(),
     ),
   );
 
