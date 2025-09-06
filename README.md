@@ -6,7 +6,10 @@ StoryTales is an AI-powered storytelling app for children aged 3-12 that generat
 
 - **Phase 1**: ✅ Completed (April 2025) - Version 1.0.0
 - **Phase 1 Patch**: ✅ Released (April 23, 2025) - Version 1.0.1
-- **Phase 2**: 🚧 In Progress - Core features enhanced, authentication system removed for future Supabase implementation
+- **Phase 2**: ✅ Major Features Complete (September 2025) - Version 2.0.1
+  - Authentication system fully implemented with custom API
+  - Story generation optimized with 50% API call reduction
+  - Enhanced library features with auto-refresh functionality
 
 For detailed implementation status, see the [CHANGELOG](docs/CHANGELOG.md).
 
@@ -34,22 +37,25 @@ Phase 1 delivered a functional MVP with core features:
 ## Current Development (Phase 2)
 
 Phase 2 is enhancing the app with:
-- **Authentication & User Management** ❌ (Removed)
-  - Firebase Authentication system completely removed
-  - Preparing for future Supabase JWT authentication implementation
-  - Clean foundation without conflicting authentication systems
-- **Background Story Generation** ✅ (Implemented)
+- **Authentication & User Management** ✅ (Implemented) - v2.0.0
+  - Custom API authentication system with device-based account recovery
+  - OTP-based email verification replacing Firebase Authentication
+  - Single-purpose screen architecture with comprehensive session management
+  - Persistent verification state recovery and error handling
+- **Background Story Generation** ✅ (Enhanced) - v2.0.1
   - Timer-based countdown mechanism during story generation
-  - Library auto-refresh when background generation completes
+  - Intelligent API polling optimization (50% reduction in calls)
+  - Automatic library refresh when generation completes
+  - Progress timing aligned with actual generation time (120s)
+  - Permanent error detection for immediate failure feedback
   - Enhanced BLoC state management for background processes
-  - **Enhanced Loading Experience**: Implemented an animated wizard and simplified status messages for a more engaging loading experience.
 - **Production Configuration** ✅ (Implemented)
   - Firebase production setup with emulator fallback (Analytics & Crashlytics only)
   - Enhanced API client with comprehensive logging
   - Environment-specific configuration management
-- **Cross-Device Synchronization** 📅 (Postponed)
-  - Awaiting future authentication system implementation
-  - Will be implemented with Supabase JWT authentication
+- **Cross-Device Synchronization** 📅 (Planned)
+  - Foundation established with custom authentication system
+  - Cloud sync capabilities planned for future implementation
 - **Enhanced Library Features** 📅 (Planned)
   - Advanced search and filtering
   - Tags system for categorization
@@ -132,12 +138,12 @@ Phase 2 is enhancing the app with:
 - **Firebase Crashlytics** for crash reporting
 - **In-App Purchase** for subscription handling
 
-### Removed Components
+### Current Technical Stack
 
-- **Firebase Authentication**: Removed to prepare for future Supabase JWT implementation
-- **Firebase Firestore**: Removed along with authentication system
-- **User Profiles**: Temporarily disabled pending new authentication system
-- **Cross-Device Sync**: Postponed until authentication system is reimplemented
+- **Authentication**: Custom API with device-based account recovery and OTP verification
+- **User Profiles**: Fully implemented with local caching and API synchronization  
+- **Session Management**: Server-side session handling with proper sign-out functionality
+- **Story Generation**: Optimized polling system with intelligent error handling
 
 ## Getting Started
 
@@ -167,6 +173,7 @@ Phase 2 will be considered complete when:
 - Pre-generated stories API is integrated ✅
 - In-app feedback mechanisms are in place
 - User satisfaction metrics show improvement over Phase 1
-- Foundation is prepared for future Supabase authentication implementation
+- Authentication system is fully operational ✅
+- Story generation system is optimized ✅
 
-**Note**: Authentication & user management and cross-device synchronization have been postponed to allow for a clean Supabase JWT implementation in the future.
+**Current Status**: Core Phase 2 features are complete with authentication system implemented and story generation optimized.

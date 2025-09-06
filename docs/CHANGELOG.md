@@ -258,6 +258,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ **Scalable Architecture**: Easy to extend with additional authentication methods
 - ✅ **Production Ready**: Comprehensive testing and error handling for all edge cases
 
+## [2.0.1] - 2025-09-06
+
+### Added
+- **Story Generation Optimization System** ✅
+  - Implemented intelligent API polling optimization reducing calls by 50% (24→12 calls per generation)
+  - Added permanent error detection for immediate failure recognition (403 PERMISSION_DENIED, 401, 400)
+  - Enhanced job failure parsing for nested error structures in API responses
+  - Implemented automatic library refresh trigger after story completion
+  - Added comprehensive LoggingService integration for debugging and monitoring
+  - Updated progress timing alignment from 10 seconds to 120 seconds for realistic UX
+
+### Changed
+- **API Polling Efficiency**: Reduced polling interval from 5 seconds to 10 seconds across all generation flows
+- **Progress Bar Timing**: Synchronized progress duration with actual API completion time (~118 seconds)
+- **Error Handling Intelligence**: Differentiate between temporary failures (continue polling) and permanent failures (stop immediately)
+- **Library UX**: Stories now appear immediately on home page without manual refresh requirement
+
+### Fixed
+- **Misleading Progress Indicators**: Progress bars no longer reach 99% completion in 10 seconds during 2-minute generation
+- **Permanent Error Timeout**: 403/401 errors now stop polling immediately instead of waiting 10 minutes
+- **Missing Story Visibility**: Generated stories now automatically appear in library upon completion
+- **Excessive API Calls**: Eliminated reported 100+ API calls during typical story generation
+
+### Technical Improvements
+- **Polling System**: Enhanced UserApiClient with `_isPermanentApiError()` and `_isPermanentJobFailure()` methods
+- **BLoC Architecture**: Added direct library refresh using proven dependency injection pattern from StoryWorkshopBloc
+- **Error Classification**: Robust error parsing with graceful fallback for malformed API responses
+- **State Management**: Timer-based scheduling to prevent BLoC timing conflicts during library refresh
+
+### Benefits
+- ✅ **50% reduction** in API calls during story generation improving server efficiency
+- ✅ **Realistic progress feedback** matching actual generation timeframes (120s vs 10s)
+- ✅ **Immediate error feedback** for API configuration issues with actionable messages
+- ✅ **Seamless story visibility** eliminating manual refresh requirements
+- ✅ **Enhanced system reliability** with intelligent error classification and handling
+
 ## [Unreleased] - Phase 2 (In Progress)
 
 ### Completed
