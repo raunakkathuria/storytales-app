@@ -3,24 +3,28 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:storytales/core/services/local_storage/database_service.dart';
+import 'package:storytales/core/services/api/user_api_client.dart';
 import 'package:storytales/features/library/data/repositories/story_repository_impl.dart';
 import 'package:storytales/features/story_generation/data/datasources/story_api_client.dart';
 
 import 'pregenerated_stories_api_test.mocks.dart';
 
-@GenerateMocks([DatabaseService, StoryApiClient, Transaction])
+@GenerateMocks([DatabaseService, StoryApiClient, UserApiClient, Transaction])
 void main() {
   group('Pre-Generated Stories API Integration', () {
     late StoryRepositoryImpl repository;
     late MockDatabaseService mockDatabaseService;
     late MockStoryApiClient mockStoryApiClient;
+    late MockUserApiClient mockUserApiClient;
 
     setUp(() {
       mockDatabaseService = MockDatabaseService();
       mockStoryApiClient = MockStoryApiClient();
+      mockUserApiClient = MockUserApiClient();
       repository = StoryRepositoryImpl(
         databaseService: mockDatabaseService,
         storyApiClient: mockStoryApiClient,
+        userApiClient: mockUserApiClient,
       );
     });
 

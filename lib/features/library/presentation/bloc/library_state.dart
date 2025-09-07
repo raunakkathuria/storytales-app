@@ -24,23 +24,35 @@ class LibraryLoading extends LibraryState {
 class LibraryLoaded extends LibraryState {
   final List<Story> stories;
   final LibraryTab activeTab;
+  final int currentUserStoriesPage;
+  final bool hasMoreUserStories;
+  final bool isLoadingMore;
 
   const LibraryLoaded({
     required this.stories,
     this.activeTab = LibraryTab.all,
+    this.currentUserStoriesPage = 1,
+    this.hasMoreUserStories = true,
+    this.isLoadingMore = false,
   });
 
   @override
-  List<Object?> get props => [stories, activeTab];
+  List<Object?> get props => [stories, activeTab, currentUserStoriesPage, hasMoreUserStories, isLoadingMore];
 
   /// Create a copy of this LibraryLoaded with the given fields replaced with the new values.
   LibraryLoaded copyWith({
     List<Story>? stories,
     LibraryTab? activeTab,
+    int? currentUserStoriesPage,
+    bool? hasMoreUserStories,
+    bool? isLoadingMore,
   }) {
     return LibraryLoaded(
       stories: stories ?? this.stories,
       activeTab: activeTab ?? this.activeTab,
+      currentUserStoriesPage: currentUserStoriesPage ?? this.currentUserStoriesPage,
+      hasMoreUserStories: hasMoreUserStories ?? this.hasMoreUserStories,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     );
   }
 }

@@ -215,6 +215,7 @@ Future<void> init() async {
     () => StoryRepositoryImpl(
       databaseService: sl(),
       storyApiClient: sl(),
+      userApiClient: sl(),
     ),
   );
 
@@ -248,6 +249,7 @@ Future<void> init() async {
     () => LibraryBloc(
       repository: sl<StoryRepository>(),
       analyticsService: sl<AnalyticsService>(),
+      authService: sl<AuthenticationService>(),
     ),
   );
 

@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storytales/core/services/analytics/analytics_service.dart';
+import 'package:storytales/core/services/auth/authentication_service.dart';
+import 'package:storytales/features/library/domain/entities/story.dart';
 import 'package:storytales/features/library/domain/repositories/story_repository.dart';
 import 'package:storytales/features/library/presentation/bloc/library_event.dart';
 import 'package:storytales/features/library/presentation/bloc/library_state.dart';
@@ -8,12 +10,15 @@ import 'package:storytales/features/library/presentation/bloc/library_state.dart
 class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
   final StoryRepository _repository;
   final AnalyticsService _analyticsService;
+  final AuthenticationService _authService;
 
   LibraryBloc({
     required StoryRepository repository,
     required AnalyticsService analyticsService,
+    required AuthenticationService authService,
   })  : _repository = repository,
         _analyticsService = analyticsService,
+        _authService = authService,
         super(const LibraryInitial()) {
     on<LoadAllStories>(_onLoadAllStories);
     on<LoadFavoriteStories>(_onLoadFavoriteStories);
@@ -22,6 +27,7 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     on<LoadApiPreGeneratedStories>(_onLoadApiPreGeneratedStories);
     on<FetchApiStory>(_onFetchApiStory);
     on<RetryLoadStories>(_onRetryLoadStories);
+    on<LoadMoreUserStories>(_onLoadMoreUserStories);
   }
 
   /// Handle the LoadAllStories event.
@@ -32,64 +38,95 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     emit(const LibraryLoading());
 
     try {
-      // First, get any existing stories from the database
-      final existingStories = await _repository.getAllStories();
-
-      // Try to load pre-generated stories from the API in the background
-      try {
-        await _repository.loadApiPreGeneratedStories();
-      } catch (apiError) {
-        // If we have existing stories, show them and log the API error
-        if (existingStories.isNotEmpty) {
-          await _analyticsService.logError(
-            errorType: 'api_pregenerated_stories_background_load_error',
-            errorMessage: apiError.toString(),
-            errorDetails: 'Failed to load API stories in background during LoadAllStories',
+      // Get current user ID from authentication service
+      final userProfileData = await _authService.getCurrentUserProfile();
+      
+      late List<Story> stories;
+      
+      if (userProfileData != null) {
+        final userId = userProfileData['user_id'] as int;
+        // User is authenticated - get mixed stories (user + pre-generated)
+        try {
+          stories = await _repository.getMixedStories(
+            userId: userId,
+            userStoriesPage: 1,
+            userStoriesLimit: 10,
           );
+        } catch (e) {
+          // If mixed stories fail, fall back to pre-generated only
+          await _analyticsService.logError(
+            errorType: 'mixed_stories_load_error',
+            errorMessage: e.toString(),
+            errorDetails: 'Failed to load mixed stories, falling back to pre-generated only',
+          );
+          
+          // Load pre-generated stories only
+          await _repository.loadApiPreGeneratedStories();
+          final allStories = await _repository.getAllStories();
+          stories = allStories.where((story) => story.isPregenerated).toList();
+        }
+      } else {
+        // User not authenticated - show only pre-generated stories
+        try {
+          await _repository.loadApiPreGeneratedStories();
+          final allStories = await _repository.getAllStories();
+          stories = allStories.where((story) => story.isPregenerated).toList();
+        } catch (apiError) {
+          // If no existing stories and API failed, check if it's a network error
+          if (_isNetworkError(apiError)) {
+            emit(const LibraryEmpty(
+              activeTab: LibraryTab.all,
+              message: 'Please connect to the internet to load stories',
+              showRetryButton: true,
+            ));
+          } else {
+            emit(const LibraryEmpty(
+              activeTab: LibraryTab.all,
+              message: 'Unable to load stories. Please check your connection and try again.',
+              showRetryButton: true,
+            ));
+          }
 
-          emit(LibraryLoaded(
-            stories: existingStories,
-            activeTab: LibraryTab.all,
-          ));
+          await _analyticsService.logError(
+            errorType: 'api_pregenerated_stories_load_error',
+            errorMessage: apiError.toString(),
+            errorDetails: 'Failed to load API stories during initial LoadAllStories',
+          );
           return;
         }
-
-        // If no existing stories and API failed, check if it's a network error
-        if (_isNetworkError(apiError)) {
-          emit(const LibraryEmpty(
-            activeTab: LibraryTab.all,
-            message: 'Please connect to the internet to load stories',
-            showRetryButton: true,
-          ));
-        } else {
-          emit(const LibraryEmpty(
-            activeTab: LibraryTab.all,
-            message: 'Unable to load stories. Please check your connection and try again.',
-            showRetryButton: true,
-          ));
-        }
-
-        await _analyticsService.logError(
-          errorType: 'api_pregenerated_stories_load_error',
-          errorMessage: apiError.toString(),
-          errorDetails: 'Failed to load API stories during initial LoadAllStories',
-        );
-        return;
       }
 
-      // Get all stories (including any newly loaded API stories)
-      final stories = await _repository.getAllStories();
-
       if (stories.isEmpty) {
-        emit(const LibraryEmpty(
+        emit(LibraryEmpty(
           activeTab: LibraryTab.all,
-          message: 'Please connect to the internet to load stories',
+          message: userProfileData != null 
+            ? 'Create your first story or connect to the internet to load featured stories'
+            : 'Please connect to the internet to load stories',
           showRetryButton: true,
         ));
       } else {
+        // Check if user has more stories by looking at the response
+        bool hasMoreUserStories = true;
+        if (userProfileData != null) {
+          final userId = userProfileData['user_id'] as int;
+          try {
+            final userStoriesResponse = await _repository.getUserStories(
+              userId: userId,
+              page: 1,
+              limit: 10,
+            );
+            hasMoreUserStories = userStoriesResponse.pagination.hasNext;
+          } catch (e) {
+            hasMoreUserStories = false;
+          }
+        }
+        
         emit(LibraryLoaded(
           stories: stories,
           activeTab: LibraryTab.all,
+          currentUserStoriesPage: 1,
+          hasMoreUserStories: hasMoreUserStories,
+          isLoadingMore: false,
         ));
       }
     } catch (e) {
@@ -290,6 +327,92 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
   ) async {
     // Simply trigger LoadAllStories again
     add(const LoadAllStories());
+  }
+
+  /// Handle the LoadMoreUserStories event for pagination.
+  Future<void> _onLoadMoreUserStories(
+    LoadMoreUserStories event,
+    Emitter<LibraryState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! LibraryLoaded) return;
+    
+    // Check if already loading or no more stories
+    if (currentState.isLoadingMore || !currentState.hasMoreUserStories) return;
+
+    // Get current user ID
+    final userProfileData = await _authService.getCurrentUserProfile();
+    if (userProfileData == null) return;
+    
+    final userId = userProfileData['user_id'] as int;
+
+    // Set loading state
+    emit(currentState.copyWith(isLoadingMore: true));
+
+    try {
+      final nextPage = currentState.currentUserStoriesPage + 1;
+      
+      // Get next page of user stories
+      final userStoriesResponse = await _repository.getUserStories(
+        userId: userId,
+        page: nextPage,
+        limit: 10,
+      );
+
+      // Convert to Story entities
+      final newUserStories = userStoriesResponse.stories.map((userStoryItem) {
+        return Story(
+          id: userStoryItem.id,
+          title: userStoryItem.title,
+          summary: userStoryItem.summary,
+          pages: [
+            StoryPage(
+              id: '${userStoryItem.id}_page_1',
+              storyId: userStoryItem.id,
+              pageNumber: 1,
+              content: userStoryItem.summary,
+              imagePath: userStoryItem.coverImagePath,
+            ),
+          ],
+          questions: [],
+          coverImagePath: userStoryItem.coverImagePath,
+          readingTime: userStoryItem.readingTime,
+          createdAt: userStoryItem.createdAt,
+          author: userStoryItem.author,
+          ageRange: userStoryItem.ageRange,
+          originalPrompt: userStoryItem.originalPrompt,
+          genre: userStoryItem.genre,
+          theme: userStoryItem.theme,
+          tags: userStoryItem.tags,
+          isPregenerated: false,
+          isFavorite: false,
+        );
+      }).toList();
+
+      // Separate current user stories from pre-generated stories
+      final currentUserStories = currentState.stories.where((story) => !story.isPregenerated).toList();
+      final preGeneratedStories = currentState.stories.where((story) => story.isPregenerated).toList();
+
+      // Combine all user stories (existing + new) and pre-generated stories
+      final allStories = [...currentUserStories, ...newUserStories, ...preGeneratedStories];
+
+      emit(currentState.copyWith(
+        stories: allStories,
+        currentUserStoriesPage: nextPage,
+        hasMoreUserStories: userStoriesResponse.pagination.hasNext,
+        isLoadingMore: false,
+      ));
+
+    } catch (e) {
+      // Error loading more stories
+      emit(currentState.copyWith(isLoadingMore: false));
+      
+      await _analyticsService.logError(
+        errorType: 'load_more_user_stories_error',
+        errorMessage: e.toString(),
+        errorDetails: 'Failed to load more user stories on page ${currentState.currentUserStoriesPage + 1}',
+      );
+    }
   }
 
   /// Check if an error is a network-related error.

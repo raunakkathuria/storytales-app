@@ -6,18 +6,23 @@ import 'package:storytales/features/library/data/models/story_model.dart';
 import 'package:storytales/features/library/domain/entities/story.dart';
 import 'package:storytales/features/library/domain/repositories/story_repository.dart';
 import 'package:storytales/features/story_generation/data/datasources/story_api_client.dart';
+import 'package:storytales/core/services/api/user_api_client.dart';
+import 'package:storytales/core/models/user_stories_response.dart';
 
 /// Implementation of the [StoryRepository] interface.
 class StoryRepositoryImpl implements StoryRepository {
   final DatabaseService _databaseService;
   final StoryApiClient _storyApiClient;
+  final UserApiClient _userApiClient;
   final Uuid _uuid = const Uuid();
 
   StoryRepositoryImpl({
     required DatabaseService databaseService,
     required StoryApiClient storyApiClient,
+    required UserApiClient userApiClient,
   }) : _databaseService = databaseService,
-       _storyApiClient = storyApiClient;
+       _storyApiClient = storyApiClient,
+       _userApiClient = userApiClient;
 
   @override
   Future<List<Story>> getAllStories() async {
@@ -320,6 +325,78 @@ class StoryRepositoryImpl implements StoryRepository {
     await saveStory(storyModel);
 
     return storyModel;
+  }
+
+  @override
+  Future<UserStoriesResponse> getUserStories({
+    required int userId,
+    int page = 1,
+    int limit = 10,
+  }) async {
+    // Directly call the UserApiClient to get user stories
+    return await _userApiClient.getUserStories(
+      userId: userId,
+      page: page,
+      limit: limit,
+    );
+  }
+
+  @override
+  Future<List<Story>> getMixedStories({
+    required int userId,
+    int userStoriesPage = 1,
+    int userStoriesLimit = 10,
+  }) async {
+    try {
+      // Get user stories from API
+      final userStoriesResponse = await _userApiClient.getUserStories(
+        userId: userId,
+        page: userStoriesPage,
+        limit: userStoriesLimit,
+      );
+      
+      // Convert UserStoryItem to Story entities
+      final userStories = userStoriesResponse.stories.map((userStoryItem) {
+        return Story(
+          id: userStoryItem.id,
+          title: userStoryItem.title,
+          summary: userStoryItem.summary,
+          pages: [
+            // User stories from API typically have summary content only
+            StoryPage(
+              id: '${userStoryItem.id}_page_1',
+              storyId: userStoryItem.id,
+              pageNumber: 1,
+              content: userStoryItem.summary,
+              imagePath: userStoryItem.coverImagePath,
+            ),
+          ],
+          questions: [], // User stories don't have questions in the API response
+          coverImagePath: userStoryItem.coverImagePath,
+          readingTime: userStoryItem.readingTime,
+          createdAt: userStoryItem.createdAt,
+          author: userStoryItem.author,
+          ageRange: userStoryItem.ageRange,
+          originalPrompt: userStoryItem.originalPrompt,
+          genre: userStoryItem.genre,
+          theme: userStoryItem.theme,
+          tags: userStoryItem.tags,
+          isPregenerated: false, // User stories are not pre-generated
+          isFavorite: false, // Default to false, will be updated from database if needed
+        );
+      }).toList();
+
+      // Get all pre-generated stories from local database
+      final allLocalStories = await getAllStories();
+      final preGeneratedStories = allLocalStories.where((story) => story.isPregenerated).toList();
+
+      // Combine user stories first, then pre-generated stories
+      return [...userStories, ...preGeneratedStories];
+    } catch (e) {
+      // If user stories API fails, just return pre-generated stories
+      final allLocalStories = await getAllStories();
+      return allLocalStories.where((story) => story.isPregenerated).toList();
+    }
   }
 
 }

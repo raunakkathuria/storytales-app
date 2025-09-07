@@ -1,4 +1,5 @@
 import 'package:storytales/features/library/domain/entities/story.dart';
+import 'package:storytales/core/models/user_stories_response.dart';
 
 /// Repository interface for managing stories.
 abstract class StoryRepository {
@@ -28,4 +29,18 @@ abstract class StoryRepository {
 
   /// Save an AI-generated story to the local database.
   Future<Story> saveAiGeneratedStory(Map<String, dynamic> aiResponse);
+
+  /// Get user-generated stories with pagination.
+  Future<UserStoriesResponse> getUserStories({
+    required int userId,
+    int page = 1,
+    int limit = 10,
+  });
+
+  /// Get mixed stories (user + pre-generated) for homepage display.
+  Future<List<Story>> getMixedStories({
+    required int userId,
+    int userStoriesPage = 1,
+    int userStoriesLimit = 10,
+  });
 }

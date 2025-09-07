@@ -62,6 +62,11 @@ class RetryLoadStories extends LibraryEvent {
   List<Object?> get props => [];
 }
 
+/// Event to load more user stories (pagination).
+class LoadMoreUserStories extends LibraryEvent {
+  const LoadMoreUserStories();
+}
+
 /// Enum for library tabs.
 enum LibraryTab {
   all,
