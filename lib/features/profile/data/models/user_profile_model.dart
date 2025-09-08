@@ -11,9 +11,8 @@ class UserProfileModel extends UserProfile {
     required super.isAnonymous,
     required super.subscriptionTier,
     required super.storiesRemaining,
-    super.monthlyStoryCount = 0,
-    super.maxMonthlyStories = 0,
-    required super.deviceId,
+    super.totalStoryCount = 0,
+    super.maxTotalStories = 0,
     super.sessionId,
     super.sessionCreatedAt,
     super.isAuthenticated,
@@ -22,35 +21,28 @@ class UserProfileModel extends UserProfile {
   /// Creates a user profile model from JSON.
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
     return UserProfileModel(
-      userId: _parseIntRequired(json['id']),
+      userId: _parseStringRequired(json['user_id']),
       displayName: _parseStringSafely(json['display_name']),
       email: _parseStringSafely(json['email']),
       emailVerified: _parseBoolSafely(json['email_verified']) ?? false,
       isAnonymous: _parseBoolSafely(json['is_anonymous']) ?? true,
       subscriptionTier: _parseStringSafely(json['subscription_tier']) ?? 'free',
-      storiesRemaining: _parseIntSafely(json['max_monthly_stories']) ?? 0,
-      monthlyStoryCount: _parseIntSafely(json['monthly_story_count']) ?? 0,
-      maxMonthlyStories: _parseIntSafely(json['max_monthly_stories']) ?? 0,
-      deviceId: _parseStringSafely(json['device_id']) ?? '',
+      storiesRemaining: _parseIntSafely(json['stories_remaining']) ?? 0,
+      totalStoryCount: _parseIntSafely(json['total_story_count']) ?? 0,
+      maxTotalStories: _parseIntSafely(json['max_total_stories']) ?? 0,
       sessionId: _parseStringSafely(json['session_id']),
       sessionCreatedAt: _parseDateTimeSafely(json['session_created_at']),
       isAuthenticated: _parseBoolSafely(json['is_authenticated']),
     );
   }
 
-  /// Safely parses a required integer from various input types.
-  static int _parseIntRequired(dynamic value) {
+  /// Safely parses a required string from various input types.
+  static String _parseStringRequired(dynamic value) {
     if (value == null) {
       throw Exception('🌟 Oh no! Our Story Wizard had trouble finding your profile. Let\'s try to set things up again!');
     }
-    if (value is int) {
+    if (value is String && value.isNotEmpty) {
       return value;
-    }
-    if (value is String) {
-      final parsed = int.tryParse(value);
-      if (parsed != null) {
-        return parsed;
-      }
     }
     throw Exception('🧙‍♂️ It looks like some of your account magic got mixed up. Don\'t worry, we can fix this!');
   }
@@ -117,9 +109,8 @@ class UserProfileModel extends UserProfile {
       'is_anonymous': isAnonymous,
       'subscription_tier': subscriptionTier,
       'stories_remaining': storiesRemaining,
-      'monthly_story_count': monthlyStoryCount,
-      'max_monthly_stories': maxMonthlyStories,
-      'device_id': deviceId,
+      'total_story_count': totalStoryCount,
+      'max_total_stories': maxTotalStories,
       'session_id': sessionId,
       'session_created_at': sessionCreatedAt?.toIso8601String(),
       'is_authenticated': isAuthenticated,
@@ -136,9 +127,8 @@ class UserProfileModel extends UserProfile {
       isAnonymous: isAnonymous,
       subscriptionTier: subscriptionTier,
       storiesRemaining: storiesRemaining,
-      monthlyStoryCount: monthlyStoryCount,
-      maxMonthlyStories: maxMonthlyStories,
-      deviceId: deviceId,
+      totalStoryCount: totalStoryCount,
+      maxTotalStories: maxTotalStories,
       sessionId: sessionId,
       sessionCreatedAt: sessionCreatedAt,
       isAuthenticated: isAuthenticated,
@@ -155,9 +145,8 @@ class UserProfileModel extends UserProfile {
       isAnonymous: profile.isAnonymous,
       subscriptionTier: profile.subscriptionTier,
       storiesRemaining: profile.storiesRemaining,
-      monthlyStoryCount: profile.monthlyStoryCount,
-      maxMonthlyStories: profile.maxMonthlyStories,
-      deviceId: profile.deviceId,
+      totalStoryCount: profile.totalStoryCount,
+      maxTotalStories: profile.maxTotalStories,
       sessionId: profile.sessionId,
       sessionCreatedAt: profile.sessionCreatedAt,
       isAuthenticated: profile.isAuthenticated,

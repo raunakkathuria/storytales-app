@@ -30,9 +30,9 @@ class UserApiClient {
     return await _deviceService.getDeviceId();
   }
 
-  /// Creates a new anonymous user with device tracking.
+  /// Creates a new anonymous user.
   ///
-  /// Returns the user profile with user_id, subscription_tier, and stories_remaining.
+  /// Returns the user profile with user_id (UUID), subscription_tier, and stories_remaining.
   Future<Map<String, dynamic>> createUser({
     required String deviceId,
   }) async {
@@ -47,9 +47,7 @@ class UserApiClient {
     try {
       final response = await _dio.post(
         '/users',
-        data: {
-          'device_id': deviceId,
-        },
+        data: {},
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -106,9 +104,9 @@ class UserApiClient {
     }
   }
 
-  /// Gets user profile with automatic monthly reset check.
+  /// Gets user profile.
   Future<Map<String, dynamic>> getUserProfile({
-    required int userId,
+    required String userId,
   }) async {
     // Check connectivity
     final isConnected = await _connectivityService.isConnected();
@@ -178,7 +176,7 @@ class UserApiClient {
 
   /// Updates user profile information (display name only).
   Future<Map<String, dynamic>> updateUserProfile({
-    required int userId,
+    required String userId,
     required String displayName,
   }) async {
     // Check connectivity
@@ -253,7 +251,7 @@ class UserApiClient {
 
   /// Starts subscription process by sending OTP to email.
   Future<Map<String, dynamic>> startSubscription({
-    required int userId,
+    required String userId,
     required String email,
     required String displayName,
     required String plan,
@@ -332,7 +330,7 @@ class UserApiClient {
 
   /// Verifies OTP and activates subscription.
   Future<Map<String, dynamic>> verifySubscription({
-    required int userId,
+    required String userId,
     required String otpCode,
   }) async {
     // Check connectivity
@@ -483,7 +481,7 @@ class UserApiClient {
   ///
   /// Returns UserStoriesResponse with stories, pagination info, subscription tier, and stories remaining.
   Future<UserStoriesResponse> getUserStories({
-    required int userId,
+    required String userId,
     int page = 1,
     int limit = 20,
   }) async {
@@ -563,7 +561,7 @@ class UserApiClient {
   ///
   /// Sends an OTP to the user's email for verification.
   Future<Map<String, dynamic>> registerUser({
-    required int userId,
+    required String userId,
     required String email,
     required String displayName,
   }) async {
@@ -644,7 +642,7 @@ class UserApiClient {
   ///
   /// Completes the registration process by verifying the OTP.
   Future<Map<String, dynamic>> verifyRegistration({
-    required int userId,
+    required String userId,
     required String otpCode,
   }) async {
     // Check connectivity
@@ -897,7 +895,7 @@ class UserApiClient {
   ///
   /// This prevents automatic login on app reinstall or device recovery.
   Future<Map<String, dynamic>> signOut({
-    required int userId,
+    required String userId,
   }) async {
     // Check connectivity
     final isConnected = await _connectivityService.isConnected();
@@ -967,10 +965,10 @@ class UserApiClient {
 
   /// Generate a user story using the background job API.
   ///
-  /// This endpoint properly tracks the story generation against the user's monthly limit
+  /// This endpoint properly tracks the story generation against the user's lifetime limit
   /// and associates the story with the user's account.
   Future<Map<String, dynamic>> generateUserStory({
-    required int userId,
+    required String userId,
     required String prompt,
     String? ageRange,
     String? theme,
@@ -1006,7 +1004,7 @@ class UserApiClient {
 
   /// Start a background user story generation job
   Future<Map<String, dynamic>> _startUserStoryGenerationJob({
-    required int userId,
+    required String userId,
     required String prompt,
     String? ageRange,
     String? theme,
@@ -1065,7 +1063,7 @@ class UserApiClient {
           case DioExceptionType.badResponse:
             final statusCode = e.response?.statusCode;
             if (statusCode == 402) {
-              errorMessage = '📖 You\'ve reached your monthly story limit! Subscribe to create unlimited magical tales and continue your storytelling adventure!';
+              errorMessage = '📖 You\'ve reached your story limit! Subscribe to create unlimited magical tales and continue your storytelling adventure!';
             } else if (statusCode == 404) {
               errorMessage = '👤 Your account seems to have wandered off! Please try refreshing the app and logging in again.';
             } else if (statusCode == 500) {

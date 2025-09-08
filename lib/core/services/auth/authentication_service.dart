@@ -49,7 +49,7 @@ class AuthenticationService {
       final prefs = await SharedPreferences.getInstance();
 
       // Check if we already have a stored user ID
-      final storedUserId = prefs.getInt(_userIdKey);
+      final storedUserId = prefs.getString(_userIdKey);
       if (storedUserId != null) {
         _loggingService.info('Found existing user ID: $storedUserId');
 
@@ -173,7 +173,7 @@ class AuthenticationService {
   Future<Map<String, dynamic>?> getCurrentUserProfile({bool forceRefresh = false}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getInt(_userIdKey);
+      final userId = prefs.getString(_userIdKey);
       final isInitComplete = prefs.getBool(_initializationCompleteKey) ?? false;
 
       if (userId == null) {
@@ -229,7 +229,7 @@ class AuthenticationService {
   /// Updates the user's display name.
   Future<Map<String, dynamic>> updateDisplayName(String displayName) async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt(_userIdKey);
+    final userId = prefs.getString(_userIdKey);
 
     if (userId == null) {
       throw Exception('No user session found. Please restart the app.');
@@ -253,7 +253,7 @@ class AuthenticationService {
     required String plan,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt(_userIdKey);
+    final userId = prefs.getString(_userIdKey);
 
     if (userId == null) {
       throw Exception('No user session found. Please restart the app.');
@@ -272,7 +272,7 @@ class AuthenticationService {
   /// Verifies the subscription OTP and activates the subscription.
   Future<Map<String, dynamic>> verifySubscription(String otpCode) async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt(_userIdKey);
+    final userId = prefs.getString(_userIdKey);
 
     if (userId == null) {
       throw Exception('No user session found. Please restart the app.');
@@ -293,13 +293,13 @@ class AuthenticationService {
   /// Checks if the user is currently authenticated (has a valid session).
   Future<bool> isAuthenticated() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_userIdKey) != null;
+    return prefs.getString(_userIdKey) != null;
   }
 
   /// Gets the current user ID if available.
-  Future<int?> getCurrentUserId() async {
+  Future<String?> getCurrentUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_userIdKey);
+    return prefs.getString(_userIdKey);
   }
 
   /// Signs out the user by clearing all stored authentication data.
@@ -317,7 +317,7 @@ class AuthenticationService {
     int limit = 20,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt(_userIdKey);
+    final userId = prefs.getString(_userIdKey);
 
     if (userId == null) {
       throw Exception('No user session found. Please restart the app.');
@@ -356,11 +356,11 @@ class AuthenticationService {
     _loggingService.debug('DEBUG _storeUserProfile - email_verified field: ${userProfile['email_verified']}');
     _loggingService.debug('DEBUG _storeUserProfile - Extracted userId: $userId (type: ${userId.runtimeType})');
     
-    if (userId is int) {
-      await prefs.setInt(_userIdKey, userId);
-      _loggingService.debug('DEBUG _storeUserProfile - Stored userId as int: $userId');
+    if (userId is String && userId.isNotEmpty) {
+      await prefs.setString(_userIdKey, userId);
+      _loggingService.debug('DEBUG _storeUserProfile - Stored userId as string: $userId');
     } else {
-      _loggingService.error('DEBUG _storeUserProfile - ERROR: userId is not int, cannot store! Raw data: $userProfile');
+      _loggingService.error('DEBUG _storeUserProfile - ERROR: userId is not string, cannot store! Raw data: $userProfile');
     }
 
     // Store full profile as JSON string

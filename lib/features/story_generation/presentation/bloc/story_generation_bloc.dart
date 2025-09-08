@@ -359,8 +359,8 @@ class StoryGenerationBloc
         // Free tier user hitting limit - show subscription prompt
         emit(StoryGenerationSubscriptionRequired(
           subscriptionTier: profile.subscriptionTier,
-          storiesUsed: profile.monthlyStoryCount,
-          monthlyLimit: profile.maxMonthlyStories,
+          storiesUsed: profile.totalStoryCount,
+          monthlyLimit: profile.maxTotalStories,
           message: 'You\'ve reached your free story limit! Subscribe for unlimited stories.',
         ));
       } else {
@@ -393,7 +393,7 @@ class StoryGenerationBloc
         // Free tier user hitting limit - emit background failure but with subscription context
         emit(BackgroundGenerationFailure(
           tempStoryId: tempStoryId,
-          error: 'Subscription required: ${profile.monthlyStoryCount}/${profile.maxMonthlyStories} stories used',
+          error: 'Subscription required: ${profile.totalStoryCount}/${profile.maxTotalStories} stories used',
         ));
       } else {
         // Subscribed user getting subscription error - technical issue

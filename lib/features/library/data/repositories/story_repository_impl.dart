@@ -329,7 +329,7 @@ class StoryRepositoryImpl implements StoryRepository {
 
   @override
   Future<UserStoriesResponse> getUserStories({
-    required int userId,
+    required String userId,
     int page = 1,
     int limit = 10,
   }) async {
@@ -343,7 +343,7 @@ class StoryRepositoryImpl implements StoryRepository {
 
   @override
   Future<List<Story>> getMixedStories({
-    required int userId,
+    required String userId,
     int userStoriesPage = 1,
     int userStoriesLimit = 10,
   }) async {

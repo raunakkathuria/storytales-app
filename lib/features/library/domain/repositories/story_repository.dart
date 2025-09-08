@@ -32,14 +32,14 @@ abstract class StoryRepository {
 
   /// Get user-generated stories with pagination.
   Future<UserStoriesResponse> getUserStories({
-    required int userId,
+    required String userId,
     int page = 1,
     int limit = 10,
   });
 
   /// Get mixed stories (user + pre-generated) for homepage display.
   Future<List<Story>> getMixedStories({
-    required int userId,
+    required String userId,
     int userStoriesPage = 1,
     int userStoriesLimit = 10,
   });

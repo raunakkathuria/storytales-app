@@ -280,7 +280,7 @@ class MockUserApiClient extends _i1.Mock implements _i8.UserApiClient {
           as _i3.Future<Map<String, dynamic>>);
 
   @override
-  _i3.Future<Map<String, dynamic>> getUserProfile({required int? userId}) =>
+  _i3.Future<Map<String, dynamic>> getUserProfile({required String? userId}) =>
       (super.noSuchMethod(
             Invocation.method(#getUserProfile, [], {#userId: userId}),
             returnValue: _i3.Future<Map<String, dynamic>>.value(
@@ -291,7 +291,7 @@ class MockUserApiClient extends _i1.Mock implements _i8.UserApiClient {
 
   @override
   _i3.Future<Map<String, dynamic>> updateUserProfile({
-    required int? userId,
+    required String? userId,
     required String? displayName,
   }) =>
       (super.noSuchMethod(
@@ -307,7 +307,7 @@ class MockUserApiClient extends _i1.Mock implements _i8.UserApiClient {
 
   @override
   _i3.Future<Map<String, dynamic>> startSubscription({
-    required int? userId,
+    required String? userId,
     required String? email,
     required String? displayName,
     required String? plan,
@@ -327,7 +327,7 @@ class MockUserApiClient extends _i1.Mock implements _i8.UserApiClient {
 
   @override
   _i3.Future<Map<String, dynamic>> verifySubscription({
-    required int? userId,
+    required String? userId,
     required String? otpCode,
   }) =>
       (super.noSuchMethod(
@@ -355,7 +355,7 @@ class MockUserApiClient extends _i1.Mock implements _i8.UserApiClient {
 
   @override
   _i3.Future<_i4.UserStoriesResponse> getUserStories({
-    required int? userId,
+    required String? userId,
     int? page = 1,
     int? limit = 20,
   }) =>
@@ -380,7 +380,7 @@ class MockUserApiClient extends _i1.Mock implements _i8.UserApiClient {
 
   @override
   _i3.Future<Map<String, dynamic>> registerUser({
-    required int? userId,
+    required String? userId,
     required String? email,
     required String? displayName,
   }) =>
@@ -398,7 +398,7 @@ class MockUserApiClient extends _i1.Mock implements _i8.UserApiClient {
 
   @override
   _i3.Future<Map<String, dynamic>> verifyRegistration({
-    required int? userId,
+    required String? userId,
     required String? otpCode,
   }) =>
       (super.noSuchMethod(
@@ -439,7 +439,7 @@ class MockUserApiClient extends _i1.Mock implements _i8.UserApiClient {
           as _i3.Future<Map<String, dynamic>>);
 
   @override
-  _i3.Future<Map<String, dynamic>> signOut({required int? userId}) =>
+  _i3.Future<Map<String, dynamic>> signOut({required String? userId}) =>
       (super.noSuchMethod(
             Invocation.method(#signOut, [], {#userId: userId}),
             returnValue: _i3.Future<Map<String, dynamic>>.value(
@@ -450,7 +450,7 @@ class MockUserApiClient extends _i1.Mock implements _i8.UserApiClient {
 
   @override
   _i3.Future<Map<String, dynamic>> generateUserStory({
-    required int? userId,
+    required String? userId,
     required String? prompt,
     String? ageRange,
     String? theme,

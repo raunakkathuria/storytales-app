@@ -33,20 +33,19 @@ void main() {
         test('should create UserProfile with correct properties', () {
           // Arrange
           const userProfile = UserProfile(
-            userId: 123,
+            userId: '550e8400-e29b-41d4-a716-446655440123',
             displayName: 'John Doe',
             email: 'john@example.com',
             emailVerified: true,
             isAnonymous: false,
             subscriptionTier: 'premium',
             storiesRemaining: 10,
-            deviceId: 'device-123',
             sessionId: 'session-123',
             sessionCreatedAt: null,
           );
 
           // Assert
-          expect(userProfile.userId, equals(123));
+          expect(userProfile.userId, equals('550e8400-e29b-41d4-a716-446655440123'));
           expect(userProfile.displayName, equals('John Doe'));
           expect(userProfile.email, equals('john@example.com'));
           expect(userProfile.emailVerified, isTrue);
@@ -58,14 +57,13 @@ void main() {
         test('should detect anonymous user correctly', () {
           // Arrange
           const anonymousProfile = UserProfile(
-            userId: 456,
+            userId: '550e8400-e29b-41d4-a716-446655440456',
             displayName: null,
             email: null,
             emailVerified: false,
             isAnonymous: true,
             subscriptionTier: 'free',
             storiesRemaining: 2,
-            deviceId: 'device-456',
             sessionId: null,
             sessionCreatedAt: null,
           );
@@ -78,14 +76,13 @@ void main() {
         test('should create copy with updated fields', () {
           // Arrange
           const originalProfile = UserProfile(
-            userId: 123,
+            userId: '550e8400-e29b-41d4-a716-446655440123',
             displayName: 'Original Name',
             email: null,
             emailVerified: false,
             isAnonymous: true,
             subscriptionTier: 'free',
             storiesRemaining: 2,
-            deviceId: 'device-123',
             sessionId: null,
             sessionCreatedAt: null,
           );
@@ -99,7 +96,7 @@ void main() {
           // Assert
           expect(updatedProfile.displayName, equals('Updated Name'));
           expect(updatedProfile.email, equals('new@example.com'));
-          expect(updatedProfile.userId, equals(123)); // Unchanged
+          expect(updatedProfile.userId, equals('550e8400-e29b-41d4-a716-446655440123')); // Unchanged
         });
       });
 
@@ -145,7 +142,7 @@ void main() {
           final model = UserProfileModel.fromJson(json);
 
           // Assert
-          expect(model.userId, equals(123));
+          expect(model.userId, equals('550e8400-e29b-41d4-a716-446655440123'));
           expect(model.displayName, equals('John Doe'));
           expect(model.email, equals('john@example.com'));
           expect(model.emailVerified, isTrue);
@@ -165,7 +162,7 @@ void main() {
           final model = UserProfileModel.fromJson(json);
 
           // Assert
-          expect(model.userId, equals(123));
+          expect(model.userId, equals('550e8400-e29b-41d4-a716-446655440123'));
           expect(model.displayName, isNull);
           expect(model.email, isNull);
           expect(model.emailVerified, isFalse); // Default value
@@ -177,14 +174,13 @@ void main() {
         test('should convert to JSON correctly', () {
           // Arrange
           const model = UserProfileModel(
-            userId: 123,
+            userId: '550e8400-e29b-41d4-a716-446655440123',
             displayName: 'John Doe',
             email: 'john@example.com',
             emailVerified: true,
             isAnonymous: false,
             subscriptionTier: 'premium',
             storiesRemaining: 10,
-            deviceId: 'device-123',
             sessionId: null,
             sessionCreatedAt: null,
           );
@@ -203,14 +199,13 @@ void main() {
         test('should convert to domain entity correctly', () {
           // Arrange
           const model = UserProfileModel(
-            userId: 123,
+            userId: '550e8400-e29b-41d4-a716-446655440123',
             displayName: 'John Doe',
             email: 'john@example.com',
             emailVerified: true,
             isAnonymous: false,
             subscriptionTier: 'premium',
             storiesRemaining: 10,
-            deviceId: 'device-123',
             sessionId: null,
             sessionCreatedAt: null,
           );
@@ -220,7 +215,7 @@ void main() {
 
           // Assert
           expect(domain, isA<UserProfile>());
-          expect(domain.userId, equals(123));
+          expect(domain.userId, equals('550e8400-e29b-41d4-a716-446655440123'));
           expect(domain.displayName, equals('John Doe'));
         });
       });
@@ -283,14 +278,13 @@ void main() {
 
       group('LoadProfile', () {
         const mockProfile = UserProfile(
-          userId: 123,
+          userId: '550e8400-e29b-41d4-a716-446655440123',
           displayName: 'Test User',
           email: 'test@example.com',
           emailVerified: true,
           isAnonymous: false,
           subscriptionTier: 'free',
           storiesRemaining: 2,
-          deviceId: 'device-123',
             sessionId: 'valid-session-123',
             sessionCreatedAt: null,
         );
@@ -329,27 +323,25 @@ void main() {
 
       group('UpdateDisplayName', () {
         const initialProfile = UserProfile(
-          userId: 123,
+          userId: '550e8400-e29b-41d4-a716-446655440123',
           displayName: 'Old Name',
           email: 'test@example.com',
           emailVerified: true,
           isAnonymous: false,
           subscriptionTier: 'free',
           storiesRemaining: 2,
-          deviceId: 'device-123',
             sessionId: null,
             sessionCreatedAt: null,
         );
 
         const updatedProfile = UserProfile(
-          userId: 123,
+          userId: '550e8400-e29b-41d4-a716-446655440123',
           displayName: 'New Name',
           email: 'test@example.com',
           emailVerified: true,
           isAnonymous: false,
           subscriptionTier: 'free',
           storiesRemaining: 2,
-          deviceId: 'device-123',
             sessionId: null,
             sessionCreatedAt: null,
         );
@@ -375,14 +367,13 @@ void main() {
 
       group('RegisterUser', () {
         const currentProfile = UserProfile(
-          userId: 123,
+          userId: '550e8400-e29b-41d4-a716-446655440123',
           displayName: 'Test User',
           email: null,
           emailVerified: false,
           isAnonymous: true,
           subscriptionTier: 'free',
           storiesRemaining: 2,
-          deviceId: 'device-123',
             sessionId: null,
             sessionCreatedAt: null,
         );
@@ -430,14 +421,13 @@ void main() {
 
       group('VerifyRegistration', () {
         const currentProfile = UserProfile(
-          userId: 123,
+          userId: '550e8400-e29b-41d4-a716-446655440123',
           displayName: 'Test User',
           email: null,
           emailVerified: false,
           isAnonymous: true,
           subscriptionTier: 'free',
           storiesRemaining: 2,
-          deviceId: 'device-123',
             sessionId: null,
             sessionCreatedAt: null,
         );
@@ -449,14 +439,13 @@ void main() {
         );
 
         const verifiedProfile = UserProfile(
-          userId: 123,
+          userId: '550e8400-e29b-41d4-a716-446655440123',
           displayName: 'Test User',
           email: 'test@example.com',
           emailVerified: true,
           isAnonymous: false,
           subscriptionTier: 'free',
           storiesRemaining: 2,
-          deviceId: 'device-123',
             sessionId: null,
             sessionCreatedAt: null,
         );
@@ -509,14 +498,13 @@ void main() {
 
       group('ClearError', () {
         const mockProfile = UserProfile(
-          userId: 123,
+          userId: '550e8400-e29b-41d4-a716-446655440123',
           displayName: 'Test User',
           email: 'test@example.com',
           emailVerified: true,
           isAnonymous: false,
           subscriptionTier: 'free',
           storiesRemaining: 2,
-          deviceId: 'device-123',
             sessionId: null,
             sessionCreatedAt: null,
         );

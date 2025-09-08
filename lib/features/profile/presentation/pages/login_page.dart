@@ -118,12 +118,11 @@ class LoginPage extends StatelessWidget {
                                 child: RegisterPage(
                                   // We need to get the profile from somewhere - let's use a simple anonymous profile
                                   profile: const UserProfile(
-                                    userId: 0,
+                                    userId: 'temp-login-user-id',
                                     emailVerified: false,
                                     isAnonymous: true,
                                     subscriptionTier: 'free',
                                     storiesRemaining: 2,
-                                    deviceId: '',
                                   ),
                                 ),
                               ),

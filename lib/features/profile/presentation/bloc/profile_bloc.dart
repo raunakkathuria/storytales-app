@@ -55,12 +55,11 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
           // User has an account but is signed out - show register/login options
           // Create a minimal anonymous profile for UI purposes without calling API
           final anonymousProfile = UserProfile(
-            userId: 0, // Temporary ID
+            userId: 'temp-anonymous-user-id', // Temporary UUID
             emailVerified: false,
             isAnonymous: true,
             subscriptionTier: 'free',
             storiesRemaining: 2,
-            deviceId: '',
             isAuthenticated: false,
           );
           emit(ProfileLoaded(profile: anonymousProfile));
@@ -79,12 +78,11 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
           _loggingService.info('Detected signed-out user scenario - showing anonymous state for UI');
           // Show anonymous state for signed out users without creating new user
           final anonymousProfile = UserProfile(
-            userId: 0, // Temporary ID
+            userId: 'temp-anonymous-user-id', // Temporary UUID
             emailVerified: false,
             isAnonymous: true,
             subscriptionTier: 'free',
             storiesRemaining: 2,
-            deviceId: '',
             isAuthenticated: false,
           );
           emit(ProfileLoaded(profile: anonymousProfile));

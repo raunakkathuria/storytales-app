@@ -44,7 +44,7 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
       late List<Story> stories;
       
       if (userProfileData != null) {
-        final userId = userProfileData['user_id'] as int;
+        final userId = userProfileData['user_id'] as String;
         // User is authenticated - get mixed stories (user + pre-generated)
         try {
           stories = await _repository.getMixedStories(
@@ -108,7 +108,7 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
         // Check if user has more stories by looking at the response
         bool hasMoreUserStories = true;
         if (userProfileData != null) {
-          final userId = userProfileData['user_id'] as int;
+          final userId = userProfileData['user_id'] as String;
           try {
             final userStoriesResponse = await _repository.getUserStories(
               userId: userId,
@@ -344,7 +344,7 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     final userProfileData = await _authService.getCurrentUserProfile();
     if (userProfileData == null) return;
     
-    final userId = userProfileData['user_id'] as int;
+    final userId = userProfileData['user_id'] as String;
 
     // Set loading state
     emit(currentState.copyWith(isLoadingMore: true));
