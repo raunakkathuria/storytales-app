@@ -209,7 +209,7 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
           // Show snackbar with subscription context
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${state.storiesUsed}/${state.monthlyLimit} free stories used. Subscribe for unlimited stories!'),
+              content: Text('${state.storiesUsed}/${state.totalLimit} stories used. Subscribe for unlimited stories!'),
               backgroundColor: StoryTalesTheme.primaryColor,
               action: SnackBarAction(
                 label: 'Subscribe',
@@ -699,7 +699,7 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           child: ResponsiveText(
-            text: 'You\'ve used ${state.storiesUsed} of ${state.monthlyLimit} free stories this month.',
+            text: 'You\'ve used ${state.storiesUsed} of ${state.totalLimit} stories total.',
             style: const TextStyle(
               color: StoryTalesTheme.textColor,
               fontSize: 16,

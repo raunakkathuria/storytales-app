@@ -19,13 +19,41 @@ class PaginationInfo {
   /// Creates a PaginationInfo from JSON response.
   factory PaginationInfo.fromJson(Map<String, dynamic> json) {
     return PaginationInfo(
-      total: json['total'] as int,
-      currentPage: json['current_page'] as int,
-      totalPages: json['total_pages'] as int,
-      hasNext: json['has_next'] as bool,
-      hasPrevious: json['has_previous'] as bool,
-      limit: json['limit'] as int,
+      total: _parseIntSafely(json['total']) ?? 0,
+      currentPage: _parseIntSafely(json['current_page']) ?? 1,
+      totalPages: _parseIntSafely(json['total_pages']) ?? 0,
+      hasNext: _parseBoolSafely(json['has_next']) ?? false,
+      hasPrevious: _parseBoolSafely(json['has_previous']) ?? false,
+      limit: _parseIntSafely(json['limit']) ?? 10,
     );
+  }
+
+  /// Safely parses an integer from various input types, allowing null.
+  static int? _parseIntSafely(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is int) {
+      return value;
+    }
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
+  }
+
+  /// Safely parses a boolean from various input types, allowing null.
+  static bool? _parseBoolSafely(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is bool) {
+      return value;
+    }
+    if (value is String) {
+      return value.toLowerCase() == 'true';
+    }
+    return null;
   }
 
   /// Converts PaginationInfo to JSON for caching.

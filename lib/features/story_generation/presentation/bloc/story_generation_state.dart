@@ -39,22 +39,22 @@ class CannotGenerateStory extends StoryGenerationState {
   List<Object?> get props => [message];
 }
 
-/// State when free tier user reaches monthly limit and needs subscription.
+/// State when free tier user reaches lifetime limit and needs subscription.
 class StoryGenerationSubscriptionRequired extends StoryGenerationState {
   final String subscriptionTier;
   final int storiesUsed;
-  final int monthlyLimit;
+  final int totalLimit;
   final String message;
 
   const StoryGenerationSubscriptionRequired({
     required this.subscriptionTier,
     required this.storiesUsed,
-    required this.monthlyLimit,
+    required this.totalLimit,
     required this.message,
   });
 
   @override
-  List<Object?> get props => [subscriptionTier, storiesUsed, monthlyLimit, message];
+  List<Object?> get props => [subscriptionTier, storiesUsed, totalLimit, message];
 }
 
 /// State when a story is being generated.

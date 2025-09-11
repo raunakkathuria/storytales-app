@@ -31,7 +31,7 @@ void main() {
 
     test('should get mixed stories (user + pre-generated)', () async {
       // Arrange
-      const userId = 123;
+      const userId = '123';
       const userStoriesPage = 1;
       const userStoriesLimit = 10;
 
@@ -59,7 +59,6 @@ void main() {
           limit: 10,
         ),
         subscriptionTier: 'free',
-        storiesRemaining: 2,
       );
 
       final mockPreGeneratedStories = [
@@ -144,7 +143,7 @@ void main() {
 
     test('should handle user stories API failure gracefully', () async {
       // Arrange
-      const userId = 123;
+      const userId = '123';
       
       final mockPreGeneratedStories = [
         {

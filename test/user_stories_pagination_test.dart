@@ -150,7 +150,6 @@ void main() {
             'limit': 20,
           },
           'subscription_tier': 'free',
-          'stories_remaining': 2,
         };
 
         // Act
@@ -162,7 +161,6 @@ void main() {
         expect(response.stories.first.title, 'Test Story 1');
         expect(response.pagination.total, 1);
         expect(response.subscriptionTier, 'free');
-        expect(response.storiesRemaining, 2);
       });
     });
 
@@ -197,7 +195,6 @@ void main() {
             'limit': 5,
           },
           'subscription_tier': 'premium',
-          'stories_remaining': 8,
         };
 
         final response = Response(
@@ -214,7 +211,7 @@ void main() {
 
         // Act
         final result = await userApiClient.getUserStories(
-          userId: 123,
+          userId: '123',
           page: 2,
           limit: 5,
         );
@@ -227,7 +224,6 @@ void main() {
         expect(result.pagination.hasNext, true);
         expect(result.pagination.hasNext, true);
         expect(result.subscriptionTier, 'premium');
-        expect(result.storiesRemaining, 8);
 
         // Verify the API call was made with correct parameters
         verify(mockDio.get(
@@ -271,7 +267,7 @@ void main() {
         )).thenAnswer((_) async => response);
 
         // Act
-        await userApiClient.getUserStories(userId: 123);
+        await userApiClient.getUserStories(userId: '123');
 
         // Assert
         verify(mockDio.get(
@@ -290,7 +286,7 @@ void main() {
 
         // Act & Assert
         expect(
-          () => userApiClient.getUserStories(userId: 123),
+          () => userApiClient.getUserStories(userId: '123'),
           throwsA(isA<Exception>().having(
             (e) => e.toString(),
             'message',
@@ -316,7 +312,6 @@ void main() {
             limit: 20,
           ),
           subscriptionTier: 'free',
-          storiesRemaining: 3,
         );
 
         when(mockUserApiClient.getUserStories(
@@ -332,11 +327,10 @@ void main() {
         expect(result.stories.length, 0);
         expect(result.pagination.currentPage, 1);
         expect(result.subscriptionTier, 'free');
-        expect(result.storiesRemaining, 3);
 
         // Verify the API was called with correct user ID
         verify(mockUserApiClient.getUserStories(
-          userId: 123,
+          userId: '123',
           page: 1,
           limit: 10,
         )).called(1);

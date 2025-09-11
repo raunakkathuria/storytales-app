@@ -10,14 +10,14 @@ void main() {
     testWidgets('should display "Anonymous User" for anonymous profile', (tester) async {
       // Arrange
       const anonymousProfile = UserProfile(
-        userId: 123,
+        userId: '123',
         displayName: null,
         email: null,
         emailVerified: false,
         isAnonymous: true,
         subscriptionTier: 'free',
-        storiesRemaining: 2,
-        deviceId: 'device-123',
+        totalStoryCount: 1,
+        maxTotalStories: 3,
       );
 
       // Act
@@ -40,14 +40,14 @@ void main() {
     testWidgets('should display user name with edit icon for registered profile', (tester) async {
       // Arrange
       const registeredProfile = UserProfile(
-        userId: 456,
+        userId: '456',
         displayName: 'John Doe',
         email: 'john@example.com',
         emailVerified: true,
         isAnonymous: false,
         subscriptionTier: 'premium',
-        storiesRemaining: 10,
-        deviceId: 'device-456',
+        totalStoryCount: 5,
+        maxTotalStories: 100,
       );
 
       // Act
@@ -71,14 +71,14 @@ void main() {
     testWidgets('should handle registered user with null display name', (tester) async {
       // Arrange
       const registeredProfile = UserProfile(
-        userId: 789,
+        userId: '789',
         displayName: null,
         email: 'user@example.com',
         emailVerified: true,
         isAnonymous: false,
         subscriptionTier: 'free',
-        storiesRemaining: 2,
-        deviceId: 'device-789',
+        totalStoryCount: 1,
+        maxTotalStories: 3,
       );
 
       // Act
@@ -100,14 +100,14 @@ void main() {
     testWidgets('should not display email for anonymous user', (tester) async {
       // Arrange
       const anonymousProfile = UserProfile(
-        userId: 123,
+        userId: '123',
         displayName: 'Anonymous User',
         email: null,
         emailVerified: false,
         isAnonymous: true,
         subscriptionTier: 'free',
-        storiesRemaining: 2,
-        deviceId: 'device-123',
+        totalStoryCount: 1,
+        maxTotalStories: 3,
       );
 
       // Act
@@ -126,14 +126,14 @@ void main() {
     testWidgets('should use correct icon colors based on profile state', (tester) async {
       // Arrange
       const registeredProfile = UserProfile(
-        userId: 123,
+        userId: '123',
         displayName: 'Test User',
         email: 'test@example.com',
         emailVerified: true,
         isAnonymous: false,
         subscriptionTier: 'free',
-        storiesRemaining: 2,
-        deviceId: 'device-123',
+        totalStoryCount: 1,
+        maxTotalStories: 3,
       );
 
       // Act
@@ -164,14 +164,14 @@ void main() {
     testWidgets('should display proper badge colors for different account types', (tester) async {
       // Test anonymous user badge
       const anonymousProfile = UserProfile(
-        userId: 123,
+        userId: '123',
         displayName: null,
         email: null,
         emailVerified: false,
         isAnonymous: true,
         subscriptionTier: 'free',
-        storiesRemaining: 2,
-        deviceId: 'device-123',
+        totalStoryCount: 1,
+        maxTotalStories: 3,
       );
 
       await tester.pumpWidget(

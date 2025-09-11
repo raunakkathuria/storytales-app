@@ -27,8 +27,8 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         return true;
       }
       
-      // For free tier users, check stories remaining using computed property
-      return profile.actualStoriesRemaining > 0;
+      // For free tier users, check stories remaining using base fields
+      return profile.totalStoryCount < profile.maxTotalStories;
     } catch (e) {
       // Fallback to local data if API fails
       final hasSubscription = await _localDataSource.hasActiveSubscription();
@@ -82,8 +82,9 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       // Get current user profile from API
       final profile = await _profileRepository.getCurrentUserProfile();
       
-      // Use the computed property for accurate business logic
-      return profile.actualStoriesRemaining;
+      // Calculate remaining stories using base fields
+      final remaining = profile.maxTotalStories - profile.totalStoryCount;
+      return remaining > 0 ? remaining : 0;
     } catch (e) {
       // Fallback to local calculation if API fails
       final generatedStoryCount = await _localDataSource.getGeneratedStoryCount();

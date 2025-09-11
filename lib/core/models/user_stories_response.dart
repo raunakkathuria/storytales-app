@@ -86,13 +86,11 @@ class UserStoriesResponse {
   final List<UserStoryItem> stories;
   final PaginationInfo pagination;
   final String subscriptionTier;
-  final int storiesRemaining;
 
   const UserStoriesResponse({
     required this.stories,
     required this.pagination,
     required this.subscriptionTier,
-    required this.storiesRemaining,
   });
 
   /// Creates a UserStoriesResponse from JSON response.
@@ -103,7 +101,6 @@ class UserStoriesResponse {
           .toList(),
       pagination: PaginationInfo.fromJson(json['pagination'] as Map<String, dynamic>),
       subscriptionTier: json['subscription_tier'] as String,
-      storiesRemaining: json['stories_remaining'] as int,
     );
   }
 
@@ -113,7 +110,6 @@ class UserStoriesResponse {
       'stories': stories.map((story) => story.toJson()).toList(),
       'pagination': pagination.toJson(),
       'subscription_tier': subscriptionTier,
-      'stories_remaining': storiesRemaining,
     };
   }
 
@@ -122,19 +118,17 @@ class UserStoriesResponse {
     List<UserStoryItem>? stories,
     PaginationInfo? pagination,
     String? subscriptionTier,
-    int? storiesRemaining,
   }) {
     return UserStoriesResponse(
       stories: stories ?? this.stories,
       pagination: pagination ?? this.pagination,
       subscriptionTier: subscriptionTier ?? this.subscriptionTier,
-      storiesRemaining: storiesRemaining ?? this.storiesRemaining,
     );
   }
 
   @override
   String toString() {
-    return 'UserStoriesResponse(stories: ${stories.length}, pagination: $pagination, subscriptionTier: $subscriptionTier, storiesRemaining: $storiesRemaining)';
+    return 'UserStoriesResponse(stories: ${stories.length}, pagination: $pagination, subscriptionTier: $subscriptionTier)';
   }
 
   @override
@@ -143,8 +137,7 @@ class UserStoriesResponse {
     return other is UserStoriesResponse &&
         other.stories.length == stories.length &&
         other.pagination == pagination &&
-        other.subscriptionTier == subscriptionTier &&
-        other.storiesRemaining == storiesRemaining;
+        other.subscriptionTier == subscriptionTier;
   }
 
   @override
@@ -153,7 +146,6 @@ class UserStoriesResponse {
       stories.length,
       pagination,
       subscriptionTier,
-      storiesRemaining,
     );
   }
 }

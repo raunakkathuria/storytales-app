@@ -44,9 +44,21 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
       late List<Story> stories;
       
       if (userProfileData != null) {
-        final userId = userProfileData['user_id'] as String;
+        final userId = userProfileData['id'] as String;
         // User is authenticated - get mixed stories (user + pre-generated)
         try {
+          // First ensure pre-generated stories are loaded from API
+          try {
+            await _repository.loadApiPreGeneratedStories();
+          } catch (pregenError) {
+            // Log but continue - we can still show user stories even if pre-generated fail
+            await _analyticsService.logError(
+              errorType: 'pregenerated_stories_load_error',
+              errorMessage: pregenError.toString(),
+              errorDetails: 'Failed to load pre-generated stories, will show user stories only',
+            );
+          }
+          
           stories = await _repository.getMixedStories(
             userId: userId,
             userStoriesPage: 1,
@@ -100,15 +112,15 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
         emit(LibraryEmpty(
           activeTab: LibraryTab.all,
           message: userProfileData != null 
-            ? 'Create your first story or connect to the internet to load featured stories'
+            ? 'Create your first story to get started! Tap the + button to begin your storytelling journey.'
             : 'Please connect to the internet to load stories',
-          showRetryButton: true,
+          showRetryButton: userProfileData == null, // Only show retry for connectivity issues
         ));
       } else {
         // Check if user has more stories by looking at the response
         bool hasMoreUserStories = true;
         if (userProfileData != null) {
-          final userId = userProfileData['user_id'] as String;
+          final userId = userProfileData['id'] as String;
           try {
             final userStoriesResponse = await _repository.getUserStories(
               userId: userId,

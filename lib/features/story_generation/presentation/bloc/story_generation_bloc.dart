@@ -360,7 +360,7 @@ class StoryGenerationBloc
         emit(StoryGenerationSubscriptionRequired(
           subscriptionTier: profile.subscriptionTier,
           storiesUsed: profile.totalStoryCount,
-          monthlyLimit: profile.maxTotalStories,
+          totalLimit: profile.maxTotalStories,
           message: 'You\'ve reached your free story limit! Subscribe for unlimited stories.',
         ));
       } else {

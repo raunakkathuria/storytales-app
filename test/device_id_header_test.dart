@@ -120,7 +120,7 @@ void main() {
       )).thenAnswer((_) async => response);
 
       // Act
-      await userApiClient.getUserProfile(userId: 123);
+      await userApiClient.getUserProfile(userId: '123');
 
       // Assert
       final captured = verify(mockDio.get(
@@ -157,7 +157,7 @@ void main() {
 
       // Act
       await userApiClient.updateUserProfile(
-        userId: 123,
+        userId: '123',
         displayName: 'Test User',
       );
 
@@ -196,7 +196,7 @@ void main() {
 
       // Act
       await userApiClient.startSubscription(
-        userId: 123,
+        userId: '123',
         email: 'test@example.com',
         displayName: 'Test User',
         plan: 'premium',
@@ -238,7 +238,7 @@ void main() {
 
       // Act
       await userApiClient.verifySubscription(
-        userId: 123,
+        userId: '123',
         otpCode: '123456',
       );
 
@@ -285,7 +285,7 @@ void main() {
       )).thenAnswer((_) async => response);
 
       // Act
-      await userApiClient.getUserStories(userId: 123);
+      await userApiClient.getUserStories(userId: '123');
 
       // Assert
       final captured = verify(mockDio.get(
@@ -313,8 +313,8 @@ void main() {
           .thenAnswer((_) async => response);
 
       // Act - Make multiple API calls
-      await userApiClient.getUserProfile(userId: 123);
-      await userApiClient.getUserProfile(userId: 123);
+      await userApiClient.getUserProfile(userId: '123');
+      await userApiClient.getUserProfile(userId: '123');
 
       // Assert - Device service should be called for each request
       verify(mockDeviceService.getDeviceId()).called(2);

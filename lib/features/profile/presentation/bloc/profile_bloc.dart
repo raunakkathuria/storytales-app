@@ -59,7 +59,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
             emailVerified: false,
             isAnonymous: true,
             subscriptionTier: 'free',
-            storiesRemaining: 2,
+            totalStoryCount: 0,
+            maxTotalStories: 3,
             isAuthenticated: false,
           );
           emit(ProfileLoaded(profile: anonymousProfile));
@@ -82,7 +83,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
             emailVerified: false,
             isAnonymous: true,
             subscriptionTier: 'free',
-            storiesRemaining: 2,
+            totalStoryCount: 0,
+            maxTotalStories: 3,
             isAuthenticated: false,
           );
           emit(ProfileLoaded(profile: anonymousProfile));

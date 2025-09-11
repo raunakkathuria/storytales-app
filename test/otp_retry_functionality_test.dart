@@ -29,14 +29,14 @@ void main() {
     });
 
     const testProfile = UserProfile(
-      userId: 123,
+      userId: '550e8400-e29b-41d4-a716-446655440123',
       displayName: 'Test User',
       email: 'test@example.com',
       emailVerified: false,
       subscriptionTier: 'free',
-      storiesRemaining: 2,
+      totalStoryCount: 1,
+      maxTotalStories: 3,
       isAnonymous: false,
-      deviceId: 'test-device-123',
     );
 
     const testRegistrationResponse = RegistrationResponse(

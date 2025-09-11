@@ -39,7 +39,8 @@ void main() {
             emailVerified: true,
             isAnonymous: false,
             subscriptionTier: 'premium',
-            storiesRemaining: 10,
+            totalStoryCount: 5,
+            maxTotalStories: 100,
             sessionId: 'session-123',
             sessionCreatedAt: null,
           );
@@ -63,7 +64,8 @@ void main() {
             emailVerified: false,
             isAnonymous: true,
             subscriptionTier: 'free',
-            storiesRemaining: 2,
+            totalStoryCount: 2,
+            maxTotalStories: 3,
             sessionId: null,
             sessionCreatedAt: null,
           );
@@ -82,7 +84,8 @@ void main() {
             emailVerified: false,
             isAnonymous: true,
             subscriptionTier: 'free',
-            storiesRemaining: 2,
+            totalStoryCount: 2,
+            maxTotalStories: 3,
             sessionId: null,
             sessionCreatedAt: null,
           );
@@ -168,7 +171,8 @@ void main() {
           expect(model.emailVerified, isFalse); // Default value
           expect(model.isAnonymous, isTrue); // Default value
           expect(model.subscriptionTier, equals('free')); // Default value
-          expect(model.storiesRemaining, equals(0)); // Default value
+          expect(model.totalStoryCount, equals(0)); // Default value
+          expect(model.maxTotalStories, equals(0)); // Default value
         });
 
         test('should convert to JSON correctly', () {
@@ -180,7 +184,8 @@ void main() {
             emailVerified: true,
             isAnonymous: false,
             subscriptionTier: 'premium',
-            storiesRemaining: 10,
+            totalStoryCount: 5,
+            maxTotalStories: 100,
             sessionId: null,
             sessionCreatedAt: null,
           );
@@ -205,7 +210,8 @@ void main() {
             emailVerified: true,
             isAnonymous: false,
             subscriptionTier: 'premium',
-            storiesRemaining: 10,
+            totalStoryCount: 5,
+            maxTotalStories: 100,
             sessionId: null,
             sessionCreatedAt: null,
           );
@@ -284,7 +290,8 @@ void main() {
           emailVerified: true,
           isAnonymous: false,
           subscriptionTier: 'free',
-          storiesRemaining: 2,
+          totalStoryCount: 2,
+          maxTotalStories: 3,
             sessionId: 'valid-session-123',
             sessionCreatedAt: null,
         );
@@ -329,7 +336,8 @@ void main() {
           emailVerified: true,
           isAnonymous: false,
           subscriptionTier: 'free',
-          storiesRemaining: 2,
+          totalStoryCount: 2,
+          maxTotalStories: 3,
             sessionId: null,
             sessionCreatedAt: null,
         );
@@ -341,7 +349,8 @@ void main() {
           emailVerified: true,
           isAnonymous: false,
           subscriptionTier: 'free',
-          storiesRemaining: 2,
+          totalStoryCount: 2,
+          maxTotalStories: 3,
             sessionId: null,
             sessionCreatedAt: null,
         );
@@ -373,7 +382,8 @@ void main() {
           emailVerified: false,
           isAnonymous: true,
           subscriptionTier: 'free',
-          storiesRemaining: 2,
+          totalStoryCount: 2,
+          maxTotalStories: 3,
             sessionId: null,
             sessionCreatedAt: null,
         );
@@ -427,7 +437,8 @@ void main() {
           emailVerified: false,
           isAnonymous: true,
           subscriptionTier: 'free',
-          storiesRemaining: 2,
+          totalStoryCount: 2,
+          maxTotalStories: 3,
             sessionId: null,
             sessionCreatedAt: null,
         );
@@ -445,7 +456,8 @@ void main() {
           emailVerified: true,
           isAnonymous: false,
           subscriptionTier: 'free',
-          storiesRemaining: 2,
+          totalStoryCount: 2,
+          maxTotalStories: 3,
             sessionId: null,
             sessionCreatedAt: null,
         );
@@ -504,7 +516,8 @@ void main() {
           emailVerified: true,
           isAnonymous: false,
           subscriptionTier: 'free',
-          storiesRemaining: 2,
+          totalStoryCount: 2,
+          maxTotalStories: 3,
             sessionId: null,
             sessionCreatedAt: null,
         );
