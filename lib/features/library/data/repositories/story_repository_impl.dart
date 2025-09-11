@@ -111,6 +111,43 @@ class StoryRepositoryImpl implements StoryRepository {
   }
 
   @override
+  Future<List<Story>> syncAndGetFavoriteStories(String userId) async {
+    try {
+      // First, sync with server favorites
+      final favoritesResponse = await _userApiClient.getUserFavorites(
+        userId: userId,
+        page: 1,
+        limit: 100, // Get enough to cover most user favorites
+      );
+
+      final serverFavorites = favoritesResponse['favorites'] as List<dynamic>? ?? [];
+      final serverFavoriteIds = serverFavorites
+          .map((fav) => fav['id'] as String)
+          .toSet();
+
+      // Update local database: mark all stories as unfavorite first
+      await _databaseService.rawExecute(
+        'UPDATE stories SET is_favorite = ?',
+        [0],
+      );
+
+      // Then mark server favorites as favorite
+      for (final storyId in serverFavoriteIds) {
+        await _databaseService.rawExecute(
+          'UPDATE stories SET is_favorite = ? WHERE id = ?',
+          [1, storyId],
+        );
+      }
+
+      // Return updated favorite stories from local database
+      return await getFavoriteStories();
+    } catch (e) {
+      // If server sync fails, fall back to local favorites
+      return await getFavoriteStories();
+    }
+  }
+
+  @override
   Future<Story> getStoryById(String id) async {
     final storiesData = await _databaseService.query(
       'stories',
@@ -245,9 +282,36 @@ class StoryRepositoryImpl implements StoryRepository {
   }
 
   @override
-  Future<void> toggleFavorite(String id) async {
+  Future<void> toggleFavorite(String id, {String? userId}) async {
+    // Get the current story to check its favorite status
     final story = await getStoryById(id);
-    final updatedStory = story.copyWith(isFavorite: !story.isFavorite);
+    final newFavoriteStatus = !story.isFavorite;
+
+    // If userId is provided, sync with server API
+    if (userId != null) {
+      try {
+        if (newFavoriteStatus) {
+          // Add to favorites via API
+          await _userApiClient.addFavorite(
+            userId: userId,
+            storyId: id,
+          );
+        } else {
+          // Remove from favorites via API
+          await _userApiClient.removeFavorite(
+            userId: userId,
+            storyId: id,
+          );
+        }
+      } catch (e) {
+        // Log the API error but don't fail the operation
+        // The local update will still happen for immediate UI feedback
+        // Note: Could add proper logging service here in the future
+      }
+    }
+
+    // Update local database for immediate UI feedback
+    final updatedStory = story.copyWith(isFavorite: newFavoriteStatus);
     await updateStory(updatedStory);
   }
 
@@ -355,8 +419,27 @@ class StoryRepositoryImpl implements StoryRepository {
         limit: userStoriesLimit,
       );
       
-      // Convert UserStoryItem to Story entities
+      // Get server favorites to sync with user stories
+      Set<String> serverFavoriteIds = {};
+      try {
+        final favoritesResponse = await _userApiClient.getUserFavorites(
+          userId: userId,
+          page: 1,
+          limit: 100, // Get enough to cover typical user favorites
+        );
+        final favorites = favoritesResponse['favorites'] as List<dynamic>? ?? [];
+        serverFavoriteIds = favorites
+            .map((fav) => fav['id'] as String)
+            .toSet();
+      } catch (e) {
+        // If favorites API fails, continue without server sync
+        // User will still see their stories, just potentially incorrect favorite status
+      }
+
+      // Convert UserStoryItem to Story entities with correct favorite status
       final userStories = userStoriesResponse.stories.map((userStoryItem) {
+        final isFavorite = serverFavoriteIds.contains(userStoryItem.id);
+        
         return Story(
           id: userStoryItem.id,
           title: userStoryItem.title,
@@ -382,13 +465,19 @@ class StoryRepositoryImpl implements StoryRepository {
           theme: userStoryItem.theme,
           tags: userStoryItem.tags,
           isPregenerated: false, // User stories are not pre-generated
-          isFavorite: false, // Default to false, will be updated from database if needed
+          isFavorite: isFavorite, // Sync with server favorites
         );
       }).toList();
 
-      // Get all pre-generated stories from local database
+      // Get all pre-generated stories from local database and sync favorite status
       final allLocalStories = await getAllStories();
-      final preGeneratedStories = allLocalStories.where((story) => story.isPregenerated).toList();
+      final preGeneratedStories = allLocalStories
+          .where((story) => story.isPregenerated)
+          .map((story) {
+            // Update favorite status based on server sync
+            final isFavorite = serverFavoriteIds.contains(story.id);
+            return story.copyWith(isFavorite: isFavorite);
+          }).toList();
 
       // Combine user stories first, then pre-generated stories
       return [...userStories, ...preGeneratedStories];

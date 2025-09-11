@@ -299,7 +299,7 @@ void main() {
     group('AuthenticationService getUserStories', () {
       test('should fetch user stories through authentication service', () async {
         // Arrange
-        SharedPreferences.setMockInitialValues({'user_id': 123});
+        SharedPreferences.setMockInitialValues({'user_id': 'test-user-uuid-123'});
 
         final expectedResponse = UserStoriesResponse(
           stories: [],
@@ -330,7 +330,7 @@ void main() {
 
         // Verify the API was called with correct user ID
         verify(mockUserApiClient.getUserStories(
-          userId: '123',
+          userId: 'test-user-uuid-123',
           page: 1,
           limit: 10,
         )).called(1);

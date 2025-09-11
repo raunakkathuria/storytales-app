@@ -1222,4 +1222,230 @@ class UserApiClient {
       rethrow;
     }
   }
+
+  /// Add a story to user's favorites.
+  ///
+  /// Works with both user-generated and pre-generated stories.
+  Future<Map<String, dynamic>> addFavorite({
+    required String userId,
+    required String storyId,
+  }) async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t update your favorites right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    _loggingService.info('Adding story to favorites for user ID: $userId, story ID: $storyId');
+
+    try {
+      final response = await _dio.post(
+        '/users/$userId/favorites/$storyId',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('Add favorite API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final favoriteResponse = response.data as Map<String, dynamic>;
+        _loggingService.info('Story added to favorites successfully');
+        return favoriteResponse;
+      } else {
+        _loggingService.error('Add favorite API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to add favorite: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error adding favorite: $e');
+
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while adding to favorites. Please try again!';
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to save your favorite! The connection seems slow. Please check your internet and let\'s try again!';
+            break;
+          case DioExceptionType.connectionError:
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t update your favorites right now. Please check your internet connection and we\'ll try to reconnect!';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 404) {
+              errorMessage = '📖 That story seems to have wandered off! Please try refreshing the app and try again.';
+            } else if (statusCode == 500) {
+              errorMessage = '🏰 The Story Wizard\'s favorite magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+            } else {
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while saving your favorite. Let\'s try again!';
+            }
+            break;
+          default:
+            errorMessage = '🌙 Something unexpected happened while saving your magical favorite. Our Story Wizard is investigating - please try again!';
+        }
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Remove a story from user's favorites.
+  ///
+  /// Works with both user-generated and pre-generated stories.
+  Future<Map<String, dynamic>> removeFavorite({
+    required String userId,
+    required String storyId,
+  }) async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t update your favorites right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    _loggingService.info('Removing story from favorites for user ID: $userId, story ID: $storyId');
+
+    try {
+      final response = await _dio.delete(
+        '/users/$userId/favorites/$storyId',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('Remove favorite API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final favoriteResponse = response.data as Map<String, dynamic>;
+        _loggingService.info('Story removed from favorites successfully');
+        return favoriteResponse;
+      } else {
+        _loggingService.error('Remove favorite API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to remove favorite: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error removing favorite: $e');
+
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while removing from favorites. Please try again!';
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to update your favorite! The connection seems slow. Please check your internet and let\'s try again!';
+            break;
+          case DioExceptionType.connectionError:
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t update your favorites right now. Please check your internet connection and we\'ll try to reconnect!';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 404) {
+              errorMessage = '📖 That favorite seems to have already been removed! Your favorites list is up to date.';
+            } else if (statusCode == 500) {
+              errorMessage = '🏰 The Story Wizard\'s favorite magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+            } else {
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while updating your favorite. Let\'s try again!';
+            }
+            break;
+          default:
+            errorMessage = '🌙 Something unexpected happened while updating your magical favorite. Our Story Wizard is investigating - please try again!';
+        }
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Get user's favorite stories with pagination.
+  ///
+  /// Returns paginated list of both user-generated and pre-generated favorite stories.
+  Future<Map<String, dynamic>> getUserFavorites({
+    required String userId,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t reach your favorite stories right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    _loggingService.info('Fetching user favorites for user ID: $userId, page: $page, limit: $limit');
+
+    try {
+      final response = await _dio.get(
+        '/users/$userId/favorites',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('User favorites API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final favoritesResponse = response.data as Map<String, dynamic>;
+        _loggingService.info('User favorites fetched successfully: ${favoritesResponse['favorites']?.length ?? 0} favorites on page $page');
+        return favoritesResponse;
+      } else {
+        _loggingService.error('User favorites API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to fetch user favorites: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error fetching user favorites: $e');
+
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while fetching your favorite stories. Please try again!';
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to fetch your favorite stories! The connection seems slow. Please check your internet and let\'s try again!';
+            break;
+          case DioExceptionType.connectionError:
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t reach your favorite stories right now. Please check your internet connection and we\'ll try to reconnect!';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 404) {
+              errorMessage = '👤 Your magical story account seems to have wandered off! Please restart the app to create a new account.';
+            } else if (statusCode == 400) {
+              errorMessage = '📖 There seems to be an issue with your favorites request. Please try again with different parameters!';
+            } else if (statusCode == 500) {
+              errorMessage = '🏰 The Story Wizard\'s favorite magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+            } else {
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while fetching your favorite stories. Let\'s try again!';
+            }
+            break;
+          default:
+            errorMessage = '🌙 Something unexpected happened while fetching your magical favorite stories. Our Story Wizard is investigating - please try again!';
+        }
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
 }

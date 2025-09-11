@@ -9,6 +9,9 @@ abstract class StoryRepository {
   /// Get favorite stories from the local database.
   Future<List<Story>> getFavoriteStories();
 
+  /// Sync favorites with server and return updated favorite stories.
+  Future<List<Story>> syncAndGetFavoriteStories(String userId);
+
   /// Get a story by its ID.
   Future<Story> getStoryById(String id);
 
@@ -19,7 +22,7 @@ abstract class StoryRepository {
   Future<void> updateStory(Story story);
 
   /// Toggle the favorite status of a story.
-  Future<void> toggleFavorite(String id);
+  Future<void> toggleFavorite(String id, {String? userId});
 
   /// Fetch and load pre-generated stories from the API.
   Future<void> loadApiPreGeneratedStories();

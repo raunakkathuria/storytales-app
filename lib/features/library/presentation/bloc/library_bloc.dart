@@ -160,7 +160,18 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     emit(const LibraryLoading());
 
     try {
-      final stories = await _repository.getFavoriteStories();
+      // Get current user ID from authentication service
+      final userProfileData = await _authService.getCurrentUserProfile();
+      final userId = userProfileData?['id'] as String?;
+
+      List<Story> stories;
+      if (userId != null) {
+        // Sync with server favorites and get updated list
+        stories = await _repository.syncAndGetFavoriteStories(userId);
+      } else {
+        // Fall back to local favorites for unauthenticated users (edge case)
+        stories = await _repository.getFavoriteStories();
+      }
 
       if (stories.isEmpty) {
         emit(const LibraryEmpty(
@@ -192,12 +203,16 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     emit(FavoriteToggling(storyId: event.storyId));
 
     try {
+      // Get current user ID from authentication service
+      final userProfileData = await _authService.getCurrentUserProfile();
+      final userId = userProfileData?['id'] as String?;
+
       // Get the current story to check its favorite status
       final story = await _repository.getStoryById(event.storyId);
       final newFavoriteStatus = !story.isFavorite;
 
-      // Toggle favorite status
-      await _repository.toggleFavorite(event.storyId);
+      // Toggle favorite status with user ID for API sync
+      await _repository.toggleFavorite(event.storyId, userId: userId);
 
       // Log analytics event
       if (newFavoriteStatus) {

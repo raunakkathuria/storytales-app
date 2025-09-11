@@ -19,7 +19,7 @@ class MockLibraryRepository extends Mock implements StoryRepository {
   Future<void> updateStory(Story story) async {}
 
   @override
-  Future<void> toggleFavorite(String id) async {}
+  Future<void> toggleFavorite(String id, {String? userId}) async {}
 
   @override
   Future<void> loadApiPreGeneratedStories() async {}
