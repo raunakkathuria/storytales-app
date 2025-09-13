@@ -1088,6 +1088,9 @@ class UserApiClient {
   Future<Map<String, dynamic>> _pollForJobCompletion(String jobId) async {
     const maxAttempts = 60; // 10 minutes with 10-second intervals
     const pollInterval = Duration(seconds: 10);
+    const maxConsecutiveErrors = 5; // Stop after 5 consecutive failures
+    
+    int consecutiveErrors = 0;
 
     for (int attempt = 0; attempt < maxAttempts; attempt++) {
       try {
@@ -1099,35 +1102,42 @@ class UserApiClient {
           _loggingService.info('Job completed successfully');
           return await _getJobResult(jobId);
         } else if (statusResponse['status'] == 'failed') {
+          consecutiveErrors++;
           final errorMsg = statusResponse['error'] ?? 'Unknown error occurred during story generation';
           _loggingService.error('Job failed: $errorMsg');
+          _loggingService.warning('Consecutive failures: $consecutiveErrors of $maxConsecutiveErrors');
           
-          // Check if the job failed due to permanent API issues
-          if (_isPermanentJobFailure(statusResponse)) {
-            _loggingService.error('Job failed with permanent error, stopping polling: $errorMsg');
-            throw Exception('🧙‍♂️ Our Story Wizard encountered a configuration issue. Please check your API setup and try again later.');
+          if (consecutiveErrors >= maxConsecutiveErrors) {
+            _loggingService.error('Story generation failed after $maxConsecutiveErrors consecutive failures, stopping polling');
+            throw Exception('🧙‍♂️ Our Story Wizard encountered persistent issues creating your story. Please try again later or contact support if the problem continues.');
           }
           
-          // Handle as temporary job failure (existing behavior)
-          throw Exception('🧙‍♂️ Our Story Wizard encountered a magical mishap: $errorMsg');
+          // Continue polling for temporary failures
+          _loggingService.info('Treating as temporary failure, continuing to poll...');
+          if (attempt < maxAttempts - 1) {
+            await Future.delayed(pollInterval);
+          }
         } else if (statusResponse['status'] == 'processing' || statusResponse['status'] == 'started') {
+          consecutiveErrors = 0; // Reset counter on successful status check
           _loggingService.info('Job still processing: ${statusResponse['progress'] ?? "Working on your story..."}');
           if (attempt < maxAttempts - 1) {
             await Future.delayed(pollInterval);
           }
         }
       } catch (e) {
-        // Check if it's a permanent failure that we shouldn't retry
-        if (_isPermanentApiError(e)) {
-          _loggingService.error('Permanent API error detected, stopping polling: $e');
-          throw Exception('🧙‍♂️ Our Story Wizard encountered a configuration issue. Please check your internet connection and try again later.');
+        consecutiveErrors++;
+        _loggingService.warning('Polling error (consecutive: $consecutiveErrors of $maxConsecutiveErrors): $e');
+        
+        if (consecutiveErrors >= maxConsecutiveErrors) {
+          _loggingService.error('Story generation failed after $maxConsecutiveErrors consecutive errors, stopping polling');
+          throw Exception('🧙‍♂️ Our Story Wizard encountered persistent connection issues. Please check your internet connection and try again later.');
         }
         
         if (attempt == maxAttempts - 1) {
           _loggingService.error('Final polling attempt failed: $e');
           rethrow;
         }
-        _loggingService.warning('Polling attempt ${attempt + 1} failed, retrying: $e');
+        _loggingService.warning('Polling attempt ${attempt + 1} failed, retrying...');
         await Future.delayed(pollInterval);
       }
     }
@@ -1135,41 +1145,6 @@ class UserApiClient {
     throw Exception('🧙‍♂️ Our Story Wizard is taking longer than expected to craft your magical tale. Please try again!');
   }
 
-  /// Check if an error is a permanent API failure that shouldn't be retried
-  bool _isPermanentApiError(dynamic error) {
-    if (error is DioException) {
-      final statusCode = error.response?.statusCode;
-      // Permanent failures: Permission denied, Unauthorized, Bad Request
-      return statusCode == 403 || statusCode == 401 || statusCode == 400;
-    }
-    return false;
-  }
-
-  /// Check if a job failed due to permanent API issues that shouldn't be retried
-  bool _isPermanentJobFailure(Map<String, dynamic> statusResponse) {
-    try {
-      final error = statusResponse['error'];
-      if (error is Map<String, dynamic>) {
-        final errorCode = error['code'];
-        // Check for permanent error codes in job failure details
-        if (errorCode is int) {
-          return errorCode == 403 || errorCode == 401 || errorCode == 400;
-        }
-        
-        // Also check status string for permission-related errors
-        final status = error['status'];
-        if (status is String) {
-          return status.contains('PERMISSION_DENIED') || 
-                 status.contains('UNAUTHENTICATED') ||
-                 status.contains('INVALID_ARGUMENT');
-        }
-      }
-    } catch (e) {
-      // If we can't parse the error details, assume it's not permanent
-      _loggingService.warning('Could not parse job error details: $e');
-    }
-    return false;
-  }
 
   /// Check the status of a background job
   Future<Map<String, dynamic>> _checkJobStatus(String jobId) async {
