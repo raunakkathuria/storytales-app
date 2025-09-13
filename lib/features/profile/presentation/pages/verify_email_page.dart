@@ -72,54 +72,30 @@ class VerifyEmailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Section
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: StoryTalesTheme.accentColor,
-                    borderRadius: BorderRadius.circular(16),
+                // Clean Header Section - matching login/register design
+                const Center(
+                  child: ResponsiveText(
+                    text: '📧 Check Your Email',
+                    style: TextStyle(
+                      fontFamily: StoryTalesTheme.fontFamilyHeading,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: StoryTalesTheme.textColor,
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: const BoxDecoration(
-                          color: StoryTalesTheme.surfaceColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.email_outlined,
-                          color: StoryTalesTheme.accentColor,
-                          size: 32,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      const ResponsiveText(
-                        text: '📧 Check Your Email',
-                        style: TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyHeading,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: StoryTalesTheme.surfaceColor,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 8),
-                      
-                      ResponsiveText(
-                        text: 'We\'ve sent a verification code to\n${registrationResponse.email}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyBody,
-                          fontSize: 14,
-                          color: StoryTalesTheme.overlayLightColor,
-                        ),
-                      ),
-                    ],
+                ),
+                
+                const SizedBox(height: 12),
+                
+                Center(
+                  child: ResponsiveText(
+                    text: 'Enter the verification code sent to ${registrationResponse.email}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: StoryTalesTheme.fontFamilyBody,
+                      fontSize: 16,
+                      color: StoryTalesTheme.textLightColor,
+                    ),
                   ),
                 ),
                 
@@ -142,47 +118,6 @@ class VerifyEmailPage extends StatelessWidget {
                     context.read<ProfileBloc>().add(const RequestNewRegistrationOTP());
                   },
                   isLoading: state is ProfileVerifying,
-                ),
-                
-                const SizedBox(height: 24),
-                
-                // Help Section
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: StoryTalesTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: StoryTalesTheme.primaryColor.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const ResponsiveText(
-                        text: '💡 Helpful Tips',
-                        style: TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyHeading,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: StoryTalesTheme.textColor,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      const ResponsiveText(
-                        text: '• Check your spam/junk folder if you don\'t see the email\n• The verification code expires in 10 minutes\n• You can request a new code if needed',
-                        style: TextStyle(
-                          fontFamily: StoryTalesTheme.fontFamilyBody,
-                          fontSize: 14,
-                          color: StoryTalesTheme.textLightColor,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),

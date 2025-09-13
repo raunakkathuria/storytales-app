@@ -371,7 +371,7 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     final userProfileData = await _authService.getCurrentUserProfile();
     if (userProfileData == null) return;
     
-    final userId = userProfileData['user_id'] as String;
+    final userId = userProfileData['id'] as String;
 
     // Set loading state
     emit(currentState.copyWith(isLoadingMore: true));

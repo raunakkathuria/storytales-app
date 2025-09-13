@@ -68,45 +68,13 @@ class _OtpVerificationFormState extends State<OtpVerificationForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with Success Icon
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: StoryTalesTheme.primaryColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.mark_email_read,
-                    color: StoryTalesTheme.primaryColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: ResponsiveText(
-                    text: 'Check Your Email!',
-                    style: TextStyle(
-                      fontFamily: StoryTalesTheme.fontFamilyHeading,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: StoryTalesTheme.textColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Instructions
+            // Simplified Instructions
             ResponsiveText(
-              text: 'We\'ve sent a verification code to ${widget.registrationResponse.email}. Please check your email and enter the code below.',
+              text: 'Enter the verification code sent to ${widget.registrationResponse.email}',
               style: const TextStyle(
                 fontFamily: StoryTalesTheme.fontFamilyBody,
-                fontSize: 14,
-                color: StoryTalesTheme.textLightColor,
+                fontSize: 16,
+                color: StoryTalesTheme.textColor,
               ),
             ),
             
@@ -160,44 +128,6 @@ class _OtpVerificationFormState extends State<OtpVerificationForm> {
                   },
                 ),
               ],
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Info Box
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: StoryTalesTheme.primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: StoryTalesTheme.primaryColor.withValues(alpha: 0.2),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const ResponsiveText(
-                    text: '✨ Almost there!',
-                    style: TextStyle(
-                      fontFamily: StoryTalesTheme.fontFamilyBody,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: StoryTalesTheme.primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  ResponsiveText(
-                    text: 'Once verified, you\'ll be registered as "${widget.displayName}" and your stories will be secure!',
-                    style: const TextStyle(
-                      fontFamily: StoryTalesTheme.fontFamilyBody,
-                      fontSize: 12,
-                      color: StoryTalesTheme.textColor,
-                    ),
-                  ),
-                ],
-              ),
             ),
             
             const SizedBox(height: 24),

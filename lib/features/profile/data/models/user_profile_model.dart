@@ -100,7 +100,7 @@ class UserProfileModel extends UserProfile {
   /// Converts the user profile model to JSON.
   Map<String, dynamic> toJson() {
     return {
-      'user_id': userId,
+      'id': userId,
       'display_name': displayName,
       'email': email,
       'email_verified': emailVerified,

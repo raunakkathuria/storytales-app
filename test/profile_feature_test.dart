@@ -131,14 +131,16 @@ void main() {
         test('should create from JSON correctly', () {
           // Arrange
           final json = {
-            'id': 123,
+            'id': '550e8400-e29b-41d4-a716-446655440123',
             'display_name': 'John Doe',
             'email': 'john@example.com',
             'email_verified': true,
             'is_anonymous': false,
             'subscription_tier': 'premium',
-            'max_monthly_stories': 10,
-            'device_id': 'device-123',
+            'total_story_count': 5,
+            'max_total_stories': 100,
+            'created_at': '2025-01-15T10:30:00Z',
+            'updated_at': '2025-01-15T10:30:00Z',
           };
 
           // Act
@@ -155,17 +157,21 @@ void main() {
         test('should handle null values in JSON', () {
           // Arrange
           final json = {
-            'id': 123,
+            'id': '123e4567-e89b-12d3-a456-426614174000',
             'display_name': null,
             'email': null,
-            'device_id': 'device-123',
+            'email_verified': null,
+            'is_anonymous': null,
+            'subscription_tier': null,
+            'total_story_count': null,
+            'max_total_stories': null,
           };
 
           // Act
           final model = UserProfileModel.fromJson(json);
 
           // Assert
-          expect(model.userId, equals('550e8400-e29b-41d4-a716-446655440123'));
+          expect(model.userId, equals('123e4567-e89b-12d3-a456-426614174000'));
           expect(model.displayName, isNull);
           expect(model.email, isNull);
           expect(model.emailVerified, isFalse); // Default value
@@ -194,7 +200,7 @@ void main() {
           final json = model.toJson();
 
           // Assert
-          expect(json['user_id'], equals(123));
+          expect(json['id'], equals('550e8400-e29b-41d4-a716-446655440123'));
           expect(json['display_name'], equals('John Doe'));
           expect(json['email'], equals('john@example.com'));
           expect(json['email_verified'], isTrue);

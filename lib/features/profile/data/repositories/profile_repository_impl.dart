@@ -188,17 +188,17 @@ class ProfileRepositoryImpl implements ProfileRepository {
         otpCode: otpCode,
       );
       
-      // Update local storage through authentication service
-      await _authenticationService.updateStoredUserProfile(loggedInProfileData);
-      
       // Extract the user_profile field from the API response according to spec
-      // API returns: {user_id: 1016, user_profile: {...}}
-      // We need just the user_profile part for parsing
+      // API returns: {id: uuid, user_profile: {...}}
+      // We need just the user_profile part for parsing and storage
       if (!loggedInProfileData.containsKey('user_profile')) {
         throw Exception('Invalid API response structure: missing user_profile field');
       }
       
       final profileData = loggedInProfileData['user_profile'] as Map<String, dynamic>;
+      
+      // Update local storage through authentication service using extracted profile data
+      await _authenticationService.updateStoredUserProfile(profileData);
       final loggedInProfile = UserProfileModel.fromJson(profileData);
       return loggedInProfile.toDomain();
     } catch (e) {

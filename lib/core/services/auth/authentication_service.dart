@@ -350,8 +350,8 @@ class AuthenticationService {
   Future<void> _storeUserProfile(Map<String, dynamic> userProfile) async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Store user ID - API can return either 'id' or 'user_id'
-    final userId = userProfile['id'] ?? userProfile['user_id'];
+    // Store user ID - API now consistently returns 'id' field
+    final userId = userProfile['id'];
     _loggingService.debug('DEBUG _storeUserProfile - Raw userProfile: $userProfile');
     _loggingService.debug('DEBUG _storeUserProfile - email_verified field: ${userProfile['email_verified']}');
     _loggingService.debug('DEBUG _storeUserProfile - Extracted userId: $userId (type: ${userId.runtimeType})');
