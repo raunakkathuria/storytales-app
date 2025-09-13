@@ -40,6 +40,10 @@ dependencies:
   device_info_plus: ^11.5.0
   crypto: ^3.0.3
 
+  # Speech Recognition
+  speech_to_text: ^7.0.0
+  permission_handler: ^11.0.1
+
   # Utilities
   uuid: ^4.3.3
   intl: ^0.20.2

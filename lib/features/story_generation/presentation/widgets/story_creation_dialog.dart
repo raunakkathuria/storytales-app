@@ -7,6 +7,7 @@ import 'package:storytales/core/widgets/animated_logo.dart';
 import 'package:storytales/core/widgets/dialog_form.dart';
 import 'package:storytales/core/widgets/responsive_button.dart';
 import 'package:storytales/core/widgets/responsive_text.dart';
+import 'package:storytales/core/widgets/speech_enabled_text_field.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_bloc.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_event.dart';
 import 'package:storytales/features/story_generation/presentation/bloc/story_generation_state.dart';
@@ -266,12 +267,12 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Prompt input
-          TextFormField(
+          // Prompt input with speech-to-text capability
+          SpeechEnabledTextField(
             controller: _promptController,
             decoration: const InputDecoration(
               labelText: 'Your story',
-              hintText: 'Tell me what you want your story to be about (like "A friendly dragon")',
+              hintText: 'Type or speak what you want your story to be about (like "A friendly dragon")',
               border: OutlineInputBorder(),
               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
@@ -290,6 +291,14 @@ class _StoryCreationDialogState extends State<StoryCreationDialog> {
                 return 'Please tell me more about your story';
               }
               return null;
+            },
+            onSpeechResult: (text) {
+              // Optional: Add haptic feedback when speech is recognized
+              // HapticFeedback.lightImpact();
+            },
+            onSpeechError: (error) {
+              // Error handling is already done in the SpeechEnabledTextField
+              // This callback is available for additional custom error handling if needed
             },
           ),
 
