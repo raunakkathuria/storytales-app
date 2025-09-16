@@ -7,8 +7,8 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   final SubscriptionLocalDataSource _localDataSource;
   final ProfileRepository _profileRepository;
 
-  /// The number of free stories allowed in Phase 1 (fallback value).
-  static const int _freeStoryLimit = 2;
+  /// Default fallback for free story limit when API is unavailable.
+  static const int _fallbackFreeStoryLimit = 3;
 
   SubscriptionRepositoryImpl({
     required SubscriptionLocalDataSource localDataSource,
@@ -22,12 +22,12 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       // Get current user profile from API
       final profile = await _profileRepository.getCurrentUserProfile();
       
-      // For subscribed users (non-free tier), they can always create stories
+      // For subscribed users (monthly/annual tiers), they can always create stories
       if (profile.subscriptionTier != 'free') {
         return true;
       }
       
-      // For free tier users, check stories remaining using base fields
+      // For free tier users, check stories remaining using API-provided limits
       return profile.totalStoryCount < profile.maxTotalStories;
     } catch (e) {
       // Fallback to local data if API fails
@@ -38,7 +38,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
 
       // Check if the user has not reached the free story limit
       final generatedStoryCount = await _localDataSource.getGeneratedStoryCount();
-      return generatedStoryCount < _freeStoryLimit;
+      return generatedStoryCount < _fallbackFreeStoryLimit;
     }
   }
 
@@ -53,7 +53,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       // Get current user profile from API
       final profile = await _profileRepository.getCurrentUserProfile();
       
-      // Consider non-free tiers as active subscriptions
+      // Consider monthly/annual tiers as active subscriptions  
       return profile.subscriptionTier != 'free';
     } catch (e) {
       // Fallback to local data if API fails
@@ -72,8 +72,15 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
-  int getFreeStoryLimit() {
-    return _freeStoryLimit;
+  Future<int> getFreeStoryLimit() async {
+    try {
+      // Get current user profile from API to get maxTotalStories
+      final profile = await _profileRepository.getCurrentUserProfile();
+      return profile.maxTotalStories;
+    } catch (e) {
+      // Fallback to default limit if API fails
+      return _fallbackFreeStoryLimit;
+    }
   }
 
   @override
@@ -88,7 +95,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     } catch (e) {
       // Fallback to local calculation if API fails
       final generatedStoryCount = await _localDataSource.getGeneratedStoryCount();
-      final remaining = _freeStoryLimit - generatedStoryCount;
+      final remaining = _fallbackFreeStoryLimit - generatedStoryCount;
       return remaining > 0 ? remaining : 0;
     }
   }

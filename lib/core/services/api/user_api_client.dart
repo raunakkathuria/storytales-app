@@ -249,28 +249,32 @@ class UserApiClient {
     }
   }
 
-  /// Starts subscription process by sending OTP to email.
-  Future<Map<String, dynamic>> startSubscription({
+  /// Process a native in-app purchase subscription.
+  ///
+  /// Verifies the platform receipt and activates the subscription.
+  Future<Map<String, dynamic>> purchaseSubscription({
     required String userId,
-    required String email,
-    required String displayName,
-    required String plan,
+    required String platform,
+    required String productId,
+    required String receiptData,
+    required String transactionId,
   }) async {
     // Check connectivity
     final isConnected = await _connectivityService.isConnected();
     if (!isConnected) {
-      throw Exception('🌟 Oh no! Our Story Wizard can\'t start your subscription right now. Please check your internet connection and we\'ll try to reconnect!');
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t process your subscription right now. Please check your internet connection and we\'ll try to reconnect!');
     }
 
-    _loggingService.info('Starting subscription for user ID: $userId, plan: $plan');
+    _loggingService.info('Processing subscription purchase for user ID: $userId, platform: $platform, product: $productId');
 
     try {
       final response = await _dio.post(
-        '/users/$userId/subscription',
+        '/users/$userId/purchase-subscription',
         data: {
-          'email': email,
-          'display_name': displayName,
-          'plan': plan,
+          'platform': platform,
+          'product_id': productId,
+          'receipt_data': receiptData,
+          'transaction_id': transactionId,
         },
         options: Options(
           headers: {
@@ -284,43 +288,47 @@ class UserApiClient {
         ),
       );
 
-      _loggingService.info('Start subscription API Response Status: ${response.statusCode}');
+      _loggingService.info('Purchase subscription API Response Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final subscriptionResponse = response.data as Map<String, dynamic>;
-        _loggingService.info('Subscription started successfully, OTP sent to: $email');
+        _loggingService.info('Subscription purchase processed successfully: ${subscriptionResponse['subscription_tier']}');
         return subscriptionResponse;
       } else {
-        _loggingService.error('Start subscription API Error - Status: ${response.statusCode}, Data: ${response.data}');
-        throw Exception('Failed to start subscription: ${response.statusCode}');
+        _loggingService.error('Purchase subscription API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to process subscription purchase: ${response.statusCode}');
       }
     } catch (e) {
-      _loggingService.error('Error starting subscription: $e');
+      _loggingService.error('Error processing subscription purchase: $e');
 
-      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while starting your subscription. Please try again!';
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while processing your subscription. Please try again!';
 
       if (e is DioException) {
         switch (e.type) {
           case DioExceptionType.connectionTimeout:
           case DioExceptionType.sendTimeout:
           case DioExceptionType.receiveTimeout:
-            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to start your subscription! The connection seems slow. Please check your internet and let\'s try again!';
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to process your subscription! The connection seems slow. Please check your internet and let\'s try again!';
             break;
           case DioExceptionType.connectionError:
-            errorMessage = '🌟 Oh no! Our Story Wizard can\'t start your subscription right now. Please check your internet connection and we\'ll try to reconnect!';
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t process your subscription right now. Please check your internet connection and we\'ll try to reconnect!';
             break;
           case DioExceptionType.badResponse:
             final statusCode = e.response?.statusCode;
-            if (statusCode == 404) {
+            if (statusCode == 400) {
+              errorMessage = '📱 There seems to be an issue with your purchase receipt. Please try again or contact support if the problem persists.';
+            } else if (statusCode == 402) {
+              errorMessage = '💳 There was a problem processing your subscription payment. Please check your payment method and try again.';
+            } else if (statusCode == 404) {
               errorMessage = '👤 Your magical story account seems to have wandered off! Please restart the app to create a new account.';
             } else if (statusCode == 500) {
               errorMessage = '🏰 The Story Wizard\'s subscription magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
             } else {
-              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while starting your subscription. Let\'s try again!';
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while processing your subscription. Let\'s try again!';
             }
             break;
           default:
-            errorMessage = '🌙 Something unexpected happened while starting your magical subscription. Our Story Wizard is investigating - please try again!';
+            errorMessage = '🌙 Something unexpected happened while processing your magical subscription. Our Story Wizard is investigating - please try again!';
         }
       }
 
@@ -328,25 +336,35 @@ class UserApiClient {
     }
   }
 
-  /// Verifies OTP and activates subscription.
-  Future<Map<String, dynamic>> verifySubscription({
+  /// Restore subscription from previous purchases.
+  ///
+  /// Used for app reinstalls or device transfers.
+  Future<Map<String, dynamic>> restoreSubscription({
     required String userId,
-    required String otpCode,
+    required String platform,
+    String? receiptData,
   }) async {
     // Check connectivity
     final isConnected = await _connectivityService.isConnected();
     if (!isConnected) {
-      throw Exception('🌟 Oh no! Our Story Wizard can\'t verify your subscription right now. Please check your internet connection and we\'ll try to reconnect!');
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t restore your subscription right now. Please check your internet connection and we\'ll try to reconnect!');
     }
 
-    _loggingService.info('Verifying subscription for user ID: $userId');
+    _loggingService.info('Restoring subscription for user ID: $userId, platform: $platform');
 
     try {
+      final requestData = {
+        'platform': platform,
+      };
+      
+      // Add receipt data if provided (mainly for Android)
+      if (receiptData != null) {
+        requestData['receipt_data'] = receiptData;
+      }
+
       final response = await _dio.post(
-        '/users/$userId/verify-subscription',
-        data: {
-          'otp_code': otpCode,
-        },
+        '/users/$userId/restore-subscription',
+        data: requestData,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -359,45 +377,117 @@ class UserApiClient {
         ),
       );
 
-      _loggingService.info('Verify subscription API Response Status: ${response.statusCode}');
+      _loggingService.info('Restore subscription API Response Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        final subscriptionResponse = response.data as Map<String, dynamic>;
-        _loggingService.info('Subscription verified and activated successfully');
-        return subscriptionResponse;
+        final restoreResponse = response.data as Map<String, dynamic>;
+        final subscriptionFound = restoreResponse['subscription_found'] ?? false;
+        _loggingService.info('Subscription restore completed - Found: $subscriptionFound');
+        return restoreResponse;
       } else {
-        _loggingService.error('Verify subscription API Error - Status: ${response.statusCode}, Data: ${response.data}');
-        throw Exception('Failed to verify subscription: ${response.statusCode}');
+        _loggingService.error('Restore subscription API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to restore subscription: ${response.statusCode}');
       }
     } catch (e) {
-      _loggingService.error('Error verifying subscription: $e');
+      _loggingService.error('Error restoring subscription: $e');
 
-      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while verifying your subscription. Please try again!';
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while restoring your subscription. Please try again!';
 
       if (e is DioException) {
         switch (e.type) {
           case DioExceptionType.connectionTimeout:
           case DioExceptionType.sendTimeout:
           case DioExceptionType.receiveTimeout:
-            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to verify your subscription! The connection seems slow. Please check your internet and let\'s try again!';
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to restore your subscription! The connection seems slow. Please check your internet and let\'s try again!';
             break;
           case DioExceptionType.connectionError:
-            errorMessage = '🌟 Oh no! Our Story Wizard can\'t verify your subscription right now. Please check your internet connection and we\'ll try to reconnect!';
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t restore your subscription right now. Please check your internet connection and we\'ll try to reconnect!';
             break;
           case DioExceptionType.badResponse:
             final statusCode = e.response?.statusCode;
-            if (statusCode == 400) {
-              errorMessage = '🔢 The verification code you entered doesn\'t seem to be correct. Please check your email and try again!';
-            } else if (statusCode == 404) {
-              errorMessage = '👤 Your magical story account seems to have wandered off! Please restart the app to create a new account.';
+            if (statusCode == 404) {
+              errorMessage = '👤 No previous subscription found for this account. You can purchase a new subscription to access unlimited stories!';
             } else if (statusCode == 500) {
-              errorMessage = '🏰 The Story Wizard\'s subscription verification magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+              errorMessage = '🏰 The Story Wizard\'s subscription restore magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
             } else {
-              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while verifying your subscription. Let\'s try again!';
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while restoring your subscription. Let\'s try again!';
             }
             break;
           default:
-            errorMessage = '🌙 Something unexpected happened while verifying your magical subscription. Our Story Wizard is investigating - please try again!';
+            errorMessage = '🌙 Something unexpected happened while restoring your magical subscription. Our Story Wizard is investigating - please try again!';
+        }
+      }
+
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Get current subscription status and details.
+  ///
+  /// Returns subscription tier, expiry date, and entitlement information.
+  Future<Map<String, dynamic>> getSubscriptionStatus({
+    required String userId,
+  }) async {
+    // Check connectivity
+    final isConnected = await _connectivityService.isConnected();
+    if (!isConnected) {
+      throw Exception('🌟 Oh no! Our Story Wizard can\'t check your subscription status right now. Please check your internet connection and we\'ll try to reconnect!');
+    }
+
+    _loggingService.info('Getting subscription status for user ID: $userId');
+
+    try {
+      final response = await _dio.get(
+        '/users/$userId/subscription-status',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'x-api-key': _appConfig.apiKey,
+            'device-id': await _getDeviceIdHeader(),
+          },
+          sendTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+          receiveTimeout: Duration(seconds: _appConfig.apiTimeoutSeconds),
+        ),
+      );
+
+      _loggingService.info('Subscription status API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final statusResponse = response.data as Map<String, dynamic>;
+        final subscriptionTier = statusResponse['subscription_tier'] ?? 'free';
+        _loggingService.info('Subscription status retrieved: $subscriptionTier');
+        return statusResponse;
+      } else {
+        _loggingService.error('Subscription status API Error - Status: ${response.statusCode}, Data: ${response.data}');
+        throw Exception('Failed to get subscription status: ${response.statusCode}');
+      }
+    } catch (e) {
+      _loggingService.error('Error getting subscription status: $e');
+
+      String errorMessage = 'Oops! Our Story Wizard encountered a magical mishap while checking your subscription. Please try again!';
+
+      if (e is DioException) {
+        switch (e.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            errorMessage = '🧙‍♂️ Our Story Wizard is taking too long to check your subscription! The connection seems slow. Please check your internet and let\'s try again!';
+            break;
+          case DioExceptionType.connectionError:
+            errorMessage = '🌟 Oh no! Our Story Wizard can\'t check your subscription right now. Please check your internet connection and we\'ll try to reconnect!';
+            break;
+          case DioExceptionType.badResponse:
+            final statusCode = e.response?.statusCode;
+            if (statusCode == 404) {
+              errorMessage = '👤 Your magical story account seems to have wandered off! Please restart the app to create a new account.';
+            } else if (statusCode == 500) {
+              errorMessage = '🏰 The Story Wizard\'s subscription status magic is having some difficulties right now. We\'re working to fix it - please try again in a little while!';
+            } else {
+              errorMessage = '🧙‍♂️ Our Story Wizard encountered a mysterious spell error (code $statusCode) while checking your subscription. Let\'s try again!';
+            }
+            break;
+          default:
+            errorMessage = '🌙 Something unexpected happened while checking your magical subscription. Our Story Wizard is investigating - please try again!';
         }
       }
 

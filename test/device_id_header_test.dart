@@ -175,36 +175,41 @@ void main() {
       expect(options.headers!['Content-Type'], equals('application/json'));
     });
 
-    test('startSubscription should include device-id header', () async {
+    test('purchaseSubscription should include device-id header', () async {
       // Arrange
       final responseData = {
-        'message': 'OTP sent successfully',
-        'session_id': 'session-123',
+        'success': true,
+        'subscription_tier': 'monthly',
+        'expires_at': '2025-02-15T10:30:00Z',
+        'platform': 'ios',
+        'product_id': 'com.storytales.monthly',
+        'unlimited_stories': true,
       };
 
       final response = Response(
         data: responseData,
         statusCode: 200,
-        requestOptions: RequestOptions(path: '/users/123/subscription'),
+        requestOptions: RequestOptions(path: '/users/123/purchase-subscription'),
       );
 
       when(mockDio.post(
-        '/users/123/subscription',
+        '/users/123/purchase-subscription',
         data: anyNamed('data'),
         options: anyNamed('options'),
       )).thenAnswer((_) async => response);
 
       // Act
-      await userApiClient.startSubscription(
+      await userApiClient.purchaseSubscription(
         userId: '123',
-        email: 'test@example.com',
-        displayName: 'Test User',
-        plan: 'premium',
+        platform: 'ios',
+        productId: 'com.storytales.monthly',
+        receiptData: 'base64_receipt_data',
+        transactionId: 'transaction_123',
       );
 
       // Assert
       final captured = verify(mockDio.post(
-        '/users/123/subscription',
+        '/users/123/purchase-subscription',
         data: anyNamed('data'),
         options: captureAnyNamed('options'),
       )).captured;
@@ -216,35 +221,39 @@ void main() {
       expect(options.headers!['Content-Type'], equals('application/json'));
     });
 
-    test('verifySubscription should include device-id header', () async {
+    test('restoreSubscription should include device-id header', () async {
       // Arrange
       final responseData = {
-        'user_id': 123,
-        'subscription_tier': 'premium',
-        'stories_remaining': 100,
+        'success': true,
+        'subscription_found': true,
+        'subscription_tier': 'monthly',
+        'expires_at': '2025-02-15T10:30:00Z',
+        'platform': 'ios',
+        'product_id': 'com.storytales.monthly',
       };
 
       final response = Response(
         data: responseData,
         statusCode: 200,
-        requestOptions: RequestOptions(path: '/users/123/verify-subscription'),
+        requestOptions: RequestOptions(path: '/users/123/restore-subscription'),
       );
 
       when(mockDio.post(
-        '/users/123/verify-subscription',
+        '/users/123/restore-subscription',
         data: anyNamed('data'),
         options: anyNamed('options'),
       )).thenAnswer((_) async => response);
 
       // Act
-      await userApiClient.verifySubscription(
+      await userApiClient.restoreSubscription(
         userId: '123',
-        otpCode: '123456',
+        platform: 'ios',
+        receiptData: 'base64_receipt_data',
       );
 
       // Assert
       final captured = verify(mockDio.post(
-        '/users/123/verify-subscription',
+        '/users/123/restore-subscription',
         data: anyNamed('data'),
         options: captureAnyNamed('options'),
       )).captured;
@@ -254,6 +263,45 @@ void main() {
       expect(options.headers!['device-id'], equals('test-device-id-12345'));
       expect(options.headers!['x-api-key'], equals('test-api-key'));
       expect(options.headers!['Content-Type'], equals('application/json'));
+    });
+
+    test('getSubscriptionStatus should include device-id header', () async {
+      // Arrange
+      final responseData = {
+        'user_id': 'test-user-uuid-1',
+        'subscription_tier': 'monthly',
+        'is_active': true,
+        'expires_at': '2025-02-15T10:30:00Z',
+        'platform': 'ios',
+        'product_id': 'com.storytales.monthly',
+        'auto_renewing': true,
+        'unlimited_stories': true,
+      };
+
+      final response = Response(
+        data: responseData,
+        statusCode: 200,
+        requestOptions: RequestOptions(path: '/users/123/subscription-status'),
+      );
+
+      when(mockDio.get(
+        '/users/123/subscription-status',
+        options: anyNamed('options'),
+      )).thenAnswer((_) async => response);
+
+      // Act
+      await userApiClient.getSubscriptionStatus(userId: '123');
+
+      // Assert
+      final captured = verify(mockDio.get(
+        '/users/123/subscription-status',
+        options: captureAnyNamed('options'),
+      )).captured;
+
+      final options = captured.first as Options;
+      expect(options.headers, isNotNull);
+      expect(options.headers!['device-id'], equals('test-device-id-12345'));
+      expect(options.headers!['x-api-key'], equals('test-api-key'));
     });
 
     test('getUserStories should include device-id header', () async {

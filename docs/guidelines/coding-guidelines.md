@@ -56,7 +56,7 @@ Adopt these best practices to keep the codebase **simple** and **maintainable**:
        ) async {
          try {
            final freeStoriesRemaining = await _repository.getFreeStoriesRemaining();
-           final freeStoryLimit = _repository.getFreeStoryLimit();
+           final freeStoryLimit = await _repository.getFreeStoryLimit();
 
            if (freeStoriesRemaining <= 0) {
              // User has no free stories remaining, subscription is required

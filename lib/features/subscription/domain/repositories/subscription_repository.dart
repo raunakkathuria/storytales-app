@@ -16,8 +16,8 @@ abstract class SubscriptionRepository {
   /// Get the number of stories the user has generated.
   Future<int> getGeneratedStoryCount();
 
-  /// Get the number of free stories allowed.
-  int getFreeStoryLimit();
+  /// Get the number of free stories allowed (from API data).
+  Future<int> getFreeStoryLimit();
 
   /// Get the number of free stories remaining.
   Future<int> getFreeStoriesRemaining();

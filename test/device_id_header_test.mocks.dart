@@ -917,12 +917,36 @@ class MockAppConfig extends _i1.Mock implements _i8.AppConfig {
           as String);
 
   @override
+  bool get iapUseSandbox =>
+      (super.noSuchMethod(Invocation.getter(#iapUseSandbox), returnValue: false)
+          as bool);
+
+  @override
+  List<String> get iapProductIds =>
+      (super.noSuchMethod(
+            Invocation.getter(#iapProductIds),
+            returnValue: <String>[],
+          )
+          as List<String>);
+
+  @override
+  bool get iapDebugLogging =>
+      (super.noSuchMethod(
+            Invocation.getter(#iapDebugLogging),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
   _i8.AppConfig copyWith({
     String? apiBaseUrl,
     int? apiTimeoutSeconds,
     bool? useMockData,
     String? environment,
     String? apiKey,
+    bool? iapUseSandbox,
+    List<String>? iapProductIds,
+    bool? iapDebugLogging,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#copyWith, [], {
@@ -931,6 +955,9 @@ class MockAppConfig extends _i1.Mock implements _i8.AppConfig {
               #useMockData: useMockData,
               #environment: environment,
               #apiKey: apiKey,
+              #iapUseSandbox: iapUseSandbox,
+              #iapProductIds: iapProductIds,
+              #iapDebugLogging: iapDebugLogging,
             }),
             returnValue: _FakeAppConfig_6(
               this,
@@ -940,6 +967,9 @@ class MockAppConfig extends _i1.Mock implements _i8.AppConfig {
                 #useMockData: useMockData,
                 #environment: environment,
                 #apiKey: apiKey,
+                #iapUseSandbox: iapUseSandbox,
+                #iapProductIds: iapProductIds,
+                #iapDebugLogging: iapDebugLogging,
               }),
             ),
           )

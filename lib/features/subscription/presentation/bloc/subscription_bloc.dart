@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storytales/core/services/analytics/analytics_service.dart';
+import 'package:storytales/core/services/auth/authentication_service.dart';
+import 'package:storytales/core/utils/iap_debug_helper.dart';
 import 'package:storytales/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_event.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_state.dart';
@@ -8,20 +10,21 @@ import 'package:storytales/features/subscription/presentation/bloc/subscription_
 class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
   final SubscriptionRepository _repository;
   final AnalyticsService _analyticsService;
+  final AuthenticationService _authService;
 
   SubscriptionBloc({
     required SubscriptionRepository repository,
     required AnalyticsService analyticsService,
+    required AuthenticationService authenticationService,
   })  : _repository = repository,
         _analyticsService = analyticsService,
+        _authService = authenticationService,
         super(const SubscriptionInitial()) {
     on<CheckSubscription>(_onCheckSubscription);
     on<IncrementStoryCount>(_onIncrementStoryCount);
     on<PurchaseSubscription>(_onPurchaseSubscription);
     on<RestoreSubscription>(_onRestoreSubscription);
     on<GetFreeStoriesRemaining>(_onGetFreeStoriesRemaining);
-    on<SimulatePurchase>(_onSimulatePurchase);
-    on<ResetSubscription>(_onResetSubscription);
     on<RefreshFreeStoriesCount>(_onRefreshFreeStoriesCount);
   }
 
@@ -33,33 +36,46 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     emit(const SubscriptionChecking());
 
     try {
-      final hasActiveSubscription = await _repository.hasActiveSubscription();
+      // Get subscription status from API via authentication service
+      final subscriptionStatus = await _authService.getSubscriptionStatus();
+      
+      final subscriptionTier = subscriptionStatus['subscription_tier'] ?? 'free';
+      final isActive = subscriptionStatus['is_active'] ?? false;
+      final unlimitedStories = subscriptionStatus['unlimited_stories'] ?? false;
 
-      if (hasActiveSubscription) {
-        // Get the subscription type
-        final subscriptionType = await _repository.getSubscriptionType();
-        emit(SubscriptionActive(subscriptionType: subscriptionType ?? 'monthly'));
+      // Debug logging for subscription check
+      IAPDebugHelper.logSubscriptionCheck(
+        userId: subscriptionStatus['user_id']?.toString() ?? 'unknown',
+        subscriptionTier: subscriptionTier,
+        isActive: isActive,
+        unlimitedStories: unlimitedStories,
+      );
+
+      if (isActive && unlimitedStories) {
+        // User has active subscription with unlimited stories
+        emit(SubscriptionActive(subscriptionType: subscriptionTier));
       } else {
+        // User is on free tier - check story limits using API data
         final freeStoriesRemaining = await _repository.getFreeStoriesRemaining();
-        final freeStoryLimit = _repository.getFreeStoryLimit();
+        final freeStoryLimit = await _repository.getFreeStoryLimit();
         final generatedStoryCount = await _repository.getGeneratedStoryCount();
 
-      if (freeStoriesRemaining <= 0) {
-        // User has no free stories remaining, subscription is required
-        emit(SubscriptionRequired(
-          generatedStoryCount: generatedStoryCount,
-          freeStoryLimit: freeStoryLimit,
-        ));
+        if (freeStoriesRemaining <= 0) {
+          // User has no free stories remaining, subscription is required
+          emit(SubscriptionRequired(
+            generatedStoryCount: generatedStoryCount,
+            freeStoryLimit: freeStoryLimit,
+          ));
 
-        // Log analytics event for subscription prompt
-        await _analyticsService.logSubscriptionPromptShown();
-      } else {
-        // User still has free stories remaining
-        emit(FreeStoriesAvailable(
-          freeStoriesRemaining: freeStoriesRemaining,
-          totalFreeStories: freeStoryLimit,
-        ));
-      }
+          // Log analytics event for subscription prompt
+          await _analyticsService.logSubscriptionPromptShown();
+        } else {
+          // User still has free stories remaining
+          emit(FreeStoriesAvailable(
+            freeStoriesRemaining: freeStoriesRemaining,
+            totalFreeStories: freeStoryLimit,
+          ));
+        }
       }
     } catch (e) {
       emit(SubscriptionError(message: e.toString()));
@@ -96,30 +112,75 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     PurchaseSubscription event,
     Emitter<SubscriptionState> emit,
   ) async {
-    emit(SubscriptionPurchasing(subscriptionType: event.subscriptionType));
+    // Determine subscription type from product ID
+    final subscriptionType = event.productId.contains('monthly') ? 'monthly' : 'annual';
+    emit(SubscriptionPurchasing(subscriptionType: subscriptionType));
 
     try {
-      // In a real implementation, this would call the in-app purchase API
-      // For Phase 1, we'll just set the subscription status to active
-      await _repository.setSubscriptionStatus(true);
-
-      // Store the subscription type
-      await _repository.setSubscriptionType(event.subscriptionType);
-
-      // Log analytics event for subscription purchased
-      await _analyticsService.logSubscriptionPurchased(
-        subscriptionType: event.subscriptionType,
-        subscriptionId: event.subscriptionId,
+      // Debug logging for purchase attempt
+      IAPDebugHelper.logTransaction(
+        platform: event.platform,
+        productId: event.productId,
+        transactionId: event.transactionId,
+        receiptData: event.receiptData,
       );
 
-      emit(SubscriptionPurchased(
-        subscriptionType: event.subscriptionType,
-        subscriptionId: event.subscriptionId,
-      ));
+      // Call authentication service to process the native IAP purchase
+      final response = await _authService.purchaseSubscription(
+        platform: event.platform,
+        productId: event.productId,
+        receiptData: event.receiptData,
+        transactionId: event.transactionId,
+      );
 
-      // Update the subscription status
-      add(const CheckSubscription());
+      // Check if purchase was successful
+      if (response['success'] == true) {
+        final subscriptionTier = response['subscription_tier'] ?? subscriptionType;
+        
+        // Debug logging for successful purchase
+        IAPDebugHelper.logPurchaseResult(
+          success: true,
+          subscriptionTier: subscriptionTier,
+          transactionId: event.transactionId,
+        );
+
+        // Log analytics event for subscription purchased
+        await _analyticsService.logSubscriptionPurchased(
+          subscriptionType: subscriptionTier,
+          subscriptionId: event.transactionId,
+        );
+
+        emit(SubscriptionPurchased(
+          subscriptionType: subscriptionTier,
+          subscriptionId: event.transactionId,
+        ));
+
+        // Update the subscription status
+        add(const CheckSubscription());
+      } else {
+        // Handle API failure response
+        final errorMessage = response['message'] ?? 'Purchase verification failed';
+        
+        // Debug logging for failed purchase
+        IAPDebugHelper.logPurchaseResult(
+          success: false,
+          error: errorMessage,
+        );
+
+        emit(SubscriptionPurchaseFailed(error: errorMessage));
+        
+        await _analyticsService.logError(
+          errorType: 'subscription_purchase_verification_failed',
+          errorMessage: errorMessage,
+        );
+      }
     } catch (e) {
+      // Debug logging for purchase exception
+      IAPDebugHelper.logPurchaseResult(
+        success: false,
+        error: e.toString(),
+      );
+
       emit(SubscriptionPurchaseFailed(error: e.toString()));
 
       // Log analytics event for error
@@ -138,15 +199,46 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     emit(const SubscriptionRestoring());
 
     try {
-      // In a real implementation, this would call the in-app purchase API
-      // For Phase 1, we'll just check if the user has an active subscription
-      final hasActiveSubscription = await _repository.hasActiveSubscription();
+      // Call authentication service to restore subscription from platform
+      final response = await _authService.restoreSubscription(
+        platform: event.platform,
+        receiptData: event.receiptData,
+      );
 
-      emit(SubscriptionRestored(wasSuccessful: hasActiveSubscription));
+      final subscriptionFound = response['subscription_found'] ?? false;
+      
+      if (subscriptionFound) {
+        // Log successful restoration as a subscription event
+        final subscriptionTier = response['subscription_tier'];
+        
+        // Debug logging for successful restore
+        IAPDebugHelper.logRestoreResult(
+          subscriptionFound: true,
+          subscriptionTier: subscriptionTier,
+        );
 
-      // Update the subscription status
+        await _analyticsService.logSubscriptionPurchased(
+          subscriptionType: subscriptionTier,
+          subscriptionId: 'restored_subscription',
+        );
+      } else {
+        // Debug logging for no subscription found
+        IAPDebugHelper.logRestoreResult(
+          subscriptionFound: false,
+        );
+      }
+
+      emit(SubscriptionRestored(wasSuccessful: subscriptionFound));
+
+      // Update the subscription status regardless of result
       add(const CheckSubscription());
     } catch (e) {
+      // Debug logging for restore exception
+      IAPDebugHelper.logRestoreResult(
+        subscriptionFound: false,
+        error: e.toString(),
+      );
+
       emit(SubscriptionRestoreFailed(error: e.toString()));
 
       // Log analytics event for error
@@ -164,7 +256,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
   ) async {
     try {
       final freeStoriesRemaining = await _repository.getFreeStoriesRemaining();
-      final freeStoryLimit = _repository.getFreeStoryLimit();
+      final freeStoryLimit = await _repository.getFreeStoryLimit();
       final generatedStoryCount = await _repository.getGeneratedStoryCount();
 
       if (freeStoriesRemaining <= 0) {
@@ -194,68 +286,6 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     }
   }
 
-  /// Handle the SimulatePurchase event (for development).
-  Future<void> _onSimulatePurchase(
-    SimulatePurchase event,
-    Emitter<SubscriptionState> emit,
-  ) async {
-    emit(const SubscriptionPurchasing(subscriptionType: 'monthly'));
-
-    try {
-      // Simulate a delay
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Set the subscription status to active
-      await _repository.setSubscriptionStatus(true);
-
-      // Store the subscription type
-      await _repository.setSubscriptionType('monthly');
-
-      // Log analytics event for subscription purchased
-      await _analyticsService.logSubscriptionPurchased(
-        subscriptionType: 'monthly',
-        subscriptionId: 'simulated_purchase',
-      );
-
-      emit(const SubscriptionPurchased(
-        subscriptionType: 'monthly',
-        subscriptionId: 'simulated_purchase',
-      ));
-
-      // Update the subscription status
-      add(const CheckSubscription());
-    } catch (e) {
-      emit(SubscriptionPurchaseFailed(error: e.toString()));
-
-      // Log analytics event for error
-      await _analyticsService.logError(
-        errorType: 'simulate_purchase_error',
-        errorMessage: e.toString(),
-      );
-    }
-  }
-
-  /// Handle the ResetSubscription event (for development).
-  Future<void> _onResetSubscription(
-    ResetSubscription event,
-    Emitter<SubscriptionState> emit,
-  ) async {
-    try {
-      // Set the subscription status to inactive
-      await _repository.setSubscriptionStatus(false);
-
-      // Update the subscription status
-      add(const CheckSubscription());
-    } catch (e) {
-      emit(SubscriptionError(message: e.toString()));
-
-      // Log analytics event for error
-      await _analyticsService.logError(
-        errorType: 'reset_subscription_error',
-        errorMessage: e.toString(),
-      );
-    }
-  }
 
   /// Handle the RefreshFreeStoriesCount event.
   /// This is used to ensure the subscription page shows the correct count
@@ -275,7 +305,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
 
       // Get the latest counts
       final freeStoriesRemaining = await _repository.getFreeStoriesRemaining();
-      final freeStoryLimit = _repository.getFreeStoryLimit();
+      final freeStoryLimit = await _repository.getFreeStoryLimit();
       final generatedStoryCount = await _repository.getGeneratedStoryCount();
 
       if (freeStoriesRemaining <= 0) {

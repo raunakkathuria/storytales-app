@@ -296,18 +296,20 @@ class MockUserApiClient extends _i1.Mock implements _i8.UserApiClient {
           as _i3.Future<Map<String, dynamic>>);
 
   @override
-  _i3.Future<Map<String, dynamic>> startSubscription({
+  _i3.Future<Map<String, dynamic>> purchaseSubscription({
     required String? userId,
-    required String? email,
-    required String? displayName,
-    required String? plan,
+    required String? platform,
+    required String? productId,
+    required String? receiptData,
+    required String? transactionId,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#startSubscription, [], {
+            Invocation.method(#purchaseSubscription, [], {
               #userId: userId,
-              #email: email,
-              #displayName: displayName,
-              #plan: plan,
+              #platform: platform,
+              #productId: productId,
+              #receiptData: receiptData,
+              #transactionId: transactionId,
             }),
             returnValue: _i3.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
@@ -316,15 +318,29 @@ class MockUserApiClient extends _i1.Mock implements _i8.UserApiClient {
           as _i3.Future<Map<String, dynamic>>);
 
   @override
-  _i3.Future<Map<String, dynamic>> verifySubscription({
+  _i3.Future<Map<String, dynamic>> restoreSubscription({
     required String? userId,
-    required String? otpCode,
+    required String? platform,
+    String? receiptData,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#verifySubscription, [], {
+            Invocation.method(#restoreSubscription, [], {
               #userId: userId,
-              #otpCode: otpCode,
+              #platform: platform,
+              #receiptData: receiptData,
             }),
+            returnValue: _i3.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i3.Future<Map<String, dynamic>>);
+
+  @override
+  _i3.Future<Map<String, dynamic>> getSubscriptionStatus({
+    required String? userId,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#getSubscriptionStatus, [], {#userId: userId}),
             returnValue: _i3.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
@@ -453,6 +469,56 @@ class MockUserApiClient extends _i1.Mock implements _i8.UserApiClient {
               #ageRange: ageRange,
               #theme: theme,
               #genre: genre,
+            }),
+            returnValue: _i3.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i3.Future<Map<String, dynamic>>);
+
+  @override
+  _i3.Future<Map<String, dynamic>> addFavorite({
+    required String? userId,
+    required String? storyId,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#addFavorite, [], {
+              #userId: userId,
+              #storyId: storyId,
+            }),
+            returnValue: _i3.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i3.Future<Map<String, dynamic>>);
+
+  @override
+  _i3.Future<Map<String, dynamic>> removeFavorite({
+    required String? userId,
+    required String? storyId,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#removeFavorite, [], {
+              #userId: userId,
+              #storyId: storyId,
+            }),
+            returnValue: _i3.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i3.Future<Map<String, dynamic>>);
+
+  @override
+  _i3.Future<Map<String, dynamic>> getUserFavorites({
+    required String? userId,
+    int? page = 1,
+    int? limit = 20,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#getUserFavorites, [], {
+              #userId: userId,
+              #page: page,
+              #limit: limit,
             }),
             returnValue: _i3.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},

@@ -18,23 +18,36 @@ class IncrementStoryCount extends SubscriptionEvent {
   const IncrementStoryCount();
 }
 
-/// Event to purchase a subscription.
+/// Event to purchase a subscription using native in-app purchase.
 class PurchaseSubscription extends SubscriptionEvent {
-  final String subscriptionType;
-  final String subscriptionId;
+  final String platform; // 'ios' or 'android'
+  final String productId; // 'com.storytales.monthly' or 'com.storytales.annual'
+  final String receiptData; // Base64 receipt from platform
+  final String transactionId; // Platform transaction ID
 
   const PurchaseSubscription({
-    required this.subscriptionType,
-    required this.subscriptionId,
+    required this.platform,
+    required this.productId, 
+    required this.receiptData,
+    required this.transactionId,
   });
 
   @override
-  List<Object?> get props => [subscriptionType, subscriptionId];
+  List<Object?> get props => [platform, productId, receiptData, transactionId];
 }
 
-/// Event to restore a subscription.
+/// Event to restore a subscription from previous purchases.
 class RestoreSubscription extends SubscriptionEvent {
-  const RestoreSubscription();
+  final String platform; // 'ios' or 'android'
+  final String? receiptData; // Optional receipt data (mainly for Android)
+
+  const RestoreSubscription({
+    required this.platform,
+    this.receiptData,
+  });
+
+  @override
+  List<Object?> get props => [platform, receiptData];
 }
 
 /// Event to get the number of free stories remaining.
@@ -42,15 +55,6 @@ class GetFreeStoriesRemaining extends SubscriptionEvent {
   const GetFreeStoriesRemaining();
 }
 
-/// Event to simulate a subscription purchase (for development).
-class SimulatePurchase extends SubscriptionEvent {
-  const SimulatePurchase();
-}
-
-/// Event to reset the subscription status (for development).
-class ResetSubscription extends SubscriptionEvent {
-  const ResetSubscription();
-}
 
 /// Event to refresh the free stories count.
 /// This is used to ensure the subscription page shows the correct count

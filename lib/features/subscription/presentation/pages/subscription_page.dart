@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storytales/core/theme/theme.dart';
-import 'package:storytales/core/widgets/confirmation_dialog.dart';
 import 'package:storytales/core/widgets/responsive_icon.dart';
 import 'package:storytales/core/widgets/responsive_text.dart';
 import 'package:storytales/features/subscription/presentation/bloc/subscription_bloc.dart';
@@ -124,7 +123,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
                 // Restore subscription button
                 OutlinedButton(
-                  onPressed: () => context.read<SubscriptionBloc>().add(const RestoreSubscription()),
+                  onPressed: () => _restoreSubscription(context),
                   child: const ResponsiveText(
                     text: 'Restore Subscription',
                     style: TextStyle(
@@ -283,26 +282,102 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   void _purchaseSubscription(BuildContext context, String type, String id) {
-    context.read<SubscriptionBloc>().add(
-      PurchaseSubscription(
-        subscriptionType: type,
-        subscriptionId: id,
+    // TODO: Implement native in-app purchase flow here
+    // This should:
+    // 1. Determine platform (iOS/Android)
+    // 2. Use in_app_purchase plugin to initiate purchase
+    // 3. Get receipt data from platform
+    // 4. Call the PurchaseSubscription event with receipt data
+    
+    // For now, show a message that native IAP is needed
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: ResponsiveText(
+          text: 'Native in-app purchase integration needed here. This will connect to iOS App Store / Google Play.',
+          style: TextStyle(
+            fontFamily: StoryTalesTheme.fontFamilyBody,
+            fontSize: 14,
+          ),
+        ),
+        backgroundColor: StoryTalesTheme.primaryColor,
       ),
     );
+    
+    // Example of what the final call will look like:
+    // final productId = type == 'monthly' ? 'com.storytales.monthly' : 'com.storytales.annual';
+    // context.read<SubscriptionBloc>().add(
+    //   PurchaseSubscription(
+    //     platform: Platform.isIOS ? 'ios' : 'android',
+    //     productId: productId,
+    //     receiptData: 'base64_receipt_from_platform',
+    //     transactionId: 'platform_transaction_id',
+    //   ),
+    // );
   }
 
-  /// Show a dialog to confirm subscription cancellation
+  void _restoreSubscription(BuildContext context) {
+    // TODO: Implement native in-app restore flow here
+    // This should:
+    // 1. Determine platform (iOS/Android)
+    // 2. Use in_app_purchase plugin to restore purchases
+    // 3. Get receipt data from platform
+    // 4. Call the RestoreSubscription event with platform data
+    
+    // For now, show a message that native IAP restore is needed
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: ResponsiveText(
+          text: 'Native in-app purchase restore integration needed here. This will restore from iOS App Store / Google Play.',
+          style: TextStyle(
+            fontFamily: StoryTalesTheme.fontFamilyBody,
+            fontSize: 14,
+          ),
+        ),
+        backgroundColor: StoryTalesTheme.primaryColor,
+      ),
+    );
+    
+    // Example of what the final call will look like:
+    // context.read<SubscriptionBloc>().add(
+    //   RestoreSubscription(
+    //     platform: Platform.isIOS ? 'ios' : 'android',
+    //     receiptData: 'base64_receipt_from_platform', // mainly for Android
+    //   ),
+    // );
+  }
+
+  /// Show a dialog to inform about subscription cancellation
   void _showCancelSubscriptionDialog(BuildContext context) {
-    ConfirmationDialog.show(
+    showDialog(
       context: context,
-      title: 'Cancel Subscription',
-      content: 'Are you sure you want to cancel your subscription? '
-          'You will still have access until the end of your current billing period.',
-      confirmText: 'Yes',
-      cancelText: 'No',
-      onConfirm: () {
-        context.read<SubscriptionBloc>().add(const ResetSubscription());
-      },
+      builder: (context) => AlertDialog(
+        title: const ResponsiveText(
+          text: 'Cancel Subscription',
+          style: TextStyle(
+            fontFamily: StoryTalesTheme.fontFamilyHeading,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const ResponsiveText(
+          text: 'To cancel your subscription, please go to your App Store (iOS) or Google Play (Android) account settings. '
+              'You will still have access until the end of your current billing period.',
+          style: TextStyle(
+            fontFamily: StoryTalesTheme.fontFamilyBody,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const ResponsiveText(
+              text: 'OK',
+              style: TextStyle(
+                fontFamily: StoryTalesTheme.fontFamilyBody,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

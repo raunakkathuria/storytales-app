@@ -278,6 +278,7 @@ Future<void> init() async {
     () => SubscriptionBloc(
       repository: sl<SubscriptionRepository>(),
       analyticsService: sl<AnalyticsService>(),
+      authenticationService: sl<AuthenticationService>(),
     ),
   );
 

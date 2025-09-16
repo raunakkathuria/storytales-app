@@ -3,5 +3,8 @@
   "apiTimeoutSeconds": 120,
   "useMockData": true,
   "environment": "development",
-  "apiKey": "dev-api-key"
+  "apiKey": "dev-api-key",
+  "iapUseSandbox": true,
+  "iapProductIds": ["com.storytales.monthly", "com.storytales.annual"],
+  "iapDebugLogging": true
 }

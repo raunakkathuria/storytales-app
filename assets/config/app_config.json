@@ -3,5 +3,8 @@
   "apiTimeoutSeconds": 120,
   "useMockData": false,
   "environment": "production",
-  "apiKey": ""
+  "apiKey": "",
+  "iapUseSandbox": false,
+  "iapProductIds": ["com.storytales.monthly", "com.storytales.annual"],
+  "iapDebugLogging": false
 }

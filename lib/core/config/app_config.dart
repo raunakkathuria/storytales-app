@@ -21,6 +21,15 @@ class AppConfig {
   /// The API key for authenticating requests.
   final String apiKey;
 
+  /// Whether to use sandbox/test environment for in-app purchases.
+  final bool iapUseSandbox;
+
+  /// The product IDs for subscriptions.
+  final List<String> iapProductIds;
+
+  /// Enable debug logging for IAP operations.
+  final bool iapDebugLogging;
+
   /// Creates a new instance of [AppConfig].
   const AppConfig({
     required this.apiBaseUrl,
@@ -28,6 +37,9 @@ class AppConfig {
     required this.useMockData,
     required this.environment,
     required this.apiKey,
+    this.iapUseSandbox = false,
+    this.iapProductIds = const ['com.storytales.monthly', 'com.storytales.annual'],
+    this.iapDebugLogging = false,
   });
 
   /// Creates a new instance of [AppConfig] from a JSON map.
@@ -38,6 +50,10 @@ class AppConfig {
       useMockData: json['useMockData'] as bool,
       environment: json['environment'] as String,
       apiKey: json['apiKey'] as String? ?? '',
+      iapUseSandbox: json['iapUseSandbox'] as bool? ?? false,
+      iapProductIds: (json['iapProductIds'] as List<dynamic>?)?.cast<String>() ?? 
+          ['com.storytales.monthly', 'com.storytales.annual'],
+      iapDebugLogging: json['iapDebugLogging'] as bool? ?? false,
     );
   }
 
@@ -76,6 +92,8 @@ class AppConfig {
         useMockData: true,
         environment: 'development',
         apiKey: '',
+        iapUseSandbox: true, // Use sandbox for development fallback
+        iapDebugLogging: true, // Enable debug logging for development
       );
     }
   }
@@ -87,6 +105,9 @@ class AppConfig {
     bool? useMockData,
     String? environment,
     String? apiKey,
+    bool? iapUseSandbox,
+    List<String>? iapProductIds,
+    bool? iapDebugLogging,
   }) {
     return AppConfig(
       apiBaseUrl: apiBaseUrl ?? this.apiBaseUrl,
@@ -94,6 +115,9 @@ class AppConfig {
       useMockData: useMockData ?? this.useMockData,
       environment: environment ?? this.environment,
       apiKey: apiKey ?? this.apiKey,
+      iapUseSandbox: iapUseSandbox ?? this.iapUseSandbox,
+      iapProductIds: iapProductIds ?? this.iapProductIds,
+      iapDebugLogging: iapDebugLogging ?? this.iapDebugLogging,
     );
   }
 
@@ -101,6 +125,9 @@ class AppConfig {
   @override
   String toString() {
     return 'AppConfig(apiBaseUrl: $apiBaseUrl, apiTimeoutSeconds: $apiTimeoutSeconds, '
-        'useMockData: $useMockData, environment: $environment, apiKey: ${apiKey.isNotEmpty ? '***' : 'empty'})';
+        'useMockData: $useMockData, environment: $environment, '
+        'apiKey: ${apiKey.isNotEmpty ? '***' : 'empty'}, '
+        'iapUseSandbox: $iapUseSandbox, iapProductIds: $iapProductIds, '
+        'iapDebugLogging: $iapDebugLogging)';
   }
 }

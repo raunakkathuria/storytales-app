@@ -246,11 +246,12 @@ class AuthenticationService {
     return updatedProfile;
   }
 
-  /// Starts the subscription process.
-  Future<Map<String, dynamic>> startSubscription({
-    required String email,
-    required String displayName,
-    required String plan,
+  /// Process a native in-app purchase subscription.
+  Future<Map<String, dynamic>> purchaseSubscription({
+    required String platform,
+    required String productId,
+    required String receiptData,
+    required String transactionId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString(_userIdKey);
@@ -259,18 +260,43 @@ class AuthenticationService {
       throw Exception('No user session found. Please restart the app.');
     }
 
-    _loggingService.info('Starting subscription for user $userId with plan: $plan');
+    _loggingService.info('Processing subscription purchase for user $userId, product: $productId');
 
-    return await _userApiClient.startSubscription(
+    final response = await _userApiClient.purchaseSubscription(
       userId: userId,
-      email: email,
-      displayName: displayName,
-      plan: plan,
+      platform: platform,
+      productId: productId,
+      receiptData: receiptData,
+      transactionId: transactionId,
     );
+
+    // If subscription was successfully processed, refresh user profile
+    if (response['success'] == true) {
+      // Get updated subscription status from API
+      final subscriptionStatus = await _userApiClient.getSubscriptionStatus(userId: userId);
+      
+      // Update local profile with subscription information
+      final currentProfile = await getCurrentUserProfile();
+      if (currentProfile != null) {
+        final updatedProfile = {
+          ...currentProfile,
+          'subscription_tier': subscriptionStatus['subscription_tier'],
+          'is_active': subscriptionStatus['is_active'],
+          'expires_at': subscriptionStatus['expires_at'],
+          'unlimited_stories': subscriptionStatus['unlimited_stories'],
+        };
+        await _storeUserProfile(updatedProfile);
+      }
+    }
+
+    return response;
   }
 
-  /// Verifies the subscription OTP and activates the subscription.
-  Future<Map<String, dynamic>> verifySubscription(String otpCode) async {
+  /// Restore subscription from previous purchases.
+  Future<Map<String, dynamic>> restoreSubscription({
+    required String platform,
+    String? receiptData,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString(_userIdKey);
 
@@ -278,16 +304,48 @@ class AuthenticationService {
       throw Exception('No user session found. Please restart the app.');
     }
 
-    _loggingService.info('Verifying subscription for user $userId');
+    _loggingService.info('Restoring subscription for user $userId, platform: $platform');
 
-    final updatedProfile = await _userApiClient.verifySubscription(
+    final response = await _userApiClient.restoreSubscription(
       userId: userId,
-      otpCode: otpCode,
+      platform: platform,
+      receiptData: receiptData,
     );
 
-    // Update stored profile with new subscription status
-    await _storeUserProfile(updatedProfile);
-    return updatedProfile;
+    // If subscription was found and restored, update local profile
+    if (response['subscription_found'] == true) {
+      // Get updated subscription status from API
+      final subscriptionStatus = await _userApiClient.getSubscriptionStatus(userId: userId);
+      
+      // Update local profile with restored subscription information
+      final currentProfile = await getCurrentUserProfile();
+      if (currentProfile != null) {
+        final updatedProfile = {
+          ...currentProfile,
+          'subscription_tier': subscriptionStatus['subscription_tier'],
+          'is_active': subscriptionStatus['is_active'],
+          'expires_at': subscriptionStatus['expires_at'],
+          'unlimited_stories': subscriptionStatus['unlimited_stories'],
+        };
+        await _storeUserProfile(updatedProfile);
+      }
+    }
+
+    return response;
+  }
+
+  /// Get current subscription status.
+  Future<Map<String, dynamic>> getSubscriptionStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString(_userIdKey);
+
+    if (userId == null) {
+      throw Exception('No user session found. Please restart the app.');
+    }
+
+    _loggingService.info('Getting subscription status for user $userId');
+
+    return await _userApiClient.getSubscriptionStatus(userId: userId);
   }
 
   /// Checks if the user is currently authenticated (has a valid session).
@@ -403,6 +461,29 @@ class AuthenticationService {
   /// This is a public method for updating user profile after API calls.
   Future<void> updateStoredUserProfile(Map<String, dynamic> userProfile) async {
     await _storeUserProfile(userProfile);
+  }
+
+  /// Refreshes subscription status from API and updates local profile.
+  Future<void> refreshSubscriptionStatus() async {
+    try {
+      final subscriptionStatus = await getSubscriptionStatus();
+      final currentProfile = await getCurrentUserProfile();
+      
+      if (currentProfile != null) {
+        final updatedProfile = {
+          ...currentProfile,
+          'subscription_tier': subscriptionStatus['subscription_tier'],
+          'is_active': subscriptionStatus['is_active'],
+          'expires_at': subscriptionStatus['expires_at'],
+          'unlimited_stories': subscriptionStatus['unlimited_stories'],
+        };
+        await _storeUserProfile(updatedProfile);
+        _loggingService.info('Subscription status refreshed successfully');
+      }
+    } catch (e) {
+      _loggingService.error('Failed to refresh subscription status: $e');
+      rethrow;
+    }
   }
 
   /// Clears all user authentication data.

@@ -925,12 +925,36 @@ class MockAppConfig extends _i1.Mock implements _i8.AppConfig {
           as String);
 
   @override
+  bool get iapUseSandbox =>
+      (super.noSuchMethod(Invocation.getter(#iapUseSandbox), returnValue: false)
+          as bool);
+
+  @override
+  List<String> get iapProductIds =>
+      (super.noSuchMethod(
+            Invocation.getter(#iapProductIds),
+            returnValue: <String>[],
+          )
+          as List<String>);
+
+  @override
+  bool get iapDebugLogging =>
+      (super.noSuchMethod(
+            Invocation.getter(#iapDebugLogging),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
   _i8.AppConfig copyWith({
     String? apiBaseUrl,
     int? apiTimeoutSeconds,
     bool? useMockData,
     String? environment,
     String? apiKey,
+    bool? iapUseSandbox,
+    List<String>? iapProductIds,
+    bool? iapDebugLogging,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#copyWith, [], {
@@ -939,6 +963,9 @@ class MockAppConfig extends _i1.Mock implements _i8.AppConfig {
               #useMockData: useMockData,
               #environment: environment,
               #apiKey: apiKey,
+              #iapUseSandbox: iapUseSandbox,
+              #iapProductIds: iapProductIds,
+              #iapDebugLogging: iapDebugLogging,
             }),
             returnValue: _FakeAppConfig_6(
               this,
@@ -948,6 +975,9 @@ class MockAppConfig extends _i1.Mock implements _i8.AppConfig {
                 #useMockData: useMockData,
                 #environment: environment,
                 #apiKey: apiKey,
+                #iapUseSandbox: iapUseSandbox,
+                #iapProductIds: iapProductIds,
+                #iapDebugLogging: iapDebugLogging,
               }),
             ),
           )
@@ -1040,18 +1070,20 @@ class MockUserApiClient extends _i1.Mock implements _i17.UserApiClient {
           as _i11.Future<Map<String, dynamic>>);
 
   @override
-  _i11.Future<Map<String, dynamic>> startSubscription({
+  _i11.Future<Map<String, dynamic>> purchaseSubscription({
     required String? userId,
-    required String? email,
-    required String? displayName,
-    required String? plan,
+    required String? platform,
+    required String? productId,
+    required String? receiptData,
+    required String? transactionId,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#startSubscription, [], {
+            Invocation.method(#purchaseSubscription, [], {
               #userId: userId,
-              #email: email,
-              #displayName: displayName,
-              #plan: plan,
+              #platform: platform,
+              #productId: productId,
+              #receiptData: receiptData,
+              #transactionId: transactionId,
             }),
             returnValue: _i11.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
@@ -1060,15 +1092,29 @@ class MockUserApiClient extends _i1.Mock implements _i17.UserApiClient {
           as _i11.Future<Map<String, dynamic>>);
 
   @override
-  _i11.Future<Map<String, dynamic>> verifySubscription({
+  _i11.Future<Map<String, dynamic>> restoreSubscription({
     required String? userId,
-    required String? otpCode,
+    required String? platform,
+    String? receiptData,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#verifySubscription, [], {
+            Invocation.method(#restoreSubscription, [], {
               #userId: userId,
-              #otpCode: otpCode,
+              #platform: platform,
+              #receiptData: receiptData,
             }),
+            returnValue: _i11.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i11.Future<Map<String, dynamic>>);
+
+  @override
+  _i11.Future<Map<String, dynamic>> getSubscriptionStatus({
+    required String? userId,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#getSubscriptionStatus, [], {#userId: userId}),
             returnValue: _i11.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
@@ -1197,6 +1243,56 @@ class MockUserApiClient extends _i1.Mock implements _i17.UserApiClient {
               #ageRange: ageRange,
               #theme: theme,
               #genre: genre,
+            }),
+            returnValue: _i11.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i11.Future<Map<String, dynamic>>);
+
+  @override
+  _i11.Future<Map<String, dynamic>> addFavorite({
+    required String? userId,
+    required String? storyId,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#addFavorite, [], {
+              #userId: userId,
+              #storyId: storyId,
+            }),
+            returnValue: _i11.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i11.Future<Map<String, dynamic>>);
+
+  @override
+  _i11.Future<Map<String, dynamic>> removeFavorite({
+    required String? userId,
+    required String? storyId,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#removeFavorite, [], {
+              #userId: userId,
+              #storyId: storyId,
+            }),
+            returnValue: _i11.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i11.Future<Map<String, dynamic>>);
+
+  @override
+  _i11.Future<Map<String, dynamic>> getUserFavorites({
+    required String? userId,
+    int? page = 1,
+    int? limit = 20,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#getUserFavorites, [], {
+              #userId: userId,
+              #page: page,
+              #limit: limit,
             }),
             returnValue: _i11.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
